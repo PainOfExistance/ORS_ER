@@ -154,6 +154,7 @@ namespace ORS_ER
                 var p = e.GetPosition(skiaElement);
                 var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
                 var mouseWorld = ScreenToWorld(mouseScreen);
+                skiaElement.Cursor = Cursors.SizeAll;
                 foreach (var item in PaintItems)
                 {
                     if (item.Selected)

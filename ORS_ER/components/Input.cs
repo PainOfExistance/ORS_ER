@@ -76,7 +76,8 @@ namespace ORS_ER.components
 
         public override string ToString()
         {
-            throw new NotImplementedException();
+            return $"Print Component: {this.Name} - {this.Description}";
+
         }
     }
 }
