@@ -15,8 +15,9 @@ namespace ORS_ER
         private SKPoint _panOffset = new(0, 0);
         private float _zoom = 1.0f;
 
-        private bool _isPanning;
-        private bool _isMoving;
+        private bool _isPanning = false;
+        private bool _isMoving = false;
+        private bool _isConnecting = false;
         private SKPoint _panStartMouse;
         private SKPoint _panStartOffset;
 
@@ -86,11 +87,14 @@ namespace ORS_ER
             foreach (Component item in PaintItems)
             {
                 item.Selected = false;
+                item.HitTest(world, _isConnecting);
+                /*
                 if (item.Rect.Contains(world))
                 {
                     item.Selected = true;
                     ReturnItem = item;
                 }
+                */
             }
 
             return ReturnItem;
@@ -159,7 +163,7 @@ namespace ORS_ER
                 {
                     if (item.Selected)
                     {
-                        item.CreateRect((int)mouseWorld.X, (int)mouseWorld.Y);
+                        item.OffsetRect((int)mouseWorld.X, (int)mouseWorld.Y);
                     }
                 }
             }

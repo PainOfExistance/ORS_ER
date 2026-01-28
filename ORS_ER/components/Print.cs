@@ -7,77 +7,44 @@ namespace ORS_ER.components
 {
     class Print : Component
     {
-        private readonly SKPaint componentFill = new()
-        {
-            Style = SKPaintStyle.Fill,
-            Color = SKColors.IndianRed,
-            IsAntialias = true,
-        };
-
-        private readonly SKPaint componentStroke = new()
-        {
-            Style = SKPaintStyle.Stroke,
-            Color = SKColors.YellowGreen,
-            StrokeWidth = 2,
-            IsAntialias = true,
-        };
-
-        private readonly SKPaint textPaint = new()
-        {
-            Color = SKColors.LightCyan,
-            IsAntialias = true,
-            TextSize = 20,
-        };
-
-        private readonly SKPaint selectedStroke = new()
-        {
-            Style = SKPaintStyle.Stroke,
-            Color = SKColors.Red,
-            StrokeWidth = 4,
-            IsAntialias = true,
-        };
-
-        private SKPoint portPoint = new();
-
-
-        private readonly SKPaint portPaint = new()
-        {
-            Style = SKPaintStyle.Fill,
-            Color = SKColors.Black,
-            IsAntialias = true,
-        };
+        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Print);
 
         public Print(Component component) : base(component)
         {
+            Inputs.Add(new IO("name", 2));
+
         }
 
         public Print(string name, string description, string category) : base(name, description, category)
         {
+            Inputs.Add(new IO("name", 2));
         }
 
         public override void CreateRect(int x, int y)
         {
             this.Rect = new SkiaSharp.SKRect(x - 75, y - 25, x + 75, y + 25);
-            this.portPoint = new SKPoint(this.Rect.MidX, this.Rect.Top);
+            var delta = Rect.Width / (Inputs.Count + 1);
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                Inputs[i].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+            }
         }
 
         public override void Paint(SKCanvas canvas)
         {
-            canvas.DrawRect(this.Rect, componentFill);
+            canvas.DrawRect(this.Rect, Paints.ComponentFill);
 
             if (this.Selected)
-                canvas.DrawRect(this.Rect, selectedStroke);
+                canvas.DrawRect(this.Rect, Paints.SelectedStroke);
             else
-                canvas.DrawRect(this.Rect, componentStroke);
+                canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
-            canvas.DrawCircle(this.portPoint, 8, portPaint);
+            foreach (var input in this.Inputs)
+            {
+                canvas.DrawCircle(input.node, 8, Paints.IOPaint);
+            }
 
-            canvas.DrawText(this.Name, this.Rect.MidX - (textPaint.MeasureText(this.Name) / 2), this.Rect.MidY + (textPaint.TextSize / 2), textPaint);
-        }
-
-        public override string ToString()
-        {
-            return $"Print Component: {this.Name} - {this.Description}";
+            canvas.DrawText(this.Name, this.Rect.MidX - (Paints.TextPaint.MeasureText(this.Name) / 2), this.Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
         }
     }
 }
