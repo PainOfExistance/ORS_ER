@@ -5,8 +5,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ORS_ER.components;
+using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using System.Linq;
 
 namespace ORS_ER
 {
@@ -17,28 +19,37 @@ namespace ORS_ER
 
         private bool _isPanning = false;
         private bool _isMoving = false;
-        private bool _isConnecting = false;
         private SKPoint _panStartMouse;
         private SKPoint _panStartOffset;
-
+        private SKPoint _mouseWorld;
         private const float MinZoom = 0.1f;
         private const float MaxZoom = 10.0f;
         private const float ZoomStep = 1.1f;
+        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
 
         public ObservableCollection<Component> Items { get; } = new()
         {
-            new components.Input("Input", "Any type input.", "Inputs"),
-            new components.Print("Print", "Prints to console.", "Outputs"),
+            new Input("Input", "Any type input.", "Inputs"),
+            new Print("Print", "Prints to console.", "Outputs"),
         };
 
-        public ObservableCollection<Component> PaintItems { get; } = new()
+        public Dictionary<string, Component> PaintItems { get; } = new()
         {
         };
+
+        public Dictionary<string, Connection> connections { get; set; } = new Dictionary<string, Connection>();
+        public bool _isConnecting { get; set; } = false;
+        string _isConnectingId = "";
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
+            PreviewMouseRightButtonDown += MainWindow_PreviewMouseRightButtonDown;
+            PreviewKeyDown += MainWindow_PreviewKeyDown;
+
+            Focusable = true;
+            Focus();
         }
 
         private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -50,6 +61,36 @@ namespace ORS_ER
             var clickedListViewItem = FindAncestor<ListViewItem>(source);
             if (clickedListViewItem is null && source.GetType().FullName != "SkiaSharp.Views.WPF.SKElement")
                 LayersListView.SelectedItem = null;
+        }
+
+        private void MainWindow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            connections.Remove(_isConnectingId);
+            _isConnecting = false;
+            _isConnectingId = "";
+            Debug.WriteLine("Cancelled Connection");
+            skiaElement.InvalidateVisual();
+        }
+
+        private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                foreach (var conn in connections)
+                {
+                    if (conn.Value.selected)
+                    {
+                        PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].outputConnectionId = "";
+                        PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionId = "";
+                        connections.Remove(conn.Key);
+                        Debug.WriteLine("Deleted Connection");
+                        skiaElement.InvalidateVisual();
+                        break;
+                    }
+                }
+            }
+
+            e.Handled = true;
         }
 
         private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
@@ -73,31 +114,96 @@ namespace ORS_ER
             canvas.Scale(_zoom);
             canvas.Translate(_panOffset);
 
+            foreach (var connection in connections.Values)
+            {
+                var fromComponent = PaintItems[connection.fromComponentId];
+                var fromNode = fromComponent.Outputs[connection.fromId].node;
+
+                var toPoint = connection.GetId() == _isConnectingId
+                    ? _mouseWorld
+                    : PaintItems[connection.toComponentId].Inputs[connection.toId].node;
+
+                canvas.DrawLine(fromNode, toPoint, connection.selected ? Paints.SelectedLineStroke : Paints.LineStroke);
+            }
+
             foreach (var item in PaintItems)
             {
-                item.Paint(canvas);
+                item.Value.Paint(canvas);
             }
         }
 
         private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
 
-        private Component? HitTest(SKPoint world)
+        private (string, Component, IO)? HitTest(SKPoint world)
         {
-            Component ReturnItem = null;
-            foreach (Component item in PaintItems)
+            (string, Component, IO)? returnItem = null;
+            (string, Component, IO)? tmp = null;
+            foreach (Component item in PaintItems.Values)
             {
                 item.Selected = false;
-                item.HitTest(world, _isConnecting);
-                /*
-                if (item.Rect.Contains(world))
+                tmp = item.HitTest(world);
+                if (tmp != null)
                 {
-                    item.Selected = true;
-                    ReturnItem = item;
+                    if (tmp.Value.Item1 == "output")
+                    {
+                        if (!_isConnecting)
+                        {
+                            _isConnecting = true;
+                            Connection newConnection = new Connection(tmp.Value.Item3.GetId(), "", tmp.Value.Item2.GetId(), "");
+                            _isConnectingId = newConnection.GetId();
+                            connections.Add(_isConnectingId, newConnection);
+                            item.Outputs[tmp.Value.Item3.GetId()].outputConnectionId = _isConnectingId;
+                            Debug.WriteLine("Started Connection");
+                        }
+                        else
+                        {
+                            connections.Remove(_isConnectingId);
+                            _isConnecting = false;
+                            _isConnectingId = "";
+                            Debug.WriteLine("Cancelled Connection");
+                        }
+                        returnItem = tmp;
+                    }
+                    else if (tmp.Value.Item1 == "input")
+                    {
+                        if (_isConnecting && tmp.Value.Item3.inputConnectionId == "" && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId())
+                        {
+                            connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
+                            connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
+                            item.Inputs[tmp.Value.Item3.GetId()].inputConnectionId = _isConnectingId;
+                            connections[_isConnectingId].selected = false;
+                            _isConnecting = false;
+                            _isConnectingId = "";
+                            Debug.WriteLine("Completed Connection");
+                        }
+                        else
+                        {
+                            connections.Remove(_isConnectingId);
+                            _isConnecting = false;
+                            _isConnectingId = "";
+                            Debug.WriteLine("Cancelled Connection");
+                        }
+                        returnItem = tmp;
+                    }
+                    else if (tmp.Value.Item1 == "rect")
+                    {
+                        item.Selected = true;
+                        returnItem = tmp;
+                        if (_isConnecting)
+                        {
+                            connections.Remove(_isConnectingId);
+                            _isConnecting = false;
+                            _isConnectingId = "";
+                            Debug.WriteLine("Cancelled Connection");
+                        }
+                    }
+                    else if (tmp.Value.Item1 == "button")
+                    {
+                        returnItem = tmp;
+                    }
                 }
-                */
             }
-
-            return ReturnItem;
+            return returnItem;
         }
 
         private void SkiaElement_OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -105,12 +211,14 @@ namespace ORS_ER
             if (e.ChangedButton != MouseButton.Left)
                 return;
 
+            skiaElement.Focus();
             var p = e.GetPosition(skiaElement);
             var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
             var mouseWorld = ScreenToWorld(mouseScreen);
-            var hit = HitTest(mouseWorld);
+            (string, Component, IO)? hit = HitTest(mouseWorld);
 
-            if (hit != null)
+            Debug.WriteLine(hit);
+            if (hit != null && hit.Value.Item1 == "rect")
             {
                 _isMoving = true;
                 LayersListView.SelectedItem = null;
@@ -124,13 +232,34 @@ namespace ORS_ER
                 var type = selected.GetType();
                 if (Activator.CreateInstance(type, selected.Name, selected.Description, selected.Category) is Component newComponent)
                 {
-                    PaintItems.Add(newComponent);
-                    int paintIndex = PaintItems.Count - 1;
-                    PaintItems[paintIndex].Selected = true;
-                    PaintItems[paintIndex].CreateRect((int)mouseWorld.X, (int)mouseWorld.Y);
+                    PaintItems.Add(newComponent.GetId(), newComponent);
+                    PaintItems[newComponent.GetId()].Selected = true;
+                    PaintItems[newComponent.GetId()].CreateRect((int)mouseWorld.X, (int)mouseWorld.Y);
                 }
                 LayersListView.SelectedItem = null;
                 skiaElement.InvalidateVisual();
+                return;
+            }
+            else if(hit!=null && hit.Value.Item1 == "button")
+            {
+                var dlg = new MyDialog { Owner = this };
+                var result = dlg.ShowDialog();
+
+                e.Handled = true;
+                return;
+            }
+            else
+            {
+                foreach (var conn in connections)
+                {
+                    if (conn.Value.toId == "" || hit != null)
+                    {
+                        continue;
+                    }
+                    var fromNode = PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].node;
+                    var toNode = PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].node;
+                    conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
+                }
             }
 
             _isPanning = true;
@@ -145,9 +274,12 @@ namespace ORS_ER
 
         private void SkiaElement_OnMouseMove(object sender, MouseEventArgs e)
         {
+            var p = e.GetPosition(skiaElement);
+            var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
+            _mouseWorld = ScreenToWorld(mouseScreen);
+
             if (_isPanning)
             {
-                var p = e.GetPosition(skiaElement);
                 var mouse = new SKPoint((float)p.X, (float)p.Y);
 
                 var deltaScreen = mouse - _panStartMouse;
@@ -155,15 +287,12 @@ namespace ORS_ER
             }
             else if (_isMoving)
             {
-                var p = e.GetPosition(skiaElement);
-                var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
-                var mouseWorld = ScreenToWorld(mouseScreen);
                 skiaElement.Cursor = Cursors.SizeAll;
                 foreach (var item in PaintItems)
                 {
-                    if (item.Selected)
+                    if (item.Value.Selected)
                     {
-                        item.OffsetRect((int)mouseWorld.X, (int)mouseWorld.Y);
+                        item.Value.OffsetRect((int)_mouseWorld.X, (int)_mouseWorld.Y);
                     }
                 }
             }

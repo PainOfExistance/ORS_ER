@@ -2,33 +2,22 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using ORS_ER.connections;
 
 namespace ORS_ER.components
 {
-    public class IO
-    {
-        public dynamic? value { get; set; }
-        public string? name { get; set; }
-        public SKPoint node { get; set; } = new SKPoint();
-        public IO() { }
-        public IO(string name, dynamic value)
-        {
-            this.name = name;
-            this.value = value;
-        }
-    }
-
     abstract public class Component(string name, string description, string category)
     {
-        private string Id { get; set; } = Guid.NewGuid().ToString();
+        private readonly string Id = Guid.NewGuid().ToString();
         public string Name { get; set; } = name;
         public string Description { get; set; } = description;
         public string Category { get; set; } = category;
         public string Code { get; set; } = "";
-        public List<IO> Inputs = new List<IO>();
-        public List<IO> Outputs = new List<IO>();
         public bool Selected { get; set; } = false;
+        public Dictionary<string, IO> Inputs = new Dictionary<string, IO>();
+        public Dictionary<string, IO> Outputs = new Dictionary<string, IO>();
         public SKRect Rect { get; set; }
 
         public Component(Component component) : this(component.Name, component.Description, component.Category)
@@ -39,8 +28,11 @@ namespace ORS_ER.components
             this.Outputs = component.Outputs;
         }
 
+        public string GetId()
+        {
+            return Id;
+        }
         abstract public void Paint(SKCanvas canvas);
-
         abstract public void CreateRect(int x, int y);
         virtual public void OffsetRect(int x, int y)
         {
@@ -50,14 +42,16 @@ namespace ORS_ER.components
 
             rect.Offset(dx, dy);
             Rect = rect;
-            var node= new SKPoint();
-            for (int i=0; i<Inputs.Count(); i++)
+
+            var node = new SKPoint();
+            foreach (var i in Inputs.Keys)
             {
                 node = Inputs[i].node;
                 node.Offset(dx, dy);
                 Inputs[i].node = node;
             }
-            for (int i=0; i<Outputs.Count(); i++)
+
+            foreach (var i in Outputs.Keys)
             {
                 node = Outputs[i].node;
                 node.Offset(dx, dy);
@@ -65,30 +59,39 @@ namespace ORS_ER.components
             }
         }
 
-        virtual public (Component, IO) HitTest(SKPoint world, bool _isConnecting)
+        virtual public (string, Component, IO?)? HitTest(SKPoint world)
         {
+            const float hitRadius = 8f;
+            var hitRadius2 = hitRadius * hitRadius;
+
+            static bool HitPoint(SKPoint a, SKPoint b, float r2)
+            {
+                var dx = a.X - b.X;
+                var dy = a.Y - b.Y;
+                return (dx * dx + dy * dy) <= r2;
+            }
+
             foreach (var io in Inputs)
-            {
-                var nodeRect = SKRect.Create(io.node.X - 5, io.node.Y - 5, 10, 10);
-                if (nodeRect.Contains(world))
+                if (HitPoint(io.Value.node, world, hitRadius2))
                 {
-                    return (this, io);
+                    Debug.WriteLine("Hit Input");
+                    return ("input", this, io.Value);
                 }
-            }
+
             foreach (var io in Outputs)
-            {
-                var nodeRect = SKRect.Create(io.node.X - 5, io.node.Y - 5, 10, 10);
-                if (nodeRect.Contains(world))
+                if (HitPoint(io.Value.node, world, hitRadius2))
                 {
-                    return (this, io);
+                    Debug.WriteLine("Hit Output");
+                    return ("output", this, io.Value);
                 }
-            }
+
             if (Rect.Contains(world))
             {
-                return (this, null);
+                Debug.WriteLine("Hit rect");
+                return ("rect", this, null);
             }
-            return (null, null);
 
+            return null;
         }
 
     }

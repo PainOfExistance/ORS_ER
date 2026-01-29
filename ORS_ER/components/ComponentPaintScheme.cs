@@ -15,6 +15,11 @@ namespace ORS_ER.components
         public SKPaint TextPaint { get; }
         public SKPaint SelectedStroke { get; }
         public SKPaint IOPaint { get; }
+        public SKPaint LineStroke { get; }
+        public SKPaint SelectedLineStroke { get; }
+        public SKPaint ButtonFill { get; }
+        public SKPaint ButtonStroke { get; }
+        public SKPaint ButtonTextPaint { get; }
 
         private ComponentPaints(
             SKColor fill,
@@ -24,7 +29,8 @@ namespace ORS_ER.components
             SKColor io,
             float strokeWidth = 2,
             float selectedStrokeWidth = 4,
-            float textSize = 20)
+            float textSize = 20,
+            float lineStrokeWidth = 4)
         {
             ComponentFill = new SKPaint
             {
@@ -61,6 +67,46 @@ namespace ORS_ER.components
                 Style = SKPaintStyle.Fill,
                 Color = io,
                 IsAntialias = true,
+            };
+
+            LineStroke = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                Color = io,
+                StrokeWidth = lineStrokeWidth,
+                IsAntialias = true,
+                StrokeCap = SKStrokeCap.Round,
+            };
+
+            SelectedLineStroke = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                Color = SKColors.OrangeRed,
+                StrokeWidth = lineStrokeWidth,
+                IsAntialias = true,
+                StrokeCap = SKStrokeCap.Round,
+            };
+
+            ButtonFill = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                Color = SKColors.White.WithAlpha(80),
+                IsAntialias = true,
+            };
+
+            ButtonStroke = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                Color = SKColors.Black.WithAlpha(140),
+                StrokeWidth = 2,
+                IsAntialias = true,
+            };
+
+            ButtonTextPaint = new SKPaint
+            {
+                Color = SKColors.WhiteSmoke,
+                IsAntialias = true,
+                TextSize = 14,
             };
         }
 
