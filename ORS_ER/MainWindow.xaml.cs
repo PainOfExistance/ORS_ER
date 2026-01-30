@@ -341,7 +341,14 @@ namespace ORS_ER
             string code = await Parser.ParseAsync(PaintItems, connections, cts.Token);
             Debug.WriteLine("Generated Code:");
             Debug.WriteLine(code);
-            
+            try
+            {
+                await Parser.EvaluateAsync(code, cts.Token);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
     }
 }

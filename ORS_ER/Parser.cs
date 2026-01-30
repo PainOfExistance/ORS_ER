@@ -1,4 +1,6 @@
-﻿using ORS_ER.components;
+﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
+using ORS_ER.components;
 using ORS_ER.connections;
 using System;
 using System.Collections.Generic;
@@ -7,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System .Reflection.Emit;
 
 namespace ORS_ER
 {
@@ -66,6 +69,18 @@ namespace ORS_ER
             }
 
             return sb.ToString();
+        }
+
+        public static Task EvaluateAsync(string code, CancellationToken cancellationToken = default)
+        {
+            var options = ScriptOptions.Default
+                .WithReferences(
+                    typeof(object).Assembly,
+                    typeof(Enumerable).Assembly,
+                    typeof(Console).Assembly)
+                .WithImports("System", "System.Linq", "System.Collections.Generic", "System.Text");
+
+            return CSharpScript.RunAsync(code, options, globals: null, cancellationToken: cancellationToken);
         }
     }
 }
