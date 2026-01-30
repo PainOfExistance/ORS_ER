@@ -9,6 +9,10 @@ using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using System.Linq;
+using System.IO;
+using System.Text;
+using System.Threading;
+using Microsoft.CSharp;
 
 namespace ORS_ER
 {
@@ -47,6 +51,10 @@ namespace ORS_ER
             DataContext = this;
             PreviewMouseRightButtonDown += MainWindow_PreviewMouseRightButtonDown;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
+
+            var uiWriter = new UiTextBlockWriter(ConsoleOutput);
+            Console.SetOut(TextWriter.Synchronized(uiWriter));
+            Console.SetError(TextWriter.Synchronized(uiWriter));
 
             Focusable = true;
             Focus();
@@ -229,22 +237,15 @@ namespace ORS_ER
             {
                 int index = LayersListView.SelectedIndex;
                 var selected = Items[index];
-                var type = selected.GetType();
-                if (Activator.CreateInstance(type, selected.Name, selected.Description, selected.Category) is Component newComponent)
-                {
-                    PaintItems.Add(newComponent.GetId(), newComponent);
-                    PaintItems[newComponent.GetId()].Selected = true;
-                    PaintItems[newComponent.GetId()].CreateRect((int)mouseWorld.X, (int)mouseWorld.Y);
-                }
+                var newComponent = Creator.Create(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
+
+                PaintItems.Add(newComponent.GetId(), newComponent);
                 LayersListView.SelectedItem = null;
                 skiaElement.InvalidateVisual();
                 return;
             }
-            else if(hit!=null && hit.Value.Item1 == "button")
+            else if (hit != null && hit.Value.Item1 == "button")
             {
-                var dlg = new MyDialog { Owner = this };
-                var result = dlg.ShowDialog();
-
                 e.Handled = true;
                 return;
             }
@@ -332,6 +333,15 @@ namespace ORS_ER
 
             skiaElement.InvalidateVisual();
             e.Handled = true;
+        }
+
+        private async void Run_Click(object sender, RoutedEventArgs e)
+        {
+            var cts = new CancellationTokenSource();
+            string code = await Parser.ParseAsync(PaintItems, connections, cts.Token);
+            Debug.WriteLine("Generated Code:");
+            Debug.WriteLine(code);
+            
         }
     }
 }

@@ -23,7 +23,6 @@ namespace ORS_ER.connections
 
         public void HitTest(SKPoint p, SKPoint a, SKPoint b, float tolerance)
         {
-            // Quick reject (optional but cheap)
             var minX = MathF.Min(a.X, b.X) - tolerance;
             var maxX = MathF.Max(a.X, b.X) + tolerance;
             var minY = MathF.Min(a.Y, b.Y) - tolerance;

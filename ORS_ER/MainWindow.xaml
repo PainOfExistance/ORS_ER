@@ -16,6 +16,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
 
         <ToolBarPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
@@ -23,8 +24,9 @@
                 <Button x:Name="File" Content="File"/>
                 <Button x:Name="New" Content="New"/>
                 <Button x:Name="Load" Content="Load"/>
-                <Separator/>
                 <Button x:Name="Help" Content="Help"/>
+                <Separator/>
+                <Button x:Name="Run" Content="Run" Click="Run_Click"/>
             </ToolBar>
         </ToolBarPanel>
 
@@ -58,5 +60,11 @@
                         MouseMove="SkiaElement_OnMouseMove"
                         MouseUp="SkiaElement_OnMouseUp"
                         MouseWheel="SkiaElement_OnMouseWheel"/>
+
+        <TextBlock x:Name="ConsoleOutput" Grid.Row="1" Grid.Column="2"
+                   Text="Output panel:"
+                   Margin="5"
+                   TextWrapping="Wrap"
+                   />
     </Grid>
 </Window>

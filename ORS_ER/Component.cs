@@ -19,6 +19,7 @@ namespace ORS_ER.components
         public Dictionary<string, IO> Inputs = new Dictionary<string, IO>();
         public Dictionary<string, IO> Outputs = new Dictionary<string, IO>();
         public SKRect Rect { get; set; }
+        public SKFont font = new SKFont();
 
         public Component(Component component) : this(component.Name, component.Description, component.Category)
         {
@@ -34,7 +35,7 @@ namespace ORS_ER.components
         }
         abstract public void Paint(SKCanvas canvas);
         abstract public void CreateRect(int x, int y);
-        virtual public void OffsetRect(int x, int y)
+        virtual public (float, float) OffsetRect(int x, int y)
         {
             var rect = Rect;
             var dx = x - rect.MidX;
@@ -57,8 +58,9 @@ namespace ORS_ER.components
                 node.Offset(dx, dy);
                 Outputs[i].node = node;
             }
-        }
 
+            return (dx, dy);
+        }
         virtual public (string, Component, IO?)? HitTest(SKPoint world)
         {
             const float hitRadius = 8f;
@@ -93,6 +95,6 @@ namespace ORS_ER.components
 
             return null;
         }
-
+        abstract public void GenerateCode();
     }
 }

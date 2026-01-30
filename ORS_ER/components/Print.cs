@@ -12,14 +12,14 @@ namespace ORS_ER.components
 
         public Print(Component component) : base(component)
         {
-            IO newNode = new IO("name", 2);
+            IO newNode = new IO();
             Inputs.Add(newNode.GetId(), newNode);
 
         }
 
         public Print(string name, string description, string category) : base(name, description, category)
         {
-            IO newNode = new IO("name", 2);
+            IO newNode = new IO();
             Inputs.Add(newNode.GetId(), newNode);
         }
 
@@ -49,6 +49,11 @@ namespace ORS_ER.components
             {
                 Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
+        }
+
+        public override void GenerateCode()
+        {
+            this.Code = $"Console.WriteLine({this.Inputs.First().Value.value});\n";
         }
     }
 }
