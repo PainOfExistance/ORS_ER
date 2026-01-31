@@ -8,7 +8,7 @@ namespace ORS_ER.connections
 {
     public class IO
     {
-        private readonly string Id = Guid.NewGuid().ToString();
+        private string Id = Guid.NewGuid().ToString();
         public dynamic? value { get; set; }
         public string? name { get; set; }
         public SKPoint node { get; set; } = new SKPoint();
@@ -25,6 +25,22 @@ namespace ORS_ER.connections
         public string GetId()
         {
             return Id;
+        }
+        public void SetId(string id)
+        {
+            Id = id;
+        }
+        public string ToJson()
+        {
+            return $"{{\n" +
+                $"\"id\": \"{Id}\",\n" +
+                $"\"name\": \"{name}\",\n" +
+                $"\"value\": \"{value}\",\n" +
+                $"\"x\": {node.X},\n" +
+                $"\"y\": {node.Y},\n" +
+                $"\"inputId\": \"{inputConnectionId}\",\n" +
+                $"\"outputId\": \"{outputConnectionId}\"\n" +
+                $"}},\n";
         }
     }
 }

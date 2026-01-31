@@ -20,7 +20,6 @@ namespace ORS_ER
     {
         private SKPoint _panOffset = new(0, 0);
         private float _zoom = 1.0f;
-
         private bool _isPanning = false;
         private bool _isMoving = false;
         private SKPoint _panStartMouse;
@@ -51,7 +50,7 @@ namespace ORS_ER
             DataContext = this;
             PreviewMouseRightButtonDown += MainWindow_PreviewMouseRightButtonDown;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
-
+            ConsoleOutput.Text = "------Console Output------\n";
             var uiWriter = new UiTextBlockWriter(ConsoleOutput);
             Console.SetOut(TextWriter.Synchronized(uiWriter));
             Console.SetError(TextWriter.Synchronized(uiWriter));
@@ -73,6 +72,8 @@ namespace ORS_ER
 
         private void MainWindow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            var conn = connections.GetValueOrDefault(_isConnectingId);
+            PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
             connections.Remove(_isConnectingId);
             _isConnecting = false;
             _isConnectingId = "";
@@ -92,6 +93,37 @@ namespace ORS_ER
                         PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionId = "";
                         connections.Remove(conn.Key);
                         Debug.WriteLine("Deleted Connection");
+                        skiaElement.InvalidateVisual();
+                        break;
+                    }
+                }
+
+                foreach (var item in PaintItems)
+                {
+                    if (item.Value.Selected)
+                    {
+                        foreach (var input in item.Value.Inputs.Values)
+                        {
+                            if (input.inputConnectionId != "")
+                            {
+                                var conn = connections[input.inputConnectionId];
+                                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
+                                connections.Remove(input.inputConnectionId);
+                                Debug.WriteLine("Deleted Connection");
+                            }
+                        }
+                        foreach (var output in item.Value.Outputs.Values)
+                        {
+                            if (output.outputConnectionId != "")
+                            {
+                                var conn = connections[output.outputConnectionId];
+                                PaintItems[conn.toComponentId].Inputs[conn.toId].inputConnectionId = "";
+                                connections.Remove(output.outputConnectionId);
+                                Debug.WriteLine("Deleted Connection");
+                            }
+                        }
+                        PaintItems.Remove(item.Key);
+                        Debug.WriteLine("Deleted Component");
                         skiaElement.InvalidateVisual();
                         break;
                     }
@@ -341,6 +373,8 @@ namespace ORS_ER
             string code = await Parser.ParseAsync(PaintItems, connections, cts.Token);
             Debug.WriteLine("Generated Code:");
             Debug.WriteLine(code);
+
+            ConsoleOutput.Text = "------Console Output------\n";
             try
             {
                 await Parser.EvaluateAsync(code, cts.Token);
@@ -349,6 +383,36 @@ namespace ORS_ER
             {
                 Console.WriteLine(ex.ToString());
             }
+
+            e.Handled = true;
+        }
+
+        private void New_Click(object sender, RoutedEventArgs e)
+        {
+            PaintItems.Clear();
+            connections.Clear();
+            _isConnecting = false;
+            _isConnectingId = "";
+            skiaElement.InvalidateVisual();
+            e.Handled = true;
+        }
+
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isConnecting)
+            {
+                var conn = connections.GetValueOrDefault(_isConnectingId);
+                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
+                connections.Remove(_isConnectingId);
+                _isConnecting = false;
+                _isConnectingId = "";
+                Debug.WriteLine("Cancelled Connection");
+                skiaElement.InvalidateVisual();
+            }
+
+            int returnCode = Creator.Save(PaintItems, connections);
+            Debug.WriteLine("Saved with code: " + returnCode);
+            e.Handled = true;
         }
     }
 }

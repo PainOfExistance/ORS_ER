@@ -7,7 +7,7 @@ namespace ORS_ER.connections
 {
     public class Connection
     {
-        private readonly string Id = Guid.NewGuid().ToString();
+        private string Id = Guid.NewGuid().ToString();
         public string fromId { get; set; }
         public string toId { get; set; }
         public string fromComponentId { get; set; }
@@ -43,10 +43,23 @@ namespace ORS_ER.connections
             var closest = new SKPoint(a.X + ab.X * t, a.Y + ab.Y * t);
             selected = (p - closest).Length <= tolerance;
         }
-
         public string GetId()
         {
             return Id;
+        }
+        public void SetId(string id)
+        {
+            Id = id;
+        }
+        public string ToJson()
+        {
+            return $"{{ \n" +
+                $"\"id\": \"{Id}\",\n" +
+                $"\"fromId\": \"{fromId}\",\n" +
+                $"\"toId\": \"{toId}\",\n" +
+                $"\"fromComponentId\": \"{fromComponentId}\",\n" +
+                $"\"toComponentId\": \"{toComponentId}\"\n" +
+                $"}}\n";
         }
     }
 }

@@ -61,12 +61,12 @@ namespace ORS_ER.components
                     var fullText = $"{nameText}: {valueText}";
 
                     var textWidth = font.MeasureText(fullText, Paints.TextPaint);
-                    while (textWidth > ((buttonRect.Left - Rect.Left)-5))
+                    while (textWidth > ((buttonRect.Left - Rect.Left) - 5))
                     {
                         font.Size--;
                         textWidth = font.MeasureText(fullText, Paints.TextPaint);
                     }
-                    textX = this.Rect.Left+5;
+                    textX = this.Rect.Left + 5;
                     textY = this.Rect.MidY + font.Size / 4;
 
                     canvas.DrawText(fullText, textX, textY, font, Paints.TextPaint);
@@ -148,5 +148,6 @@ namespace ORS_ER.components
         {
             this.Code = $"dynamic {this.Outputs.First().Value.name} = {this.Outputs.First().Value.value};\n";
         }
+
     }
 }

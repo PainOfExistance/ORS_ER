@@ -21,8 +21,8 @@
 
         <ToolBarPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <ToolBar>
-                <Button x:Name="File" Content="File"/>
-                <Button x:Name="New" Content="New"/>
+                <Button x:Name="New" Content="New" Click="New_Click"/>
+                <Button x:Name="Save" Content="Save as diagram" Click="Save_Click"/>
                 <Button x:Name="Load" Content="Load"/>
                 <Button x:Name="Help" Content="Help"/>
                 <Separator/>
@@ -61,10 +61,13 @@
                         MouseUp="SkiaElement_OnMouseUp"
                         MouseWheel="SkiaElement_OnMouseWheel"/>
 
-        <TextBlock x:Name="ConsoleOutput" Grid.Row="1" Grid.Column="2"
-                   Text="Output panel:"
-                   Margin="5"
-                   TextWrapping="Wrap"
-                   />
+        <TextBox x:Name="ConsoleOutput" Grid.Row="1" Grid.Column="2"
+                 Text="Output panel:"
+                 Margin="5"
+                 TextWrapping="Wrap"
+                 AcceptsReturn="True"
+                 IsReadOnly="True"
+                 VerticalScrollBarVisibility="Auto"
+                 />
     </Grid>
 </Window>

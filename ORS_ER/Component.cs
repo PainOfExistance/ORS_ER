@@ -10,7 +10,7 @@ namespace ORS_ER.components
 {
     abstract public class Component(string name, string description, string category)
     {
-        private readonly string Id = Guid.NewGuid().ToString();
+        private string Id = Guid.NewGuid().ToString();
         public string Name { get; set; } = name;
         public string Description { get; set; } = description;
         public string Category { get; set; } = category;
@@ -32,6 +32,10 @@ namespace ORS_ER.components
         public string GetId()
         {
             return Id;
+        }
+        public void SetId(string id)
+        {
+            Id = id;
         }
         abstract public void Paint(SKCanvas canvas);
         abstract public void CreateRect(int x, int y);
@@ -96,5 +100,33 @@ namespace ORS_ER.components
             return null;
         }
         abstract public void GenerateCode();
+        virtual public string ToJson()
+        {
+            string inputJsons = "\"inputs\": [";
+            foreach (var input in this.Inputs)
+            {
+                inputJsons += input.Value.ToJson();
+            }
+            inputJsons += "]";
+
+            string outputJsons = "\"outputs\": [";
+            foreach (var output in this.Outputs)
+            {
+                outputJsons += output.Value.ToJson();
+            }
+            outputJsons += "]";
+
+            return $"\"{this.Name}\": {{\n" +
+                $"\"id\": \"{this.GetId()}\",\n" +
+                $"\"x\": {this.Rect.MidX},\n" +
+                $"\"y\": {this.Rect.MidY},\n" +
+                $"\"code\": \"{this.Code}\",\n" +
+                $"\"description\": \"{this.Description}\",\n" +
+                $"\"category\": \"{this.Category}\",\n" +
+                $"{inputJsons},\n" +
+                $"{outputJsons}\n" +
+                $"}}\n";
+        }
     }
 }
+

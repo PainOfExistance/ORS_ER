@@ -77,8 +77,16 @@ namespace ORS_ER
                 .WithReferences(
                     typeof(object).Assembly,
                     typeof(Enumerable).Assembly,
-                    typeof(Console).Assembly)
-                .WithImports("System", "System.Linq", "System.Collections.Generic", "System.Text");
+                    typeof(Console).Assembly,
+                    typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly,
+                    typeof(System.Dynamic.DynamicObject).Assembly,
+                    typeof(Microsoft.CSharp.RuntimeBinder.Binder).Assembly)
+                .WithImports(
+                    "System",
+                    "System.Linq",
+                    "System.Collections.Generic",
+                    "System.Text",
+                    "System.Dynamic");
 
             return CSharpScript.RunAsync(code, options, globals: null, cancellationToken: cancellationToken);
         }

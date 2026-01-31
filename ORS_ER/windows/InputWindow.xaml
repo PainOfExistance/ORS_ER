@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ORS_ER.windows"
         mc:Ignorable="d"
-        Title="Input" Width="320" Height="140"
+        Title="Input" Width="500" Height="200"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
     <Grid Margin="12">
@@ -17,14 +17,14 @@
 
         <WrapPanel Grid.Row="0" Margin="0,0,0,8">
             <TextBlock Text="Name:" Width="40" VerticalAlignment="Center"/>
-            <TextBox x:Name="NameTextBox" Width="200" />
+            <TextBox x:Name="NameTextBox" Width="435" />
         </WrapPanel>
         <WrapPanel Grid.Row="1" Margin="0,0,0,12">
             <TextBlock Text="Value:" Width="40" VerticalAlignment="Center"/>
-            <TextBox x:Name="ValueTextBox" Width="200"  />
+            <TextBox x:Name="ValueTextBox" Width="435"  />
         </WrapPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="center">
             <Button Content="OK" Width="80" Margin="0,0,8,0" Click="Ok_Click"/>
             <Button Content="Reset" Width="80" Margin="0,0,8,0" Click="Clear_Click"/>
             <Button Content="Cancel" Width="80" Click="Cancel_Click"/>

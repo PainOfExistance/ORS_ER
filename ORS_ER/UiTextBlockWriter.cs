@@ -9,11 +9,11 @@ namespace ORS_ER;
 
 internal sealed class UiTextBlockWriter : TextWriter
 {
-    private readonly TextBlock _target;
+    private readonly TextBox _target;
     private readonly Dispatcher _dispatcher;
     private readonly int _maxChars;
 
-    public UiTextBlockWriter(TextBlock target, int maxChars = 50_000)
+    public UiTextBlockWriter(TextBox target, int maxChars = 50_000)
     {
         _target = target ?? throw new ArgumentNullException(nameof(target));
         _dispatcher = target.Dispatcher;
@@ -24,7 +24,7 @@ internal sealed class UiTextBlockWriter : TextWriter
 
     public override void Write(char value) => Append(value.ToString());
     public override void Write(string? value) { if (value is not null) Append(value); }
-    public override void WriteLine(string? value) => Append((value ?? string.Empty) + Environment.NewLine);
+    public override void WriteLine(string? value) => Append(Environment.NewLine + (value ?? string.Empty));
 
     private void Append(string text)
     {
