@@ -23,7 +23,7 @@
             <ToolBar>
                 <Button x:Name="New" Content="New" Click="New_Click"/>
                 <Button x:Name="Save" Content="Save as diagram" Click="Save_Click"/>
-                <Button x:Name="Load" Content="Load"/>
+                <Button x:Name="Load" Content="Load diagram" Click="Load_Click"/>
                 <Button x:Name="Help" Content="Help"/>
                 <Separator/>
                 <Button x:Name="Run" Content="Run" Click="Run_Click"/>

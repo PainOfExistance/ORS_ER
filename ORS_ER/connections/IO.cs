@@ -36,11 +36,9 @@ namespace ORS_ER.connections
                 $"\"id\": \"{Id}\",\n" +
                 $"\"name\": \"{name}\",\n" +
                 $"\"value\": \"{value}\",\n" +
-                $"\"x\": {node.X},\n" +
-                $"\"y\": {node.Y},\n" +
                 $"\"inputId\": \"{inputConnectionId}\",\n" +
                 $"\"outputId\": \"{outputConnectionId}\"\n" +
-                $"}},\n";
+                $"}}\n";
         }
     }
 }

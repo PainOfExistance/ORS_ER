@@ -107,20 +107,25 @@ namespace ORS_ER.components
             {
                 inputJsons += input.Value.ToJson();
             }
-            inputJsons += "]";
+            inputJsons = inputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
 
             string outputJsons = "\"outputs\": [";
             foreach (var output in this.Outputs)
             {
                 outputJsons += output.Value.ToJson();
             }
-            outputJsons += "]";
+            outputJsons = outputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
 
-            return $"\"{this.Name}\": {{\n" +
+            return $"{{\n" +
+                $"\"name\": \"{this.Name}\",\n" +
                 $"\"id\": \"{this.GetId()}\",\n" +
                 $"\"x\": {this.Rect.MidX},\n" +
                 $"\"y\": {this.Rect.MidY},\n" +
-                $"\"code\": \"{this.Code}\",\n" +
+                $"\"code\": \"{this.Code.TrimEnd(',', '\n').Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t")}\",\n" +
                 $"\"description\": \"{this.Description}\",\n" +
                 $"\"category\": \"{this.Category}\",\n" +
                 $"{inputJsons},\n" +

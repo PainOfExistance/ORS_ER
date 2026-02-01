@@ -97,6 +97,15 @@ namespace ORS_ER.components
             {
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
+
+            if (this.Outputs.First().Value.name != null && this.Outputs.First().Value.name != "")
+            {
+                this.buttonRect = new SKRect(
+                this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
+                this.Rect.Top + 5,
+                this.Rect.Right - 5,
+                this.Rect.Bottom - 5);
+            }
         }
 
         public override (float, float) OffsetRect(int x, int y)
@@ -143,11 +152,9 @@ namespace ORS_ER.components
             }
             return baseReturn;
         }
-
         public override void GenerateCode()
         {
             this.Code = $"dynamic {this.Outputs.First().Value.name} = {this.Outputs.First().Value.value};\n";
         }
-
     }
 }

@@ -410,9 +410,41 @@ namespace ORS_ER
                 skiaElement.InvalidateVisual();
             }
 
-            int returnCode = Creator.Save(PaintItems, connections);
-            Debug.WriteLine("Saved with code: " + returnCode);
+            Creator.Save(PaintItems, connections);
             e.Handled = true;
+        }
+
+        private void Load_Click(object sender, RoutedEventArgs e)
+        {
+            var items = Creator.Load();
+            if(items.Item1.Count == 0)
+            {
+                return;
+            }
+            PaintItems.Clear();
+            connections.Clear();
+            foreach (var item in items.Item1)
+            {
+                PaintItems.Add(item.Key, item.Value);
+            }
+            foreach (var conn in items.Item2)
+            {
+                connections.Add(conn.Key, conn.Value);
+            }
+            e.Handled = true;
+            skiaElement.InvalidateVisual();
         }
     }
 }
+/*
+•	Undo/Redo stack for add/move/connect/delete.
+•	Selection box + multi-select (Shift/Ctrl) and group move.
+•	Copy/Paste/Duplicate of components and subgraphs.
+•	Snap-to-grid + optional grid rendering in OnPaintSurface(object, SKPaintSurfaceEventArgs).
+•	Auto-layout (basic top-to-bottom or left-to-right).
+•	Connection validation (type compatibility, cycle prevention).
+•	Properties panel for selected component/connection.
+•	Zoom-to-fit and reset view actions.
+•	Export canvas to PNG/SVG.
+•	Inline error highlights on invalid connections or runtime errors.
+*/
