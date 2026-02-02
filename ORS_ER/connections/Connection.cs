@@ -21,7 +21,7 @@ namespace ORS_ER.connections
             this.toComponentId = toComponentId;
         }
 
-        public void HitTest(SKPoint p, SKPoint a, SKPoint b, float tolerance)
+        public bool HitTest(SKPoint p, SKPoint a, SKPoint b, float tolerance)
         {
             var minX = MathF.Min(a.X, b.X) - tolerance;
             var maxX = MathF.Max(a.X, b.X) + tolerance;
@@ -42,6 +42,7 @@ namespace ORS_ER.connections
 
             var closest = new SKPoint(a.X + ab.X * t, a.Y + ab.Y * t);
             selected = (p - closest).Length <= tolerance;
+            return selected;
         }
         public string GetId()
         {

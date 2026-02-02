@@ -147,11 +147,11 @@ namespace ORS_ER.components
                         this.Rect.Bottom - (int)this.Rect.Height / 4);
                     }
                 }
-                Debug.WriteLine("Button hit!");
                 return ("button", this, null);
             }
             return baseReturn;
         }
+        
         public override void GenerateCode()
         {
             this.Code = $"dynamic {this.Outputs.First().Value.name} = {this.Outputs.First().Value.value};\n";

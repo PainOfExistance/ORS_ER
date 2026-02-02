@@ -80,23 +80,24 @@ namespace ORS_ER.components
             foreach (var io in Inputs)
                 if (HitPoint(io.Value.node, world, hitRadius2))
                 {
-                    Debug.WriteLine("Hit Input");
+                    this.Selected = false;
                     return ("input", this, io.Value);
                 }
 
             foreach (var io in Outputs)
                 if (HitPoint(io.Value.node, world, hitRadius2))
                 {
-                    Debug.WriteLine("Hit Output");
+                    this.Selected = false;
                     return ("output", this, io.Value);
                 }
 
             if (Rect.Contains(world))
             {
-                Debug.WriteLine("Hit rect");
+                this.Selected = true;
                 return ("rect", this, null);
             }
 
+            this.Selected = false;
             return null;
         }
         abstract public void GenerateCode();

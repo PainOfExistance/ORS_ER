@@ -34,6 +34,8 @@ namespace ORS_ER
         {
             new Input("Input", "Any type input.", "Inputs"),
             new Print("Print", "Prints to console.", "Outputs"),
+            new BinaryInput("Binary Input", "Outputs binary value.", "Inputs"),
+            new BinaryPrint("Binary Print", "Prints binary value to console.", "Outputs"),
         };
 
         public Dictionary<string, Component> PaintItems { get; } = new()
@@ -72,6 +74,8 @@ namespace ORS_ER
 
         private void MainWindow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!_isConnecting)
+                return;
             var conn = connections.GetValueOrDefault(_isConnectingId);
             PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
             connections.Remove(_isConnectingId);
@@ -193,14 +197,12 @@ namespace ORS_ER
                             _isConnectingId = newConnection.GetId();
                             connections.Add(_isConnectingId, newConnection);
                             item.Outputs[tmp.Value.Item3.GetId()].outputConnectionId = _isConnectingId;
-                            Debug.WriteLine("Started Connection");
                         }
                         else
                         {
                             connections.Remove(_isConnectingId);
                             _isConnecting = false;
                             _isConnectingId = "";
-                            Debug.WriteLine("Cancelled Connection");
                         }
                         returnItem = tmp;
                     }
@@ -214,14 +216,12 @@ namespace ORS_ER
                             connections[_isConnectingId].selected = false;
                             _isConnecting = false;
                             _isConnectingId = "";
-                            Debug.WriteLine("Completed Connection");
                         }
                         else
                         {
                             connections.Remove(_isConnectingId);
                             _isConnecting = false;
                             _isConnectingId = "";
-                            Debug.WriteLine("Cancelled Connection");
                         }
                         returnItem = tmp;
                     }
@@ -234,7 +234,6 @@ namespace ORS_ER
                             connections.Remove(_isConnectingId);
                             _isConnecting = false;
                             _isConnectingId = "";
-                            Debug.WriteLine("Cancelled Connection");
                         }
                     }
                     else if (tmp.Value.Item1 == "button")
@@ -257,11 +256,30 @@ namespace ORS_ER
             var mouseWorld = ScreenToWorld(mouseScreen);
             (string, Component, IO)? hit = HitTest(mouseWorld);
 
-            Debug.WriteLine(hit);
+            foreach (var conn in connections)
+            {
+                if (conn.Value.toId == "" || (hit != null))
+                {
+                    conn.Value.selected = false;
+                    continue;
+                }
+                var fromNode = PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].node;
+                var toNode = PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].node;
+                var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
+                if (isSelected)
+                {
+                    skiaElement.InvalidateVisual();
+                    e.Handled = true;
+                    _isPanning = false;
+                    return;
+                }
+            }
+
             if (hit != null && hit.Value.Item1 == "rect")
             {
                 _isMoving = true;
                 LayersListView.SelectedItem = null;
+                skiaElement.InvalidateVisual();
                 e.Handled = true;
                 return;
             }
@@ -274,25 +292,14 @@ namespace ORS_ER
                 PaintItems.Add(newComponent.GetId(), newComponent);
                 LayersListView.SelectedItem = null;
                 skiaElement.InvalidateVisual();
+                e.Handled = true;
                 return;
             }
             else if (hit != null && hit.Value.Item1 == "button")
             {
+                skiaElement.InvalidateVisual();
                 e.Handled = true;
                 return;
-            }
-            else
-            {
-                foreach (var conn in connections)
-                {
-                    if (conn.Value.toId == "" || hit != null)
-                    {
-                        continue;
-                    }
-                    var fromNode = PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].node;
-                    var toNode = PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].node;
-                    conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
-                }
             }
 
             _isPanning = true;
@@ -302,6 +309,7 @@ namespace ORS_ER
             _panStartMouse = mouseScreen;
             _panStartOffset = _panOffset;
 
+            skiaElement.InvalidateVisual();
             e.Handled = true;
         }
 
@@ -317,6 +325,7 @@ namespace ORS_ER
 
                 var deltaScreen = mouse - _panStartMouse;
                 _panOffset = _panStartOffset + deltaScreen;
+                skiaElement.InvalidateVisual();
             }
             else if (_isMoving)
             {
@@ -328,9 +337,13 @@ namespace ORS_ER
                         item.Value.OffsetRect((int)_mouseWorld.X, (int)_mouseWorld.Y);
                     }
                 }
+                skiaElement.InvalidateVisual();
+            }
+            else if (_isConnecting)
+            {
+                skiaElement.InvalidateVisual();
             }
 
-            skiaElement.InvalidateVisual();
             e.Handled = true;
         }
 
@@ -384,6 +397,7 @@ namespace ORS_ER
                 Console.WriteLine(ex.ToString());
             }
 
+            skiaElement.InvalidateVisual();
             e.Handled = true;
         }
 
@@ -417,7 +431,7 @@ namespace ORS_ER
         private void Load_Click(object sender, RoutedEventArgs e)
         {
             var items = Creator.Load();
-            if(items.Item1.Count == 0)
+            if (items.Item1.Count == 0)
             {
                 return;
             }
@@ -437,13 +451,9 @@ namespace ORS_ER
     }
 }
 /*
-•	Undo/Redo stack for add/move/connect/delete.
 •	Selection box + multi-select (Shift/Ctrl) and group move.
 •	Copy/Paste/Duplicate of components and subgraphs.
-•	Snap-to-grid + optional grid rendering in OnPaintSurface(object, SKPaintSurfaceEventArgs).
-•	Auto-layout (basic top-to-bottom or left-to-right).
 •	Connection validation (type compatibility, cycle prevention).
-•	Properties panel for selected component/connection.
 •	Zoom-to-fit and reset view actions.
 •	Export canvas to PNG/SVG.
 •	Inline error highlights on invalid connections or runtime errors.

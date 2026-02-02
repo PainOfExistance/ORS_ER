@@ -5,7 +5,8 @@ namespace ORS_ER.components
     enum ComponentPaintScheme
     {
         Input,
-        Print
+        Print,
+        BinaryInput,
     }
 
     class ComponentPaints
@@ -20,6 +21,8 @@ namespace ORS_ER.components
         public SKPaint ButtonFill { get; }
         public SKPaint ButtonStroke { get; }
         public SKPaint ButtonTextPaint { get; }
+        public SKPaint ValueTrue { get; }
+        public SKPaint ValueFalse { get; }
 
         private ComponentPaints(
             SKColor fill,
@@ -108,6 +111,20 @@ namespace ORS_ER.components
                 IsAntialias = true,
                 TextSize = 14,
             };
+
+            ValueTrue = new SKPaint
+            {
+                Color = SKColors.Green,
+                IsAntialias = true,
+                TextSize = 14,
+            };
+
+            ValueFalse = new SKPaint
+            {
+                Color = SKColors.Red,
+                IsAntialias = true,
+                TextSize = 14,
+            };
         }
 
         public static ComponentPaints Create(ComponentPaintScheme scheme) => scheme switch
@@ -122,6 +139,12 @@ namespace ORS_ER.components
                 fill: SKColors.IndianRed,
                 stroke: SKColors.YellowGreen,
                 text: SKColors.LightCyan,
+                selected: SKColors.Red,
+                io: SKColors.Black),
+            ComponentPaintScheme.BinaryInput => new ComponentPaints(
+                fill: SKColors.DarkSlateBlue,
+                stroke: SKColors.MediumPurple,
+                text: SKColors.White,
                 selected: SKColors.Red,
                 io: SKColors.Black),
             _ => throw new ArgumentOutOfRangeException(nameof(scheme), scheme, null)
