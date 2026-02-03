@@ -8,9 +8,10 @@ using ORS_ER.connections;
 
 namespace ORS_ER.components
 {
-    abstract public class Component(string name, string description, string category)
+    abstract public class Component(string name, string description, string category, int runningIndex)
     {
         private string Id = Guid.NewGuid().ToString();
+        public int Index { get; set; } = runningIndex;
         public string Name { get; set; } = name;
         public string Description { get; set; } = description;
         public string Category { get; set; } = category;
@@ -21,12 +22,13 @@ namespace ORS_ER.components
         public SKRect Rect { get; set; }
         public SKFont font = new SKFont();
 
-        public Component(Component component) : this(component.Name, component.Description, component.Category)
+        public Component(Component component) : this(component.Name, component.Description, component.Category, component.Index)
         {
             this.Id = component.Id;
             this.Code = component.Code;
             this.Inputs = component.Inputs;
             this.Outputs = component.Outputs;
+            this.Index = component.Index;
         }
 
         public string GetId()
@@ -130,7 +132,8 @@ namespace ORS_ER.components
                 $"\"description\": \"{this.Description}\",\n" +
                 $"\"category\": \"{this.Category}\",\n" +
                 $"{inputJsons},\n" +
-                $"{outputJsons}\n" +
+                $"{outputJsons},\n" +
+                $"\"index\": \"{this.Index}\"\n" +
                 $"}}\n";
         }
     }

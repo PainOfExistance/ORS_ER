@@ -16,7 +16,7 @@ namespace ORS_ER.components
             Inputs.Add(newNode.GetId(), newNode);
         }
 
-        public BinaryPrint(string name, string description, string category) : base(name, description, category)
+        public BinaryPrint(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             IO newNode = new IO();
             Inputs.Add(newNode.GetId(), newNode);
@@ -72,6 +72,7 @@ namespace ORS_ER.components
                 Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
         }
+        
         public override (float, float) OffsetRect(int x, int y)
         {
             (float, float) dxdy = base.OffsetRect(x, y);
@@ -80,6 +81,7 @@ namespace ORS_ER.components
             this.valueRect = rect;
             return dxdy;
         }
+        
         public override void GenerateCode()
         {
             this.Code = $"Console.WriteLine(\"{this.Name}: \" +  {this.Inputs.First().Value.name});\n";

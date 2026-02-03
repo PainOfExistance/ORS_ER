@@ -11,22 +11,22 @@ namespace ORS_ER.components
 {
     class BinaryInput : Component
     {
-        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.BinaryInput);
+        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
         SKRect valueRect { get; set; }
         public BinaryInput(Component component) : base(component)
         {
             base.font = new SKFont();
             IO newNode = new IO();
-            newNode.name = component.Name;
+            newNode.name = this.Name.Replace(" ", "") + this.Index.ToString();
             newNode.value = false;
             Outputs.Add(newNode.GetId(), newNode);
         }
 
-        public BinaryInput(string name, string description, string category) : base(name, description, category)
+        public BinaryInput(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             base.font = new SKFont();
             IO newNode = new IO();
-            newNode.name = name;
+            newNode.name = name.Replace(" ", "") + runningIndex.ToString();
             newNode.value = false;
             Outputs.Add(newNode.GetId(), newNode);
         }

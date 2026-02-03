@@ -32,10 +32,11 @@ namespace ORS_ER
 
         public ObservableCollection<Component> Items { get; } = new()
         {
-            new Input("Input", "Any type input.", "Inputs"),
-            new Print("Print", "Prints to console.", "Outputs"),
-            new BinaryInput("Binary Input", "Outputs binary value.", "Inputs"),
-            new BinaryPrint("Binary Print", "Prints binary value to console.", "Outputs"),
+            new Input("Input", "Any type input.", "Inputs", 0),
+            new Print("Print", "Prints to console.", "Outputs", 0),
+            new BinaryInput("Binary Input", "Outputs binary value.", "Inputs", 0),
+            new BinaryPrint("Binary Print", "Prints binary value to console.", "Outputs", 0),
+            new Logic("Logic Block", "Performs logical operation.", "Logic", 0),
         };
 
         public Dictionary<string, Component> PaintItems { get; } = new()

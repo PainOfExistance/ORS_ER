@@ -16,7 +16,7 @@ namespace ORS_ER.components
             Inputs.Add(newNode.GetId(), newNode);
         }
 
-        public Print(string name, string description, string category) : base(name, description, category)
+        public Print(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             IO newNode = new IO();
             Inputs.Add(newNode.GetId(), newNode);
@@ -36,7 +36,11 @@ namespace ORS_ER.components
                 canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
             }
 
-            canvas.DrawText($"{this.Name} {this.Index}", this.Rect.MidX - (Paints.TextPaint.MeasureText(this.Name) / 2), this.Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
+            if (this.Inputs.Values.First().value == null)
+                canvas.DrawText($"{this.Name} {this.Index}", this.Rect.MidX - (Paints.TextPaint.MeasureText($"{this.Name} {this.Index}") / 2), this.Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
+            else
+                canvas.DrawText($"{this.Name} {this.Index}: {this.Inputs.First().Value.value}", this.Rect.Left + (Paints.TextPaint.MeasureText($"{this.Name} {this.Index}: {this.Inputs.First().Value.value}")/4), this.Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
+            //TODO make drawing dynamic based on input text length
         }
 
         public override void CreateRect(int x, int y)
@@ -53,40 +57,6 @@ namespace ORS_ER.components
         public override void GenerateCode()
         {
             this.Code = $"Console.WriteLine(\"{this.Name} {this.Index}: \" +  {this.Inputs.First().Value.name});\n";
-        }
-
-        public override string ToJson()
-        {
-            string inputJsons = "\"inputs\": [";
-            foreach (var input in this.Inputs)
-            {
-                inputJsons += input.Value.ToJson();
-            }
-            inputJsons = inputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
-
-            string outputJsons = "\"outputs\": [";
-            foreach (var output in this.Outputs)
-            {
-                outputJsons += output.Value.ToJson();
-            }
-            outputJsons = outputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
-
-            return $"{{\n" +
-                $"\"name\": \"{this.Name}\",\n" +
-                $"\"id\": \"{this.GetId()}\",\n" +
-                $"\"x\": {this.Rect.MidX},\n" +
-                $"\"y\": {this.Rect.MidY},\n" +
-                $"\"code\": \"{this.Code.TrimEnd(',', '\n').Replace("\\", "\\\\")
-                .Replace("\"", "\\\"")
-                .Replace("\r", "\\r")
-                .Replace("\n", "\\n")
-                .Replace("\t", "\\t")}\",\n" +
-                $"\"description\": \"{this.Description}\",\n" +
-                $"\"category\": \"{this.Category}\",\n" +
-                $"{inputJsons},\n" +
-                $"{outputJsons},\n" +
-                $"\"index\": \"{this.Index}\"\n" +
-                $"}}\n";
         }
     }
 }

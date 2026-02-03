@@ -25,8 +25,6 @@ namespace ORS_ER
 
             [JsonPropertyName("runningIndex")]
             public int RunningIndex { get; set; }
-            [JsonPropertyName("runningIndexInputs")]
-            public int RunningIndexInputs { get; set; }
         }
 
         internal sealed class ComponentData
@@ -99,7 +97,6 @@ namespace ORS_ER
         }
 
         private static int runningIndex = 1;
-        private static int runningIndexInputs = 1;
 
         public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections)
         {
@@ -115,8 +112,7 @@ namespace ORS_ER
                 saveData += connection.ToJson() + ",\n";
             }
             saveData = saveData.TrimEnd(',', '\n') + "\n]," +
-                $"\"runningIndex\": {runningIndex}," +
-                $"\"runningIndexInputs\": {runningIndexInputs}\n}}";
+                $"\"runningIndex\": {runningIndex}\n}}";
 
             try
             {
@@ -168,7 +164,6 @@ namespace ORS_ER
                 Dictionary<string, Connection> connections = new Dictionary<string, Connection>();
 
                 runningIndex = rawData.RunningIndex;
-                runningIndexInputs = rawData.RunningIndexInputs;
                 foreach (var component in rawData.Components)
                 {
                     Component newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
@@ -235,6 +230,8 @@ namespace ORS_ER
                     return createBinaryInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Print":
                     return createBinaryOutput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "Logic Block":
+                    return createLogic(Name, Description, Category, mouseWorldX, mouseWorldY);
                 default:
                     throw new ArgumentException("Invalid component type");
             }
@@ -242,7 +239,7 @@ namespace ORS_ER
 
         public static Component createInput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Input input = new Input(Name, Description, Category);
+            Input input = new Input(Name, Description, Category, runningIndex);
             input.Selected = true;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -250,7 +247,7 @@ namespace ORS_ER
 
         private static Component createPrint(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Print input = new Print(Name, Description, Category);
+            Print input = new Print(Name, Description, Category, runningIndex);
             input.Selected = true;
             input.Index = runningIndex;
             runningIndex++;
@@ -260,17 +257,29 @@ namespace ORS_ER
 
         private static Component createBinaryInput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            BinaryInput input = new BinaryInput(Name.Replace(" ", "") + "_" + runningIndexInputs, Description, Category);
+            BinaryInput input = new BinaryInput(Name, Description, Category, runningIndex);
             input.Selected = true;
-            runningIndexInputs++;
+            input.Index = runningIndex;
+            runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }
 
         private static Component createBinaryOutput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            BinaryPrint input = new BinaryPrint(Name.Replace(" ", "") + "_" + runningIndex, Description, Category);
+            BinaryPrint input = new BinaryPrint(Name, Description, Category, runningIndex);
             input.Selected = true;
+            input.Index = runningIndex;
+            runningIndex++;
+            input.CreateRect(mouseWorldX, mouseWorldY);
+            return input;
+        }
+
+        private static Component createLogic(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        {
+            Logic input = new Logic(Name, Description, Category, runningIndex);
+            input.Selected = true;
+            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;

@@ -17,7 +17,7 @@ namespace ORS_ER.components
             Outputs.Add(newNode.GetId(), newNode);
         }
 
-        public Input(string name, string description, string category) : base(name, description, category)
+        public Input(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             base.font = new SKFont();
             IO newNode = new IO();
