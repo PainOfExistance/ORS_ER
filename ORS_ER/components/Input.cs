@@ -3,17 +3,26 @@ using ORS_ER.windows;
 using SkiaSharp;
 using System.Diagnostics;
 using System.Windows.Input;
+using System.Xml.Linq;
 
 namespace ORS_ER.components
 {
     class Input : Component
     {
-        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
+        private static ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
         SKRect buttonRect { get; set; }
         public Input(Component component) : base(component)
         {
             base.font = new SKFont();
             IO newNode = new IO();
+            if (component.Name.Contains("String"))
+            {
+                newNode.value = "";
+            }
+            else
+            {
+                newNode.value = 0.0;
+            }
             Outputs.Add(newNode.GetId(), newNode);
         }
 
@@ -21,6 +30,18 @@ namespace ORS_ER.components
         {
             base.font = new SKFont();
             IO newNode = new IO();
+            if (name.Contains("String"))
+            {
+                newNode.value = "";
+            }
+            else if (name.Contains("Binary"))
+            {
+                newNode.value = false;
+            }
+            else
+            {
+                newNode.value = 0;
+            }
             Outputs.Add(newNode.GetId(), newNode);
         }
 
@@ -54,32 +75,53 @@ namespace ORS_ER.components
             {
                 float textX = 0;
                 float textY = 0;
-                foreach (var output in this.Outputs)
+                var output = this.Outputs.First();
+                var nameText = output.Value.name?.ToString() ?? "null";
+                var valueText = output.Value.value?.ToString() ?? "null";
+                if (output.Value.value is bool)
                 {
-                    var nameText = output.Value.name?.ToString() ?? "null";
-                    var valueText = output.Value.value?.ToString() ?? "null";
-                    var fullText = $"{nameText}: {valueText}";
-
-                    var textWidth = font.MeasureText(fullText, Paints.TextPaint);
-                    while (textWidth > ((buttonRect.Left - Rect.Left) - 5))
-                    {
-                        font.Size--;
-                        textWidth = font.MeasureText(fullText, Paints.TextPaint);
-                    }
-                    textX = this.Rect.Left + 5;
-                    textY = this.Rect.MidY + font.Size / 4;
-
-                    canvas.DrawText(fullText, textX, textY, font, Paints.TextPaint);
+                    valueText = valueText.ToLower();
                 }
+                var fullText = $"{nameText}: {valueText}";
+
+                var textWidth = font.MeasureText(fullText, Paints.TextPaint);
+                while (textWidth > ((buttonRect.Left - Rect.Left) - 5))
+                {
+                    font.Size--;
+                    textWidth = font.MeasureText(fullText, Paints.TextPaint);
+                }
+                textX = this.Rect.Left + 5;
+                textY = this.Rect.MidY + font.Size / 4;
+
+                canvas.DrawText(fullText, textX, textY, font, Paints.TextPaint);
                 font.Size = 20;
                 canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
                 canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
 
-                const string label = "+";
+                string label = "+";
                 textX = buttonRect.MidX - (font.MeasureText(label) / 2);
                 textY = buttonRect.MidY + font.Size / 4;
                 canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
             }
+
+            string lab = "";
+            if (this.Name.Contains("String"))
+            {
+                lab = "STR";
+            }
+            else if (this.Name.Contains("Binary"))
+            {
+                lab = "BIN";
+            }
+            else
+            {
+                lab = "NUM";
+            }
+
+            font.Size = 12;
+            var textXX = this.Rect.Left + (font.MeasureText(lab, Paints.TextPaint) / 5);
+            var textYY = this.Rect.Top + font.Size;
+            canvas.DrawText(lab, textXX, textYY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)
@@ -122,36 +164,34 @@ namespace ORS_ER.components
             (string, Component, IO?)? baseReturn = base.HitTest(world);
             if (this.buttonRect.Contains(world))
             {
-                var dlg = new InputWindow(Outputs.First().Value.name, Outputs.First().Value.value);
+                var dlg = new InputWindow(this.Name, Outputs.First().Value.name, Outputs.First().Value.value);
 
                 if (dlg.ShowDialog() == true)
                 {
-                    if ((dlg.ResultName != "" && dlg.ResultName != null))
-                    {
-                        Outputs.First().Value.name = dlg.ResultName;
-                        Outputs.First().Value.value = dlg.ResultValue;
-                        this.buttonRect = new SKRect(
-                        this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
-                        this.Rect.Top + 5,
-                        this.Rect.Right - 5,
-                        this.Rect.Bottom - 5);
-                    }
-                    else
-                    {
-                        Outputs.First().Value.name = null;
-                        Outputs.First().Value.value = null;
-                        this.buttonRect = new SKRect(
-                        this.Rect.Left + (int)this.Rect.Width / 4,
-                        this.Rect.Top + (int)this.Rect.Height / 4,
-                        this.Rect.Right - (int)this.Rect.Width / 4,
-                        this.Rect.Bottom - (int)this.Rect.Height / 4);
-                    }
+                    Outputs.First().Value.name = dlg.ResultName;
+                    Outputs.First().Value.value = dlg.ResultValue;
+                    this.buttonRect = new SKRect(
+                    this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
+                    this.Rect.Top + 5,
+                    this.Rect.Right - 5,
+                    this.Rect.Bottom - 5);
                 }
+                else
+                {
+                    Outputs.First().Value.name = null;
+                    Outputs.First().Value.value = null;
+                    this.buttonRect = new SKRect(
+                    this.Rect.Left + (int)this.Rect.Width / 4,
+                    this.Rect.Top + (int)this.Rect.Height / 4,
+                    this.Rect.Right - (int)this.Rect.Width / 4,
+                    this.Rect.Bottom - (int)this.Rect.Height / 4);
+                }
+
                 return ("button", this, null);
             }
             return baseReturn;
         }
-        
+
         public override void GenerateCode()
         {
             this.Code = $"dynamic {this.Outputs.First().Value.name} = {this.Outputs.First().Value.value};\n";

@@ -222,12 +222,14 @@ namespace ORS_ER
         {
             switch (Name)
             {
-                case "Input":
+                case "String Input":
+                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "Numerical Input":
                     return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Print":
                     return createPrint(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Input":
-                    return createBinaryInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Print":
                     return createBinaryOutput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Logic Block":
@@ -248,16 +250,6 @@ namespace ORS_ER
         private static Component createPrint(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
             Print input = new Print(Name, Description, Category, runningIndex);
-            input.Selected = true;
-            input.Index = runningIndex;
-            runningIndex++;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
-        }
-
-        private static Component createBinaryInput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
-        {
-            BinaryInput input = new BinaryInput(Name, Description, Category, runningIndex);
             input.Selected = true;
             input.Index = runningIndex;
             runningIndex++;

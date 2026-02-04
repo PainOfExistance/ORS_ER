@@ -26,8 +26,8 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="center">
             <Button Content="OK" Width="80" Margin="0,0,8,0" Click="Ok_Click"/>
-            <Button Content="Reset" Width="80" Margin="0,0,8,0" Click="Clear_Click"/>
             <Button Content="Cancel" Width="80" Click="Cancel_Click"/>
+            <Button Content="Clear and close" Width="100" Margin="8, 0, 0,0" Click="Button_Click"/>
         </StackPanel>
     </Grid>
 </Window>

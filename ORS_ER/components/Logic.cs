@@ -1,4 +1,5 @@
 ﻿using ORS_ER.connections;
+using ORS_ER.windows;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace ORS_ER.components
     {
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Logic);
         int Index = 0;
-        string operation = ">";
+        string operation = "==";
         SKRect buttonRect { get; set; }
         public Logic(Component component) : base(component)
         {
@@ -101,6 +102,22 @@ namespace ORS_ER.components
         public override void GenerateCode()
         {
             this.Code = $"dynamic {this.Outputs.First().Value.name} = {this.Inputs.Values.First().name} {this.operation} {this.Inputs.Values.Last().name};\n";
+        }
+
+        public override (string, Component, IO?)? HitTest(SKPoint world)
+        {
+            (string, Component, IO?)? baseReturn = base.HitTest(world);
+            if (this.buttonRect.Contains(world))
+            {
+                var dlg = new LogicWindow(operation);
+
+                if (dlg.ShowDialog() == true)
+                {
+                    this.operation = dlg.op;
+                }
+                return ("button", this, null);
+            }
+            return baseReturn;
         }
 
         public override string ToJson()
