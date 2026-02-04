@@ -1,9 +1,5 @@
 ﻿using ORS_ER.connections;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 
 namespace ORS_ER.components
 {
@@ -14,12 +10,14 @@ namespace ORS_ER.components
         public BinaryPrint(Component component) : base(component)
         {
             IO newNode = new IO();
+            newNode.value = false;
             Inputs.Add(newNode.GetId(), newNode);
         }
 
         public BinaryPrint(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             IO newNode = new IO();
+            newNode.value = false;
             Inputs.Add(newNode.GetId(), newNode);
         }
 
@@ -33,13 +31,14 @@ namespace ORS_ER.components
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
-            foreach (var input in this.Inputs)
+            foreach (var input in Inputs)
             {
                 canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
             }
 
+            var inputNode = Inputs.Values.First();
             string label;
-            if (this.Inputs.First().Value.value == null || (bool)this.Inputs.First().Value.value == false)
+            if (inputNode.value == null || (bool)inputNode.value == false)
             {
                 canvas.DrawRoundRect(valueRect, 6, 6, Paints.ValueFalse);
                 canvas.DrawRoundRect(valueRect, 6, 6, Paints.ButtonStroke);
@@ -85,7 +84,8 @@ namespace ORS_ER.components
         
         public override void GenerateCode()
         {
-            this.Code = $"Console.WriteLine(\"{this.Name}: \" +  {this.Inputs.First().Value.name});\n";
+            var inputNode = Inputs.Values.First();
+            this.Code = $"Console.WriteLine(\"{Name}: \" +  {inputNode.name});\n";
         }
 
     }

@@ -6,7 +6,8 @@ namespace ORS_ER.components
     {
         Input,
         Print,
-        Logic
+        Logic,
+        Gate
     }
 
     class ComponentPaints
@@ -146,9 +147,13 @@ namespace ORS_ER.components
                 stroke: SKColors.CadetBlue,
                 text: SKColors.WhiteSmoke,
                 selected: SKColors.Red,
-                io: SKColors.Black
-                ),
-
+                io: SKColors.Black),
+            ComponentPaintScheme.Gate => new ComponentPaints(
+                fill: SKColors.Teal,
+                stroke: SKColors.CadetBlue,
+                text: SKColors.WhiteSmoke,
+                selected: SKColors.Red,
+                io: SKColors.Black),
             _ => throw new ArgumentOutOfRangeException(nameof(scheme), scheme, null)
         };
     }

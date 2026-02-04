@@ -1,9 +1,6 @@
 ﻿using ORS_ER.connections;
 using ORS_ER.windows;
 using SkiaSharp;
-using System.Diagnostics;
-using System.Windows.Input;
-using System.Xml.Linq;
 
 namespace ORS_ER.components
 {
@@ -55,12 +52,13 @@ namespace ORS_ER.components
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
-            foreach (var output in this.Outputs)
+            foreach (var output in Outputs)
             {
                 canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
             }
 
-            if (this.Outputs.First().Value.name == null || this.Outputs.First().Value.name == "")
+            var outputNode = Outputs.Values.First();
+            if (string.IsNullOrEmpty(outputNode.name))
             {
                 canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
                 canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
@@ -75,10 +73,9 @@ namespace ORS_ER.components
             {
                 float textX = 0;
                 float textY = 0;
-                var output = this.Outputs.First();
-                var nameText = output.Value.name?.ToString() ?? "null";
-                var valueText = output.Value.value?.ToString() ?? "null";
-                if (output.Value.value is bool)
+                var nameText = outputNode.name?.ToString() ?? "null";
+                var valueText = outputNode.value?.ToString() ?? "null";
+                if (outputNode.value is bool)
                 {
                     valueText = valueText.ToLower();
                 }
@@ -140,7 +137,7 @@ namespace ORS_ER.components
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
 
-            if (this.Outputs.First().Value.name != null && this.Outputs.First().Value.name != "")
+            if (!string.IsNullOrEmpty(Outputs.Values.First().name))
             {
                 this.buttonRect = new SKRect(
                 this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
@@ -164,12 +161,13 @@ namespace ORS_ER.components
             (string, Component, IO?)? baseReturn = base.HitTest(world);
             if (this.buttonRect.Contains(world))
             {
-                var dlg = new InputWindow(this.Name, Outputs.First().Value.name, Outputs.First().Value.value);
+                var outputNode = Outputs.Values.First();
+                var dlg = new InputWindow(Name, outputNode.name, outputNode.value);
 
                 if (dlg.ShowDialog() == true)
                 {
-                    Outputs.First().Value.name = dlg.ResultName;
-                    Outputs.First().Value.value = dlg.ResultValue;
+                    outputNode.name = dlg.ResultName;
+                    outputNode.value = dlg.ResultValue;
                     this.buttonRect = new SKRect(
                     this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
                     this.Rect.Top + 5,
@@ -178,8 +176,8 @@ namespace ORS_ER.components
                 }
                 else
                 {
-                    Outputs.First().Value.name = null;
-                    Outputs.First().Value.value = null;
+                    outputNode.name = null;
+                    outputNode.value = null;
                     this.buttonRect = new SKRect(
                     this.Rect.Left + (int)this.Rect.Width / 4,
                     this.Rect.Top + (int)this.Rect.Height / 4,
@@ -194,7 +192,15 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
-            this.Code = $"dynamic {this.Outputs.First().Value.name} = {this.Outputs.First().Value.value};\n";
+            var outputNode = Outputs.Values.First();
+            if (this.Name.Contains("Binary"))
+            {
+                this.Code = $"dynamic {outputNode.name} = {outputNode.value.ToString().ToLower()};\n";
+            }
+            else
+            {
+                this.Code = $"dynamic {outputNode.name} = {outputNode.value};\n";
+            }
         }
     }
 }

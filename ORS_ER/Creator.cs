@@ -8,8 +8,6 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Windows.Controls.Primitives;
-using System.Xml.Linq;
 
 namespace ORS_ER
 {
@@ -100,19 +98,36 @@ namespace ORS_ER
 
         public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections)
         {
-            string saveData = "{\n\"components\": [\n";
+            static void TrimTrailing(StringBuilder builder)
+            {
+                while (builder.Length > 0)
+                {
+                    var ch = builder[^1];
+                    if (ch != ',' && ch != '\n')
+                        break;
+
+                    builder.Length--;
+                }
+            }
+
+            var saveBuilder = new StringBuilder();
+            saveBuilder.Append("{\n\"components\": [\n");
             foreach (var component in components.Values)
             {
-                saveData += component.ToJson() + ",\n";
+                saveBuilder.Append(component.ToJson()).Append(",\n");
             }
-            saveData = saveData.TrimEnd(',', '\n') + "\n],\n\"connections\": [\n";
+            TrimTrailing(saveBuilder);
+            saveBuilder.Append("\n],\n\"connections\": [\n");
 
             foreach (var connection in connections.Values)
             {
-                saveData += connection.ToJson() + ",\n";
+                saveBuilder.Append(connection.ToJson()).Append(",\n");
             }
-            saveData = saveData.TrimEnd(',', '\n') + "\n]," +
-                $"\"runningIndex\": {runningIndex}\n}}";
+            TrimTrailing(saveBuilder);
+            saveBuilder.Append("\n],");
+            saveBuilder.Append($"\"runningIndex\": {runningIndex}\n}}");
+
+            string saveData = saveBuilder.ToString();
 
             try
             {

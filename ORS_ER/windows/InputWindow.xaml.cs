@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Xml.Linq;
-using System;
-using System.Collections.Generic;
+﻿using System.Windows;
 using System.CodeDom.Compiler;
 
 namespace ORS_ER.windows
@@ -22,14 +8,14 @@ namespace ORS_ER.windows
     /// </summary>
     public partial class InputWindow : Window
     {
-        string inputName { get; set; }
+        private readonly string _inputName;
         public string? ResultName { get; private set; }
         public dynamic? ResultValue { get; private set; }
 
         public InputWindow(string inputName, string name, dynamic value)
         {
             InitializeComponent();
-            this.inputName = inputName;
+            _inputName = inputName;
             NameTextBox.Text = name;
             if (value is bool)
             {
@@ -57,11 +43,11 @@ namespace ORS_ER.windows
             }
 
             ResultName = candidateName;
-            if (this.inputName.Contains("String"))
+            if (_inputName.Contains("String"))
             {
                 ResultValue = "\"" + ValueTextBox.Text.Replace("\"", "") + "\"";
             }
-            else if (this.inputName.Contains("Binary"))
+            else if (_inputName.Contains("Binary"))
             {
                 bool val = false;
                 success = bool.TryParse(ValueTextBox.Text, out val);

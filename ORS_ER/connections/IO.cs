@@ -1,8 +1,5 @@
-﻿using ORS_ER.components;
-using SkiaSharp;
+﻿using SkiaSharp;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ORS_ER.connections
 {

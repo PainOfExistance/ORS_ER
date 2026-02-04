@@ -8,11 +8,8 @@ using ORS_ER.components;
 using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
-using System.Linq;
 using System.IO;
-using System.Text;
 using System.Threading;
-using Microsoft.CSharp;
 
 namespace ORS_ER
 {
@@ -34,7 +31,7 @@ namespace ORS_ER
         {
             new Input("String Input", "String input.", "Inputs", 0),
             new Input("Numerical Input", "Numerical input.", "Inputs", 0),
-            new Input("Binary Input", "Outputs binary value.", "Inputs", 0),
+            new Input("Binary Input", "Binary input.", "Inputs", 0),
             new Print("Print", "Prints to console.", "Outputs", 0),
             new BinaryPrint("Binary Print", "Prints binary value to console.", "Outputs", 0),
             new Logic("Logic Block", "Performs logical operation.", "Logic", 0),
@@ -210,7 +207,8 @@ namespace ORS_ER
                     }
                     else if (tmp.Value.Item1 == "input")
                     {
-                        if (_isConnecting && tmp.Value.Item3.inputConnectionId == "" && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId())
+                        if (_isConnecting && tmp.Value.Item3.inputConnectionId == "" && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId()) 
+                            //&& (PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].value.GetType() == tmp.Value.Item3.value.GetType()))
                         {
                             connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
                             connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();

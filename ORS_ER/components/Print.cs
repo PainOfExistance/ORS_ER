@@ -1,8 +1,5 @@
 ﻿using ORS_ER.connections;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ORS_ER.components
 {
@@ -31,15 +28,17 @@ namespace ORS_ER.components
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
-            foreach (var input in this.Inputs)
+            foreach (var input in Inputs)
             {
                 canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
             }
 
-            if (this.Inputs.Values.First().value == null)
-                canvas.DrawText($"{this.Name} {this.Index}", this.Rect.MidX - (Paints.TextPaint.MeasureText($"{this.Name} {this.Index}") / 2), this.Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
+            var inputNode = Inputs.Values.First();
+            var label = $"{Name} {Index}";
+            if (inputNode.value == null)
+                canvas.DrawText(label, Rect.MidX - (Paints.TextPaint.MeasureText(label) / 2), Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
             else
-                canvas.DrawText($"{this.Name} {this.Index}: {this.Inputs.First().Value.value}", this.Rect.Left + (Paints.TextPaint.MeasureText($"{this.Name} {this.Index}: {this.Inputs.First().Value.value}")/4), this.Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
+                canvas.DrawText($"{label}: {inputNode.value}", Rect.Left + (Paints.TextPaint.MeasureText($"{label}: {inputNode.value}") / 4), Rect.MidY + (Paints.TextPaint.TextSize / 2), Paints.TextPaint);
             //TODO make drawing dynamic based on input text length
         }
 
@@ -56,7 +55,8 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
-            this.Code = $"Console.WriteLine(\"{this.Name} {this.Index}: \" +  {this.Inputs.First().Value.name});\n";
+            var inputNode = Inputs.Values.First();
+            this.Code = $"Console.WriteLine(\"{Name} {Index}: \" +  {inputNode.name});\n";
         }
     }
 }

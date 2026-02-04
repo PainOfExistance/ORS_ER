@@ -4,12 +4,10 @@ using ORS_ER.components;
 using ORS_ER.connections;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System .Reflection.Emit;
 
 namespace ORS_ER
 {
@@ -34,17 +32,18 @@ namespace ORS_ER
             sb.AppendLine("using System.Text;");
             sb.AppendLine();
 
-            List<Component> startNodes = PaintItems
-                .Where(kv => kv.Value.Inputs.Count == 0)
-                .Select(kv => kv.Value)
-                .ToList();
+            var startNodes = new Queue<Component>(
+                PaintItems
+                    .Where(kv => kv.Value.Inputs.Count == 0)
+                    .Select(kv => kv.Value));
+            var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
 
             while (startNodes.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var currentNode = startNodes[0];
-                startNodes.RemoveAt(0);
+                var currentNode = startNodes.Dequeue();
+                queuedNodes.Remove(currentNode.GetId());
 
                 currentNode.GenerateCode();
                 sb.AppendLine(currentNode.Code);
@@ -60,10 +59,8 @@ namespace ORS_ER
                     nextNode.Inputs[conn.toId].name = currentNode.Outputs[conn.fromId].name;
                     nextNode.Inputs[conn.toId].value = currentNode.Outputs[conn.fromId].value;
 
-                    if (!startNodes.Contains(nextNode))
-                    {
-                        startNodes.Add(nextNode);
-                    }
+                    if (queuedNodes.Add(nextNode.GetId()))
+                        startNodes.Enqueue(nextNode);
 
                 }
             }

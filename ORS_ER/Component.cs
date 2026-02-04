@@ -1,8 +1,6 @@
 ﻿using SkiaSharp;
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using ORS_ER.connections;
 
@@ -105,35 +103,37 @@ namespace ORS_ER.components
         abstract public void GenerateCode();
         virtual public string ToJson()
         {
-            string inputJsons = "\"inputs\": [";
-            foreach (var input in this.Inputs)
+            var inputBuilder = new StringBuilder("\"inputs\": [");
+            foreach (var input in Inputs)
             {
-                inputJsons += input.Value.ToJson();
+                inputBuilder.Append(input.Value.ToJson());
             }
-            inputJsons = inputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
+            inputBuilder.Append(']');
+            var inputJsons = inputBuilder.ToString().TrimEnd(',', '\n', '\r', '\t', ' ');
 
-            string outputJsons = "\"outputs\": [";
-            foreach (var output in this.Outputs)
+            var outputBuilder = new StringBuilder("\"outputs\": [");
+            foreach (var output in Outputs)
             {
-                outputJsons += output.Value.ToJson();
+                outputBuilder.Append(output.Value.ToJson());
             }
-            outputJsons = outputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
+            outputBuilder.Append(']');
+            var outputJsons = outputBuilder.ToString().TrimEnd(',', '\n', '\r', '\t', ' ');
 
             return $"{{\n" +
-                $"\"name\": \"{this.Name}\",\n" +
-                $"\"id\": \"{this.GetId()}\",\n" +
-                $"\"x\": {this.Rect.MidX},\n" +
-                $"\"y\": {this.Rect.MidY},\n" +
-                $"\"code\": \"{this.Code.TrimEnd(',', '\n').Replace("\\", "\\\\")
+                $"\"name\": \"{Name}\",\n" +
+                $"\"id\": \"{GetId()}\",\n" +
+                $"\"x\": {Rect.MidX},\n" +
+                $"\"y\": {Rect.MidY},\n" +
+                $"\"code\": \"{Code.TrimEnd(',', '\n').Replace("\\", "\\\\")
                 .Replace("\"", "\\\"")
                 .Replace("\r", "\\r")
                 .Replace("\n", "\\n")
                 .Replace("\t", "\\t")}\",\n" +
-                $"\"description\": \"{this.Description}\",\n" +
-                $"\"category\": \"{this.Category}\",\n" +
+                $"\"description\": \"{Description}\",\n" +
+                $"\"category\": \"{Category}\",\n" +
                 $"{inputJsons},\n" +
                 $"{outputJsons},\n" +
-                $"\"index\": \"{this.Index}\"\n" +
+                $"\"index\": \"{Index}\"\n" +
                 $"}}\n";
         }
     }

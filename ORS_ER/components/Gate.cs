@@ -1,15 +1,19 @@
 ﻿using ORS_ER.connections;
 using ORS_ER.windows;
 using SkiaSharp;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Windows;
 
 namespace ORS_ER.components
 {
-    class Logic : Component
+    class Gate : Component
     {
-        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Logic);
+        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Gate);
         string operation = "==";
         SKRect buttonRect { get; set; }
-        public Logic(Component component) : base(component)
+        public Gate(Component component) : base(component)
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
@@ -20,7 +24,7 @@ namespace ORS_ER.components
             Outputs.Add(newNode3.GetId(), newNode3);
         }
 
-        public Logic(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public Gate(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
