@@ -207,8 +207,7 @@ namespace ORS_ER
                     }
                     else if (tmp.Value.Item1 == "input")
                     {
-                        if (_isConnecting && tmp.Value.Item3.inputConnectionId == "" && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId()) 
-                            //&& (PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].value.GetType() == tmp.Value.Item3.value.GetType()))
+                        if (_isConnecting && tmp.Value.Item3.inputConnectionId == "" && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId() && (PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].value.GetType() == tmp.Value.Item3.value.GetType()))
                         {
                             connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
                             connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();

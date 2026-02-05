@@ -1,6 +1,7 @@
 ﻿using ORS_ER.connections;
 using ORS_ER.windows;
 using SkiaSharp;
+using System.Xml.Linq;
 
 namespace ORS_ER.components
 {
@@ -12,9 +13,13 @@ namespace ORS_ER.components
         {
             base.font = new SKFont();
             IO newNode = new IO();
-            if (component.Name.Contains("String"))
+            if (this.Name.Contains("String"))
             {
                 newNode.value = "";
+            }
+            else if (this.Name.Contains("Binary"))
+            {
+                newNode.value = false;
             }
             else
             {
@@ -37,7 +42,7 @@ namespace ORS_ER.components
             }
             else
             {
-                newNode.value = 0;
+                newNode.value = 0.0;
             }
             Outputs.Add(newNode.GetId(), newNode);
         }
