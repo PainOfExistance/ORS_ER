@@ -35,6 +35,8 @@ namespace ORS_ER
             new Print("Print", "Prints to console.", "Outputs", 0),
             new BinaryPrint("Binary Print", "Prints binary value to console.", "Outputs", 0),
             new Logic("Logic Block", "Performs logical operation.", "Logic", 0),
+            new Gate("Logic Gate Block", "Performs bool operation.", "Logic", 0),
+            new Operator("Operator Block", "Performs numerical operations.", "Logic", 0),
         };
 
         public Dictionary<string, Component> PaintItems { get; } = new()
@@ -207,21 +209,49 @@ namespace ORS_ER
                     }
                     else if (tmp.Value.Item1 == "input")
                     {
-                        if (_isConnecting && tmp.Value.Item3.inputConnectionId == "" && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId() && (PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].value.GetType() == tmp.Value.Item3.value.GetType()))
+                        try
                         {
-                            connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
-                            connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
-                            item.Inputs[tmp.Value.Item3.GetId()].inputConnectionId = _isConnectingId;
-                            connections[_isConnectingId].selected = false;
-                            _isConnecting = false;
-                            _isConnectingId = "";
+
+                            var fromValue = PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].value;
+                            var toValue = tmp.Value.Item3.value;
+
+                            bool isFromValueNull = fromValue == null;
+                            bool isToValueNull = toValue == null;
+                            Debug.WriteLine(isFromValueNull);
+                            Debug.WriteLine(isToValueNull);
+
+                            if (toValue == null)
+                            {
+                                toValue = fromValue;
+                            }
+
+                            if (_isConnecting
+                                && tmp.Value.Item3.inputConnectionId == ""
+                                && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId()
+                                && fromValue is not null
+                                && toValue is not null
+                                && fromValue.GetType() == toValue.GetType())
+                            {
+                                connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
+                                connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
+                                item.Inputs[tmp.Value.Item3.GetId()].inputConnectionId = _isConnectingId;
+                                connections[_isConnectingId].selected = false;
+                                _isConnecting = false;
+                                _isConnectingId = "";
+                            }
+                            else
+                            {
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionId = "";
+                                connections.Remove(_isConnectingId);
+                                _isConnecting = false;
+                                _isConnectingId = "";
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            connections.Remove(_isConnectingId);
-                            _isConnecting = false;
-                            _isConnectingId = "";
+                            Debug.WriteLine("Error during connection: " + ex.Message);
                         }
+
                         returnItem = tmp;
                     }
                     else if (tmp.Value.Item1 == "rect")

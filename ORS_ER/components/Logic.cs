@@ -7,14 +7,16 @@ namespace ORS_ER.components
     class Logic : Component
     {
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Logic);
-        string operation = "==";
+        public string operation = "==";
         SKRect buttonRect { get; set; }
         public Logic(Component component) : base(component)
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
-            newNode3.name = $"{this.Name}{this.Index}";
+            newNode1.value = 0.0;
+            newNode2.value = 0.0;
+            newNode3.value = false;
             Inputs.Add(newNode1.GetId(), newNode1);
             Inputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
@@ -25,7 +27,9 @@ namespace ORS_ER.components
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
-            newNode3.name = $"{this.Name}{this.Index}".Replace(" ", "");
+            newNode1.value = 0.0;
+            newNode2.value = 0.0;
+            newNode3.value = false;
             Inputs.Add(newNode1.GetId(), newNode1);
             Inputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
@@ -57,6 +61,16 @@ namespace ORS_ER.components
             float textX = buttonRect.MidX - (font.MeasureText(operation) / 2);
             float textY = buttonRect.MidY + font.Size / 4;
             canvas.DrawText(operation, textX, textY, font, Paints.TextPaint);
+
+            if(this.Outputs.First().Value.name == null)
+            {
+                this.Outputs.First().Value.name = "";
+            }
+
+            font.Size = 12;
+            var textXX = this.Rect.MidX - (font.MeasureText("Name: " + this.Outputs.First().Value.name, Paints.TextPaint) / 2);
+            var textYY = this.Rect.Top + font.Size;
+            canvas.DrawText("Name: " + this.Outputs.First().Value.name, textXX, textYY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)
@@ -64,9 +78,9 @@ namespace ORS_ER.components
             this.Rect = new SkiaSharp.SKRect(x - 45, y - 25, x + 45, y + 25);
             this.buttonRect = new SKRect(
             this.Rect.Left + 10,
-            this.Rect.Top + 10,
+            this.Rect.Top + 15,
             this.Rect.Right - 10,
-            this.Rect.Bottom - 10);
+            this.Rect.Bottom - 5);
 
             var delta = Rect.Width / (Inputs.Count + 1);
             string[] keys = Inputs.Keys.ToArray();
@@ -96,7 +110,7 @@ namespace ORS_ER.components
         {
             var inputs = Inputs.Values.ToArray();
             var outputNode = Outputs.Values.First();
-            this.Code = $"dynamic {outputNode.name} = {inputs[0].name} {operation} {inputs[^1].name};\n";
+            this.Code = $"dynamic {outputNode.name} = {inputs[0].name} {operation} {inputs[1].name};\n";
         }
 
         public override (string, Component, IO?)? HitTest(SKPoint world)
@@ -104,11 +118,12 @@ namespace ORS_ER.components
             (string, Component, IO?)? baseReturn = base.HitTest(world);
             if (this.buttonRect.Contains(world))
             {
-                var dlg = new LogicWindow(operation);
+                var dlg = new LogicWindow(this.Outputs.First().Value.name, operation, "Logic");
 
                 if (dlg.ShowDialog() == true)
                 {
                     this.operation = dlg.op;
+                    this.Outputs.First().Value.name = dlg.name;
                 }
                 return ("button", this, null);
             }
@@ -146,6 +161,7 @@ namespace ORS_ER.components
                 $"{inputJsons},\n" +
                 $"{outputJsons},\n" +
                 $"\"index\": \"{this.Index}\"\n" +
+                $"\"operation\": \"{operation}\"\n" +
                 $"}}\n";
         }
     }

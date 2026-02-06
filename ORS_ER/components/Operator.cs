@@ -4,36 +4,35 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Windows;
 
 namespace ORS_ER.components
 {
-    class Gate : Component
+    class Operator : Component
     {
-        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Gate);
-        public string operation = "AND";
+        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Operator);
+        public string operation = "+";
         SKRect buttonRect { get; set; }
-        public Gate(Component component) : base(component)
+        public Operator(Component component) : base(component)
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
-            newNode1.value = false;
-            newNode2.value = false;
-            newNode3.value = false;
+            newNode1.value = 0.0;
+            newNode2.value = 0.0;
+            newNode3.value = 0.0;
             Inputs.Add(newNode1.GetId(), newNode1);
             Inputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
 
-        public Gate(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public Operator(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
-            newNode1.value = false;
-            newNode2.value = false;
-            newNode3.value = false;
+            newNode1.value = 0.0;
+            newNode2.value = 0.0;
+            newNode3.value = 0.0;
             Inputs.Add(newNode1.GetId(), newNode1);
             Inputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
@@ -72,7 +71,7 @@ namespace ORS_ER.components
             }
 
             font.Size = 12;
-            var textXX = this.Rect.MidX - (font.MeasureText("Name: "+this.Outputs.First().Value.name, Paints.TextPaint) / 2);
+            var textXX = this.Rect.MidX - (font.MeasureText("Name: " + this.Outputs.First().Value.name, Paints.TextPaint) / 2);
             var textYY = this.Rect.Top + font.Size;
             canvas.DrawText("Name: " + this.Outputs.First().Value.name, textXX, textYY, font, Paints.TextPaint);
         }
@@ -114,33 +113,7 @@ namespace ORS_ER.components
         {
             var inputs = Inputs.Values.ToArray();
             var outputNode = Outputs.Values.First();
-            switch (operation)
-            {
-                case "AND":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} && {inputs[1].name};\n";
-                    break;
-                case "OR":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
-                    break;
-                case "NOT":
-                    this.Code = $"dynamic {outputNode.name} = !{inputs[0].name};\n";
-                    break;
-                case "XOR":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} ^ {inputs[1].name};\n";
-                    break;
-                case "NOR":
-                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} | {inputs[1].name});\n";
-                    break;
-                case "XNOR":
-                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} ^ {inputs[1].name});\n";
-                    break;
-                case "NAND":
-                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} && {inputs[1].name});\n";
-                    break;
-                default:
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
-                    break;
-            }
+            this.Code = $"dynamic {outputNode.name} = {inputs[0].name} {operation} {inputs[1].name};\n";
         }
 
         public override (string, Component, IO?)? HitTest(SKPoint world)
@@ -148,7 +121,7 @@ namespace ORS_ER.components
             (string, Component, IO?)? baseReturn = base.HitTest(world);
             if (this.buttonRect.Contains(world))
             {
-                var dlg = new LogicWindow(this.Outputs.First().Value.name, operation, "Gate");
+                var dlg = new LogicWindow(this.Outputs.First().Value.name, operation, "Operator");
 
                 if (dlg.ShowDialog() == true)
                 {

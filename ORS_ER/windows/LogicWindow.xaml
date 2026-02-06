@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ORS_ER.windows"
         mc:Ignorable="d"
-        Title="LogicWindow" Height="100" Width="200">
+        Title="LogicWindow" Height="150" Width="220">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
@@ -16,14 +17,17 @@
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Label Content="Select Logic Type:" VerticalAlignment="Center"/>
-            <ComboBox x:Name="LogicTypeComboBox" Width="50" Margin="5"/>
+            <Label Content="Name: " VerticalAlignment="Center"/>
+            <TextBox x:Name="NameTextBox" Width="120" Margin="5"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button x:Name="OkButton" Content="OK" Width="75" Margin="5" Click="OkButton_Click"/>
-            <Button x:Name="CancelButton" Content="Cancel" Width="75" Margin="5" Click="CancelButton_Click"/>
+            <Label Content="Select Operation:" VerticalAlignment="Center"/>
+            <ComboBox x:Name="LogicTypeComboBox" Width="65" Margin="5"/>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button x:Name="OkButton" Content="OK" Width="80" Margin="5" Click="OkButton_Click"/>
+            <Button x:Name="CancelButton" Content="Cancel" Width="80" Margin="5" Click="CancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

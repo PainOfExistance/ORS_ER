@@ -8,27 +8,59 @@ namespace ORS_ER.windows
     public partial class LogicWindow : Window
     {
         public string op = "==";
-        public LogicWindow(string operation)
+        public string name = "";
+        public LogicWindow(string Name, string operation, string type)
         {
             InitializeComponent();
+            this.name = Name;
+            NameTextBox.Text = Name;
             op = operation;
-            LogicTypeComboBox.Text = operation;
-            LogicTypeComboBox.ItemsSource = new List<string>
+            if (type == "Gate")
             {
+                LogicTypeComboBox.ItemsSource = new List<string>
+                {
+                    "AND",
+                    "OR",
+                    "NOT",
+                    "XOR",
+                    "NOR",
+                    "XNOR",
+                    "NAND"
+                };
+            }
+            else if (type == "Operator")
+            {
+                LogicTypeComboBox.ItemsSource = new List<string>
+                {
+                "+",
+                "-",
+                "*",
+                "/",
+                "%",
+                "^"
+                };
+            }
+            else
+            {
+                LogicTypeComboBox.ItemsSource = new List<string>
+                {
                 "==",
                 "!=",
                 "<",
                 "<=",
                 ">",
                 ">="
-            };
+                };
+            }
+            LogicTypeComboBox.SelectedIndex = LogicTypeComboBox.Items.IndexOf(operation);
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            if (LogicTypeComboBox.SelectedItem != null)
+            if (LogicTypeComboBox.SelectedItem != null && NameTextBox.Text != "")
             {
                 op = (string)LogicTypeComboBox.SelectedItem;
+                name = NameTextBox.Text;
                 DialogResult = true;
             }
         }

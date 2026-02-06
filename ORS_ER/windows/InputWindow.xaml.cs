@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.CodeDom.Compiler;
+using System.Diagnostics;
 
 namespace ORS_ER.windows
 {
@@ -83,6 +84,8 @@ namespace ORS_ER.windows
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
+            if(ResultName == "" || ResultName == null)
+                ResultName = "";
             DialogResult = true;
         }
 

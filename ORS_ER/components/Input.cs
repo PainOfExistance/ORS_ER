@@ -169,7 +169,7 @@ namespace ORS_ER.components
                 var outputNode = Outputs.Values.First();
                 var dlg = new InputWindow(Name, outputNode.name, outputNode.value);
 
-                if (dlg.ShowDialog() == true)
+                if (dlg.ShowDialog() == true && dlg.ResultName != "")
                 {
                     outputNode.name = dlg.ResultName;
                     outputNode.value = dlg.ResultValue;

@@ -56,6 +56,9 @@ namespace ORS_ER
 
             [JsonPropertyName("index")]
             public int? Index { get; set; }
+
+            [JsonPropertyName("operation")]
+            public string? Operation { get; set; }
         }
 
         internal sealed class IoData
@@ -184,9 +187,12 @@ namespace ORS_ER
                     Component newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
                     newComponent.SetId(component.Id);
                     newComponent.Code = component.Code ?? "";
-                    if (component.Index.HasValue && newComponent is Print print)
+                    if (component.Operation != "" && (newComponent is Gate or Logic))
                     {
-                        print.Index = component.Index.Value;
+                        if (newComponent is Gate gate)
+                            gate.operation = component.Operation;
+                        else if (newComponent is Logic logic)
+                            logic.operation = component.Operation;
                     }
 
                     newComponent.Inputs.Clear();
@@ -249,6 +255,10 @@ namespace ORS_ER
                     return createBinaryOutput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Logic Block":
                     return createLogic(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "Logic Gate Block":
+                    return createLogicGate(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "Operator Block":
+                    return createOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
                 default:
                     throw new ArgumentException("Invalid component type");
             }
@@ -285,6 +295,26 @@ namespace ORS_ER
         private static Component createLogic(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
             Logic input = new Logic(Name, Description, Category, runningIndex);
+            input.Selected = true;
+            input.Index = runningIndex;
+            runningIndex++;
+            input.CreateRect(mouseWorldX, mouseWorldY);
+            return input;
+        }
+
+        private static Component createLogicGate(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        {
+            Gate input = new Gate(Name, Description, Category, runningIndex);
+            input.Selected = true;
+            input.Index = runningIndex;
+            runningIndex++;
+            input.CreateRect(mouseWorldX, mouseWorldY);
+            return input;
+        }
+
+        private static Component createOperator(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        {
+            Operator input = new Operator(Name, Description, Category, runningIndex);
             input.Selected = true;
             input.Index = runningIndex;
             runningIndex++;
