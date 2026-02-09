@@ -8,42 +8,17 @@ namespace ORS_ER.components
     class Input : Component
     {
         private static ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
-        SKRect buttonRect { get; set; }
         public Input(Component component) : base(component)
         {
             base.font = new SKFont();
             IO newNode = new IO();
-            if (this.Name.Contains("String"))
-            {
-                newNode.value = "";
-            }
-            else if (this.Name.Contains("Binary"))
-            {
-                newNode.value = false;
-            }
-            else
-            {
-                newNode.value = 0.0;
-            }
             Outputs.Add(newNode.GetId(), newNode);
         }
 
-        public Input(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public Input(string name, string description, string category) : base(name, description, category)
         {
             base.font = new SKFont();
             IO newNode = new IO();
-            if (name.Contains("String"))
-            {
-                newNode.value = "";
-            }
-            else if (name.Contains("Binary"))
-            {
-                newNode.value = false;
-            }
-            else
-            {
-                newNode.value = 0.0;
-            }
             Outputs.Add(newNode.GetId(), newNode);
         }
 
@@ -62,73 +37,47 @@ namespace ORS_ER.components
                 canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
             }
 
-            var outputNode = Outputs.Values.First();
-            if (string.IsNullOrEmpty(outputNode.name))
+            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
+
+            string label = "+";
+            if (string.IsNullOrEmpty(this.Code))
             {
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
-
-                const string label = "+";
-                var textX = buttonRect.MidX - (font.MeasureText(label) / 2);
-                var textY = buttonRect.MidY + font.Size / 4;
-
-                canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
+                label = "+";
             }
             else
             {
-                float textX = 0;
-                float textY = 0;
-                var nameText = outputNode.name?.ToString() ?? "null";
-                var valueText = outputNode.value?.ToString() ?? "null";
-                if (outputNode.value is bool)
-                {
-                    valueText = valueText.ToLower();
-                }
-                var fullText = $"{nameText}: {valueText}";
-
-                var textWidth = font.MeasureText(fullText, Paints.TextPaint);
-                while (textWidth > ((buttonRect.Left - Rect.Left) - 5))
-                {
-                    font.Size--;
-                    textWidth = font.MeasureText(fullText, Paints.TextPaint);
-                }
-                textX = this.Rect.Left + 5;
-                textY = this.Rect.MidY + font.Size / 4;
-
-                canvas.DrawText(fullText, textX, textY, font, Paints.TextPaint);
-                font.Size = 20;
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
-
-                string label = "+";
-                textX = buttonRect.MidX - (font.MeasureText(label) / 2);
-                textY = buttonRect.MidY + font.Size / 4;
-                canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
+                label = this.Code;
             }
 
-            string lab = "";
+            var textX = buttonRect.MidX - (font.MeasureText(label) / 2);
+            var textY = buttonRect.MidY + font.Size / 4;
+
+            canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
+
+            label = "";
             if (this.Name.Contains("String"))
             {
-                lab = "STR";
+                label = "STR";
             }
             else if (this.Name.Contains("Binary"))
             {
-                lab = "BIN";
+                label = "BIN";
             }
             else
             {
-                lab = "NUM";
+                label = "NUM";
             }
 
             font.Size = 12;
-            var textXX = this.Rect.Left + (font.MeasureText(lab, Paints.TextPaint) / 5);
+            var textXX = this.Rect.Left + (font.MeasureText(label, Paints.TextPaint) / 5);
             var textYY = this.Rect.Top + font.Size;
-            canvas.DrawText(lab, textXX, textYY, font, Paints.TextPaint);
+            canvas.DrawText(label, textXX, textYY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 75, y - 25, x + 75, y + 25);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
             this.buttonRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 4,
                 this.Rect.Top + (int)this.Rect.Height / 4,
@@ -141,72 +90,11 @@ namespace ORS_ER.components
             {
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
-
-            if (!string.IsNullOrEmpty(Outputs.Values.First().name))
-            {
-                this.buttonRect = new SKRect(
-                this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
-                this.Rect.Top + 5,
-                this.Rect.Right - 5,
-                this.Rect.Bottom - 5);
-            }
-        }
-
-        public override (float, float) OffsetRect(int x, int y)
-        {
-            (float, float) dxdy = base.OffsetRect(x, y);
-            var rect = this.buttonRect;
-            rect.Offset(dxdy.Item1, dxdy.Item2);
-            this.buttonRect = rect;
-            return dxdy;
-        }
-
-        public override (string, Component, IO?)? HitTest(SKPoint world)
-        {
-            (string, Component, IO?)? baseReturn = base.HitTest(world);
-            if (this.buttonRect.Contains(world))
-            {
-                var outputNode = Outputs.Values.First();
-                var dlg = new InputWindow(this.Name, outputNode.name, outputNode.value);
-
-                if (dlg.ShowDialog() == true && dlg.ResultName != "")
-                {
-                    outputNode.name = dlg.ResultName;
-                    outputNode.value = dlg.ResultValue;
-                    this.buttonRect = new SKRect(
-                    this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
-                    this.Rect.Top + 5,
-                    this.Rect.Right - 5,
-                    this.Rect.Bottom - 5);
-                }
-                else
-                {
-                    outputNode.name = null;
-                    outputNode.value = null;
-                    this.buttonRect = new SKRect(
-                    this.Rect.Left + (int)this.Rect.Width / 4,
-                    this.Rect.Top + (int)this.Rect.Height / 4,
-                    this.Rect.Right - (int)this.Rect.Width / 4,
-                    this.Rect.Bottom - (int)this.Rect.Height / 4);
-                }
-
-                return ("button", this, null);
-            }
-            return baseReturn;
         }
 
         public override void GenerateCode()
         {
             //todo change
-            var outputNode = Outputs.Values.First();
-            if (this.Name.Contains("Binary"))
-            {
-                this.Code = $"dynamic {outputNode.name} = {outputNode.value.ToString().ToLower()};\n";
-            }
-            else
-            {
-                this.Code = $"dynamic {outputNode.name} = {outputNode.value};\n";
-            }
         }
     }
 }

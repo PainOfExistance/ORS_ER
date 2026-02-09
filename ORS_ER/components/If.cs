@@ -18,7 +18,7 @@ namespace ORS_ER.components
             Outputs.Add(newNode2.GetId(), newNode2);
         }
 
-        public If(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public If(string name, string description, string category) : base(name, description, category)
         {
             var cond = new IO { value = false };
             Inputs.Add(cond.GetId(), cond);
@@ -64,7 +64,7 @@ namespace ORS_ER.components
             Outputs[outKeys[1]].node = new SKPoint(Rect.Left + Rect.Width * 0.66f, Rect.Bottom);
         }
 
-        public override void GenerateCode(ValueRegistry valueRegistry)
+        public override void GenerateCode()
         {
             // Control-flow not supported in current linear parser; emit a comment so build/run still works.
             var cond = Inputs.Values.First();

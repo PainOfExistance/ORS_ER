@@ -9,24 +9,11 @@ namespace ORS_ER.connections
     public class IO
     {
         private string Id = Guid.NewGuid().ToString();
-
-        public dynamic? value { get; set; }
-        public string? name { get; set; }
         public SKPoint node { get; set; } = new SKPoint();
-
-        // Supports fan-in/fan-out:
-        // - Inputs can have multiple incoming connections (from multiple outputs).
-        // - Outputs can drive multiple connections (to multiple inputs).
         public List<string> inputConnectionIds { get; set; } = [];
         public List<string> outputConnectionIds { get; set; } = [];
 
         public IO() { }
-
-        public IO(string name, dynamic value)
-        {
-            this.name = name;
-            this.value = value;
-        }
 
         public string GetId()
         {
@@ -64,11 +51,8 @@ namespace ORS_ER.connections
 
         public string ToJson()
         {
-            // New schema (supports multiple connections). Still readable with AllowTrailingCommas.
             return $"{{\n" +
                 $"\"id\": \"{JsonString(Id)}\",\n" +
-                $"\"name\": \"{JsonString(name)}\",\n" +
-                $"\"value\": \"{JsonString(value?.ToString())}\",\n" +
                 $"\"inputIds\": {JsonStringList(inputConnectionIds)},\n" +
                 $"\"outputIds\": {JsonStringList(outputConnectionIds)}\n" +
                 $"}}\n";

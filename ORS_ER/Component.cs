@@ -1,16 +1,18 @@
-﻿using SkiaSharp;
+﻿using ORS_ER.connections;
+using ORS_ER.windows;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ORS_ER.connections;
+using System.Windows;
 
 namespace ORS_ER.components
 {
-    abstract public class Component(string name, string description, string category, int runningIndex)
+    abstract public class Component(string name, string description, string category)
     {
         private string Id = Guid.NewGuid().ToString();
-        public int Index { get; set; } = runningIndex;
         public string Name { get; set; } = name;
+        public dynamic Value { get; set; }
         public string Description { get; set; } = description;
         public string Category { get; set; } = category;
         public string Code { get; set; } = "";
@@ -18,15 +20,15 @@ namespace ORS_ER.components
         public Dictionary<string, IO> Inputs = new Dictionary<string, IO>();
         public Dictionary<string, IO> Outputs = new Dictionary<string, IO>();
         public SKRect Rect { get; set; }
+        public SKRect buttonRect { get; set; }
         public SKFont font = new SKFont();
 
-        public Component(Component component) : this(component.Name, component.Description, component.Category, component.Index)
+        public Component(Component component) : this(component.Name, component.Description, component.Category)
         {
             this.Id = component.Id;
             this.Code = component.Code;
             this.Inputs = component.Inputs;
             this.Outputs = component.Outputs;
-            this.Index = component.Index;
         }
 
         public string GetId()
@@ -39,7 +41,7 @@ namespace ORS_ER.components
         }
         abstract public void Paint(SKCanvas canvas);
         abstract public void CreateRect(int x, int y);
-        virtual public (float, float) OffsetRect(int x, int y)
+        virtual public void OffsetRect(int x, int y)
         {
             var rect = Rect;
             var dx = x - rect.MidX;
@@ -63,7 +65,9 @@ namespace ORS_ER.components
                 Outputs[i].node = node;
             }
 
-            return (dx, dy);
+            rect = this.buttonRect;
+            rect.Offset(dx, dy);
+            this.buttonRect = rect;
         }
         virtual public (string, Component, IO?)? HitTest(SKPoint world)
         {
@@ -90,6 +94,58 @@ namespace ORS_ER.components
                     this.Selected = false;
                     return ("output", this, io.Value);
                 }
+
+            if (this.buttonRect.Contains(world))
+            {
+                this.Selected = true;
+                if (this.Name.Contains("Gate") || this.Name.Contains("Operator"))
+                {
+                    var dlg = new LogicWindow(this.Name, this.Code);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        this.Value = dlg.Value;
+                        this.Code = dlg.Code;
+                    }
+                }
+                else if (this.Name.Contains("Input"))
+                {
+                    var dlg = new InputWindow(this.Name, this.Code);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        this.Code = dlg.Code;
+                        this.Value = dlg.Value;
+                    }
+                }
+                else if (this.Name.Contains("Print"))
+                {
+                    var dlg = new InputWindow(this.Name, this.Code);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        this.Code = dlg.Code;
+                        this.Value = dlg.Value;
+                    }
+                }
+                else if (this.Name.Contains("If"))
+                {
+                    var dlg = new IfWindow(this.Name, this.Code);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        this.Code = dlg.Code;
+                        this.Value = dlg.Value;
+                    }
+                }
+                else
+                {
+                    var dlg = new WhileWindow(this.Name, this.Code);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        this.Code = dlg.Code;
+                        this.Value = dlg.Value;
+                    }
+                }
+
+                    return ("button", this, null);
+            }
 
             if (Rect.Contains(world))
             {
@@ -133,7 +189,6 @@ namespace ORS_ER.components
                 $"\"category\": \"{Category}\",\n" +
                 $"{inputJsons},\n" +
                 $"{outputJsons},\n" +
-                $"\"index\": \"{Index}\"\n" +
                 $"}}\n";
         }
     }

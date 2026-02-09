@@ -8,15 +8,14 @@ namespace ORS_ER.windows
     /// </summary>
     public partial class LogicWindow : Window
     {
-        public string op = "==";
+        public string code = "==";
         public string name = "";
-        public LogicWindow(string Name, string operation, string type)
+        public LogicWindow(string Name, string Code)
         {
             InitializeComponent();
             this.name = Name;
-            NameTextBox.Text = Name;
-            op = operation;
-            if (type == "Gate")
+            this.code = Code;
+            if (Name.Contains("Gate"))
             {
                 LogicTypeComboBox.ItemsSource = new List<string>
                 {
@@ -29,7 +28,7 @@ namespace ORS_ER.windows
                     "NAND"
                 };
             }
-            else if (type == "Operator")
+            else if (Name.Contains("Operator"))
             {
                 LogicTypeComboBox.ItemsSource = new List<string>
                 {
@@ -38,13 +37,7 @@ namespace ORS_ER.windows
                 "*",
                 "/",
                 "%",
-                "^"
-                };
-            }
-            else
-            {
-                LogicTypeComboBox.ItemsSource = new List<string>
-                {
+                "^",
                 "==",
                 "!=",
                 "<",
@@ -53,7 +46,7 @@ namespace ORS_ER.windows
                 ">="
                 };
             }
-            LogicTypeComboBox.SelectedIndex = LogicTypeComboBox.Items.IndexOf(operation);
+            
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

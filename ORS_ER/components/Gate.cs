@@ -11,24 +11,18 @@ namespace ORS_ER.components
     class Gate : Component
     {
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Gate);
-        public string operation = "AND";
-        SKRect buttonRect { get; set; }
         public Gate(Component component) : base(component)
         {
             IO newNode1 = new IO();
             IO newNode3 = new IO();
-            newNode1.value = false;
-            newNode3.value = false;
             Inputs.Add(newNode1.GetId(), newNode1);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
 
-        public Gate(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public Gate(string name, string description, string category) : base(name, description, category)
         {
             IO newNode1 = new IO();
             IO newNode3 = new IO();
-            newNode1.value = false;
-            newNode3.value = false;
             Inputs.Add(newNode1.GetId(), newNode1);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
@@ -56,29 +50,29 @@ namespace ORS_ER.components
             canvas.DrawRect(this.buttonRect, Paints.ButtonFill);
             canvas.DrawRect(this.buttonRect, Paints.ButtonStroke);
 
-            float textX = buttonRect.MidX - (font.MeasureText(operation) / 2);
-            float textY = buttonRect.MidY + font.Size / 4;
-            canvas.DrawText(operation, textX, textY, font, Paints.TextPaint);
-
-            if (this.Outputs.First().Value.name == null)
+            string label = "+";
+            if (string.IsNullOrEmpty(this.Code))
             {
-                this.Outputs.First().Value.name = "";
+                label = "+";
+            }
+            else
+            {
+                label = this.Code;
             }
 
-            font.Size = 12;
-            var textXX = this.Rect.MidX - (font.MeasureText("Name: "+this.Outputs.First().Value.name, Paints.TextPaint) / 2);
-            var textYY = this.Rect.Top + font.Size;
-            canvas.DrawText("Name: " + this.Outputs.First().Value.name, textXX, textYY, font, Paints.TextPaint);
+            float textX = buttonRect.MidX - (font.MeasureText(label) / 2);
+            float textY = buttonRect.MidY + font.Size / 4;
+            canvas.DrawText(label, textX, textY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 45, y - 25, x + 45, y + 25);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
             this.buttonRect = new SKRect(
-            this.Rect.Left + 10,
-            this.Rect.Top + 15,
-            this.Rect.Right - 10,
-            this.Rect.Bottom - 5);
+                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Top + (int)this.Rect.Height / 4,
+                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Bottom - (int)this.Rect.Height / 4);
 
             var delta = Rect.Width / (Inputs.Count + 1);
             string[] keys = Inputs.Keys.ToArray();
@@ -95,19 +89,11 @@ namespace ORS_ER.components
             }
         }
 
-        public override (float, float) OffsetRect(int x, int y)
-        {
-            (float, float) dxdy = base.OffsetRect(x, y);
-            var rect = this.buttonRect;
-            rect.Offset(dxdy.Item1, dxdy.Item2);
-            this.buttonRect = rect;
-            return dxdy;
-        }
-
         public override void GenerateCode()
         {
             var inputs = Inputs.Values.ToArray();
             var outputNode = Outputs.Values.First();
+
             switch (operation)
             {
                 case "AND":
@@ -135,58 +121,6 @@ namespace ORS_ER.components
                     this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
                     break;
             }
-        }
-
-        public override (string, Component, IO?)? HitTest(SKPoint world)
-        {
-            (string, Component, IO?)? baseReturn = base.HitTest(world);
-            if (this.buttonRect.Contains(world))
-            {
-                var dlg = new LogicWindow(this.Outputs.First().Value.name, operation, "Gate");
-
-                if (dlg.ShowDialog() == true)
-                {
-                    this.operation = dlg.op;
-                    this.Outputs.First().Value.name = dlg.name;
-                }
-                return ("button", this, null);
-            }
-            return baseReturn;
-        }
-
-        public override string ToJson()
-        {
-            string inputJsons = "\"inputs\": [";
-            foreach (var input in this.Inputs)
-            {
-                inputJsons += input.Value.ToJson();
-            }
-            inputJsons = inputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
-
-            string outputJsons = "\"outputs\": [";
-            foreach (var output in this.Outputs)
-            {
-                outputJsons += output.Value.ToJson();
-            }
-            outputJsons = outputJsons.TrimEnd(',', '\n', '\r', '\t', ' ') + "]";
-
-            return $"{{\n" +
-                $"\"name\": \"{this.Name}\",\n" +
-                $"\"id\": \"{this.GetId()}\",\n" +
-                $"\"x\": {this.Rect.MidX},\n" +
-                $"\"y\": {this.Rect.MidY},\n" +
-                $"\"code\": \"{this.Code.TrimEnd(',', '\n').Replace("\\", "\\\\")
-                .Replace("\"", "\\\"")
-                .Replace("\r", "\\r")
-                .Replace("\n", "\\n")
-                .Replace("\t", "\\t")}\",\n" +
-                $"\"description\": \"{this.Description}\",\n" +
-                $"\"category\": \"{this.Category}\",\n" +
-                $"{inputJsons},\n" +
-                $"{outputJsons},\n" +
-                $"\"index\": \"{this.Index}\"\n" +
-                $"\"operation\": \"{operation}\"\n" +
-                $"}}\n";
         }
     }
 }

@@ -17,7 +17,7 @@ namespace ORS_ER.components
             Outputs.Add(newNode2.GetId(), newNode2);
         }
 
-        public While(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public While(string name, string description, string category) : base(name, description, category)
         {
             var cond = new IO { value = false };
             Inputs.Add(cond.GetId(), cond);
@@ -60,7 +60,7 @@ namespace ORS_ER.components
             Outputs[outKey].node = new SKPoint(Rect.MidX, Rect.Bottom);
         }
 
-        public override void GenerateCode(ValueRegistry valueRegistry)
+        public override void GenerateCode()
         {
             var cond = Inputs.Values.First();
             Code = $"// WHILE ({cond.name}) => looping not implemented in parser\\n";

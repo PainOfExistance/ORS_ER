@@ -20,9 +20,6 @@ namespace ORS_ER
 
             [JsonPropertyName("connections")]
             public List<ConnectionData> Connections { get; set; } = [];
-
-            [JsonPropertyName("runningIndex")]
-            public int RunningIndex { get; set; }
         }
 
         internal sealed class ComponentData
@@ -98,8 +95,6 @@ namespace ORS_ER
             public string? ToComponentId { get; set; }
         }
 
-        private static int runningIndex = 1;
-
         public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections)
         {
             static void TrimTrailing(StringBuilder builder)
@@ -128,9 +123,7 @@ namespace ORS_ER
                 saveBuilder.Append(connection.ToJson()).Append(",\n");
             }
             TrimTrailing(saveBuilder);
-            saveBuilder.Append("\n],");
-            saveBuilder.Append($"\"runningIndex\": {runningIndex}\n}}");
-
+            saveBuilder.Append("\n]\n}");
             string saveData = saveBuilder.ToString();
 
             try
@@ -180,7 +173,6 @@ namespace ORS_ER
                 Dictionary<string, Component> components = new Dictionary<string, Component>();
                 Dictionary<string, Connection> connections = new Dictionary<string, Connection>();
 
-                runningIndex = rawData.RunningIndex;
                 foreach (var component in rawData.Components)
                 {
                     Component newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
@@ -199,12 +191,8 @@ namespace ORS_ER
                     {
                         IO newIO = new IO();
                         newIO.SetId(input.Id);
-                        newIO.name = input.Name;
-                        newIO.value = input.Value;
-
                         newIO.inputConnectionIds = input.InputIds ?? [];
                         newIO.outputConnectionIds = input.OutputIds ?? [];
-
                         newComponent.Inputs.Add(input.Id, newIO);
                     }
 
@@ -213,12 +201,8 @@ namespace ORS_ER
                     {
                         IO newIO = new IO();
                         newIO.SetId(output.Id);
-                        newIO.name = output.Name;
-                        newIO.value = output.Value;
-
                         newIO.inputConnectionIds = output.InputIds ?? [];
                         newIO.outputConnectionIds = output.OutputIds ?? [];
-
                         newComponent.Outputs.Add(output.Id, newIO);
                     }
 
@@ -271,7 +255,7 @@ namespace ORS_ER
 
         public static Component createInput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Input input = new Input(Name, Description, Category, runningIndex);
+            Input input = new Input(Name, Description, Category);
             input.Selected = true;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -279,9 +263,8 @@ namespace ORS_ER
 
         private static Component createPrint(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Print input = new Print(Name, Description, Category, runningIndex);
+            Print input = new Print(Name, Description, Category);
             input.Selected = true;
-            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -289,9 +272,8 @@ namespace ORS_ER
 
         private static Component createLogic(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Logic input = new Logic(Name, Description, Category, runningIndex);
+            Logic input = new Logic(Name, Description, Category);
             input.Selected = true;
-            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -299,9 +281,8 @@ namespace ORS_ER
 
         private static Component createLogicGate(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Gate input = new Gate(Name, Description, Category, runningIndex);
+            Gate input = new Gate(Name, Description, Category);
             input.Selected = true;
-            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -309,9 +290,8 @@ namespace ORS_ER
 
         private static Component createOperator(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            Operator input = new Operator(Name, Description, Category, runningIndex);
+            Operator input = new Operator(Name, Description, Category);
             input.Selected = true;
-            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -319,9 +299,8 @@ namespace ORS_ER
 
         private static Component createIf(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            If input = new If(Name, Description, Category, runningIndex);
+            If input = new If(Name, Description, Category);
             input.Selected = true;
-            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
@@ -329,9 +308,8 @@ namespace ORS_ER
 
         private static Component createWhile(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
-            While input = new While(Name, Description, Category, runningIndex);
+            While input = new While(Name, Description, Category);
             input.Selected = true;
-            input.Index = runningIndex;
             runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;

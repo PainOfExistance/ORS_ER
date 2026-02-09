@@ -29,15 +29,15 @@ namespace ORS_ER
 
         public ObservableCollection<Component> Items { get; } = new()
         {
-            new Input("String Input", "String input.", "Inputs", 0),
-            new Input("Numerical Input", "Numerical input.", "Inputs", 0),
-            new Input("Binary Input", "Binary input.", "Inputs", 0),
-            new Print("Print", "Prints to console.", "Outputs", 0),
-            new Logic("Logic Block", "Performs logical operation.", "Logic", 0),
-            new Gate("Logic Gate Block", "Performs bool operation.", "Logic", 0),
-            new Operator("Operator Block", "Performs numerical operations.", "Logic", 0),
-            new If("If", "Branches based on condition.", "Control Flow", 0),
-            new While("While", "Repeats based on condition.", "Control Flow", 0),
+            new Input("String Input", "String input.", "Inputs"),
+            new Input("Numerical Input", "Numerical input.", "Inputs"),
+            new Input("Binary Input", "Binary input.", "Inputs"),
+            new Print("Print", "Prints to console.", "Outputs"),
+            new Logic("Logic Block", "Performs logical operation.", "Logic"),
+            new Gate("Logic Gate Block", "Performs bool operation.", "Logic"),
+            new Operator("Operator Block", "Performs numerical operations.", "Logic"),
+            new If("If", "Branches based on condition.", "Control Flow"),
+            new While("While", "Repeats based on condition.", "Control Flow"),
         };
 
         public Dictionary<string, Component> PaintItems { get; } = new()

@@ -9,9 +9,7 @@ namespace ORS_ER.components
     class Print : Component
     {
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Print);
-        public int Index = 0;
         string printValue = "";
-        SKRect buttonRect { get; set; }
 
         public Print(Component component) : base(component)
         {
@@ -19,7 +17,7 @@ namespace ORS_ER.components
             Inputs.Add(newNode.GetId(), newNode);
         }
 
-        public Print(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
+        public Print(string name, string description, string category) : base(name, description, category)
         {
             IO newNode = new IO();
             Inputs.Add(newNode.GetId(), newNode);
@@ -105,40 +103,10 @@ namespace ORS_ER.components
             }
         }
 
-        public override (float, float) OffsetRect(int x, int y)
-        {
-            (float, float) dxdy = base.OffsetRect(x, y);
-            var rect = this.buttonRect;
-            rect.Offset(dxdy.Item1, dxdy.Item2);
-            this.buttonRect = rect;
-            return dxdy;
-        }
-
-        public override (string, Component, IO?)? HitTest(SKPoint world)
-        {
-            (string, Component, IO?)? baseReturn = base.HitTest(world);
-            if (this.buttonRect.Contains(world))
-            {
-                var dlg = new PrintWindow(this.printValue);
-
-                if (dlg.ShowDialog() == true && dlg.ResultName != "")
-                {
-
-                }
-                else
-                {
-
-                }
-
-                return ("button", this, null);
-            }
-            return baseReturn;
-        }
-
         public override void GenerateCode()
         {
             var inputNode = Inputs.Values.First();
-            this.Code = $"Console.WriteLine(\"{Name} {Index}: \" +  {inputNode.name});\n";
+            this.Code = $"Console.WriteLine(\"{Name}: \" +  {inputNode.name});\n";
         }
     }
 }
