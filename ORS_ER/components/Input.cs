@@ -167,7 +167,7 @@ namespace ORS_ER.components
             if (this.buttonRect.Contains(world))
             {
                 var outputNode = Outputs.Values.First();
-                var dlg = new PrintWindow(outputNode.name, outputNode.value);
+                var dlg = new InputWindow(this.Name, outputNode.name, outputNode.value);
 
                 if (dlg.ShowDialog() == true && dlg.ResultName != "")
                 {
@@ -195,16 +195,9 @@ namespace ORS_ER.components
             return baseReturn;
         }
 
-        public override void GenerateCode(ValueRegistry valueRegistry)
+        public override void GenerateCode()
         {
             //todo change
-            valueRegistry.RegisterGlobalValue(Outputs.Values.First().name, new ValueRegistry.RegistryEntry
-            {
-                BlockId = this.GetId(),
-                Name = Outputs.Values.First().name,
-                Value = Outputs.Values.First().value
-            });
-
             var outputNode = Outputs.Values.First();
             if (this.Name.Contains("Binary"))
             {

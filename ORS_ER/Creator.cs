@@ -260,6 +260,10 @@ namespace ORS_ER
                     return createLogicGate(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Operator Block":
                     return createOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "If":
+                    return createIf(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "While":
+                    return createWhile(Name, Description, Category, mouseWorldX, mouseWorldY);
                 default:
                     return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
             }
@@ -306,6 +310,26 @@ namespace ORS_ER
         private static Component createOperator(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
             Operator input = new Operator(Name, Description, Category, runningIndex);
+            input.Selected = true;
+            input.Index = runningIndex;
+            runningIndex++;
+            input.CreateRect(mouseWorldX, mouseWorldY);
+            return input;
+        }
+
+        private static Component createIf(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        {
+            If input = new If(Name, Description, Category, runningIndex);
+            input.Selected = true;
+            input.Index = runningIndex;
+            runningIndex++;
+            input.CreateRect(mouseWorldX, mouseWorldY);
+            return input;
+        }
+
+        private static Component createWhile(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        {
+            While input = new While(Name, Description, Category, runningIndex);
             input.Selected = true;
             input.Index = runningIndex;
             runningIndex++;

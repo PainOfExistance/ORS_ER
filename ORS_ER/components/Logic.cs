@@ -12,26 +12,20 @@ namespace ORS_ER.components
         public Logic(Component component) : base(component)
         {
             IO newNode1 = new IO();
-            IO newNode2 = new IO();
             IO newNode3 = new IO();
             newNode1.value = 0.0;
-            newNode2.value = 0.0;
             newNode3.value = false;
             Inputs.Add(newNode1.GetId(), newNode1);
-            Inputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
 
         public Logic(string name, string description, string category, int runningIndex) : base(name, description, category, runningIndex)
         {
             IO newNode1 = new IO();
-            IO newNode2 = new IO();
             IO newNode3 = new IO();
             newNode1.value = 0.0;
-            newNode2.value = 0.0;
             newNode3.value = false;
             Inputs.Add(newNode1.GetId(), newNode1);
-            Inputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
 

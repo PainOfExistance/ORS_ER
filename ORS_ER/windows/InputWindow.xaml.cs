@@ -13,11 +13,13 @@ namespace ORS_ER.windows
         public string? ResultName { get; private set; }
         public dynamic? ResultValue { get; private set; }
 
-        public InputWindow(string inputName, dynamic value)
+        public InputWindow(string inputName, string name, dynamic value)
         {
             InitializeComponent();
             _inputName = inputName;
-            NameTextBox.Text = value;
+            NameTextBox.Text = name;
+            ValueTextBox.Text = value.ToString();
+            ResultName = name;
             ResultValue = value;
         }
 

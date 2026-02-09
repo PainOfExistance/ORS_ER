@@ -4,7 +4,8 @@ using System.Text;
 
 namespace ORS_ER.connections
 {
-    public class ValueRegistry
+
+    public static class ValueRegistry
     {
         public struct RegistryEntry
         {
@@ -13,10 +14,10 @@ namespace ORS_ER.connections
             public dynamic Value { get; set; }
         }
 
-        private List<RegistryEntry> _globalRegistry = new List<RegistryEntry>();
-        private Dictionary<string, List<RegistryEntry>> _localRegistry = new Dictionary<string, List<RegistryEntry>>();
+        private static readonly List<RegistryEntry> _globalRegistry = new();
+        private static readonly Dictionary<string, List<RegistryEntry>> _localRegistry = new();
 
-        public void RegisterGlobalValue(string key, RegistryEntry value)
+        public static void RegisterGlobalValue(string key, RegistryEntry value)
         {
             for (int i = 0; i < _globalRegistry.Count; i++)
             {
@@ -29,7 +30,7 @@ namespace ORS_ER.connections
             _globalRegistry.Add(value);
         }
 
-        public RegistryEntry? GetGlobalValue(string key)
+        public static RegistryEntry? GetGlobalValue(string key)
         {
             foreach (var entry in _globalRegistry)
             {
@@ -41,7 +42,7 @@ namespace ORS_ER.connections
             return null;
         }
 
-        public void AddLocalRegistry(string registryId)
+        public static void AddLocalRegistry(string registryId)
         {
             if (!_localRegistry.ContainsKey(registryId))
             {
@@ -49,7 +50,7 @@ namespace ORS_ER.connections
             }
         }
 
-        public void RegisterLocalValue(string registryId, string key, RegistryEntry value)
+        public static void RegisterLocalValue(string registryId, string key, RegistryEntry value)
         {
             if (_localRegistry.TryGetValue(registryId, out var registry))
             {
@@ -65,7 +66,7 @@ namespace ORS_ER.connections
             }
         }
 
-        public RegistryEntry? GetLocalValue(string registryId, string key)
+        public static RegistryEntry? GetLocalValue(string registryId, string key)
         {
             foreach (var entry in _globalRegistry)
             {
@@ -89,7 +90,7 @@ namespace ORS_ER.connections
             return null;
         }
 
-        public void DeleteLocalRegistry(string registryId)
+        public static void DeleteLocalRegistry(string registryId)
         {
             if (_localRegistry.ContainsKey(registryId))
             {

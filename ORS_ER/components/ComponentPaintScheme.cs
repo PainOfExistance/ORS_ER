@@ -9,6 +9,8 @@ namespace ORS_ER.components
         Logic,
         Gate,
         Operator,
+        If,
+        While,
     }
 
     class ComponentPaints
@@ -161,6 +163,20 @@ namespace ORS_ER.components
                 text: SKColors.Black,
                 selected: SKColors.Red,
                 io: SKColors.Black),
+            ComponentPaintScheme.If => new ComponentPaints(
+                fill: SKColors.SlateBlue,
+                stroke: SKColors.MediumPurple,
+                text: SKColors.WhiteSmoke,
+                selected: SKColors.Red,
+                io: SKColors.Black,
+                textSize: 16),
+            ComponentPaintScheme.While => new ComponentPaints(
+                fill: SKColors.DarkSlateBlue,
+                stroke: SKColors.SteelBlue,
+                text: SKColors.WhiteSmoke,
+                selected: SKColors.Red,
+                io: SKColors.Black,
+                textSize: 16),
             _ => throw new ArgumentOutOfRangeException(nameof(scheme), scheme, null)
         };
     }

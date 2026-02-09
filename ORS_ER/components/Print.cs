@@ -119,7 +119,7 @@ namespace ORS_ER.components
             (string, Component, IO?)? baseReturn = base.HitTest(world);
             if (this.buttonRect.Contains(world))
             {
-                var dlg = new InputWindow(Name, this.printValue);
+                var dlg = new PrintWindow(this.printValue);
 
                 if (dlg.ShowDialog() == true && dlg.ResultName != "")
                 {

@@ -25,7 +25,6 @@ namespace ORS_ER
         private const float MinZoom = 0.1f;
         private const float MaxZoom = 10.0f;
         private const float ZoomStep = 1.1f;
-        public ValueRegistry ValueRegistry { get; } = new();
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
 
         public ObservableCollection<Component> Items { get; } = new()
@@ -37,6 +36,8 @@ namespace ORS_ER
             new Logic("Logic Block", "Performs logical operation.", "Logic", 0),
             new Gate("Logic Gate Block", "Performs bool operation.", "Logic", 0),
             new Operator("Operator Block", "Performs numerical operations.", "Logic", 0),
+            new If("If", "Branches based on condition.", "Control Flow", 0),
+            new While("While", "Repeats based on condition.", "Control Flow", 0),
         };
 
         public Dictionary<string, Component> PaintItems { get; } = new()
@@ -419,7 +420,7 @@ namespace ORS_ER
         private async void Run_Click(object sender, RoutedEventArgs e)
         {
             var cts = new CancellationTokenSource();
-            string code = await Parser.ParseAsync(PaintItems, connections, ValueRegistry, cts.Token);
+            string code = await Parser.ParseAsync(PaintItems, connections, cts.Token);
             Debug.WriteLine("Generated Code:");
             Debug.WriteLine(code);
 
