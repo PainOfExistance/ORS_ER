@@ -17,12 +17,14 @@ namespace ORS_ER.windows
     /// </summary>
     public partial class PrintWindow : Window
     {
-        public string? ResultName { get; private set; }
-        public PrintWindow(string name)
+        public (string, dynamic) Value = ("", null);
+        public string Code = "";
+        public PrintWindow(string Code, (string, dynamic) Value)
         {
             InitializeComponent();
-            VariableComboBox.SelectedItem = VariableComboBox.Items.IndexOf(name);
-            ResultName = name;
+            this.Code = Code;
+            this.Value = Value;
+            VariableComboBox.SelectedItem = VariableComboBox.Items.IndexOf(this.Value.Item1);
         }
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Windows;
-using System.CodeDom.Compiler;
+﻿using System.CodeDom.Compiler;
 using System.Diagnostics;
+using System.Windows;
+using System.Xml.Linq;
 
 namespace ORS_ER.windows
 {
@@ -9,18 +10,16 @@ namespace ORS_ER.windows
     /// </summary>
     public partial class InputWindow : Window
     {
-        private readonly string _inputName;
-        public string? ResultName { get; private set; }
-        public dynamic? ResultValue { get; private set; }
+        public (string, dynamic) Value = ("", null);
+        public string Code = "";
 
-        public InputWindow(string inputName, string name, dynamic value)
+        public InputWindow(string Code, (string, dynamic) Value)
         {
             InitializeComponent();
-            _inputName = inputName;
-            NameTextBox.Text = name;
-            ValueTextBox.Text = value.ToString();
-            ResultName = name;
-            ResultValue = value;
+            this.Code = Code;
+            this.Value = Value;
+            NameTextBox.Text = Value.Item1;
+            ValueTextBox.Text = Value.Item2;
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)

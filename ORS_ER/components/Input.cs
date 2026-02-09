@@ -40,22 +40,11 @@ namespace ORS_ER.components
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
 
-            string label = "+";
-            if (string.IsNullOrEmpty(this.Code))
-            {
-                label = "+";
-            }
-            else
-            {
-                label = this.Code;
-            }
-
-            var textX = buttonRect.MidX - (font.MeasureText(label) / 2);
+            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
             var textY = buttonRect.MidY + font.Size / 4;
+            canvas.DrawText(this.Code, textX, textY, font, Paints.ButtonTextPaint);
 
-            canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
-
-            label = "";
+            string label = "";
             if (this.Name.Contains("String"))
             {
                 label = "STR";

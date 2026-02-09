@@ -12,7 +12,7 @@ namespace ORS_ER.components
     {
         private string Id = Guid.NewGuid().ToString();
         public string Name { get; set; } = name;
-        public dynamic Value { get; set; }
+        public (string, dynamic) Value { get; set; }
         public string Description { get; set; } = description;
         public string Category { get; set; } = category;
         public string Code { get; set; } = "";
@@ -98,9 +98,9 @@ namespace ORS_ER.components
             if (this.buttonRect.Contains(world))
             {
                 this.Selected = true;
-                if (this.Name.Contains("Gate") || this.Name.Contains("Operator"))
+                if (this.Name.Contains("Operator"))
                 {
-                    var dlg = new LogicWindow(this.Name, this.Code);
+                    var dlg = new LogicWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Value = dlg.Value;
@@ -109,7 +109,7 @@ namespace ORS_ER.components
                 }
                 else if (this.Name.Contains("Input"))
                 {
-                    var dlg = new InputWindow(this.Name, this.Code);
+                    var dlg = new InputWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;
@@ -118,7 +118,7 @@ namespace ORS_ER.components
                 }
                 else if (this.Name.Contains("Print"))
                 {
-                    var dlg = new InputWindow(this.Name, this.Code);
+                    var dlg = new PrintWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;

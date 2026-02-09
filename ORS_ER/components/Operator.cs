@@ -15,19 +15,15 @@ namespace ORS_ER.components
             this.Code = component.Code;
             IO newNode1 = new IO();
             IO newNode3 = new IO();
-            newNode1.value = 0.0;
-            newNode3.value = 0.0;
             Inputs.Add(newNode1.GetId(), newNode1);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
 
         public Operator(string name, string description, string category) : base(name, description, category)
         {
-            this.Code = "+";
+            this.Code = "==";
             IO newNode1 = new IO();
             IO newNode3 = new IO();
-            newNode1.value = 0.0;
-            newNode3.value = 0.0;
             Inputs.Add(newNode1.GetId(), newNode1);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
@@ -58,26 +54,16 @@ namespace ORS_ER.components
             float textX = buttonRect.MidX - (font.MeasureText(Code) / 2);
             float textY = buttonRect.MidY + font.Size / 4;
             canvas.DrawText(Code, textX, textY, font, Paints.TextPaint);
-
-            if (this.Outputs.First().Value.name == null)
-            {
-                this.Outputs.First().Value.name = "";
-            }
-
-            font.Size = 12;
-            var textXX = this.Rect.MidX - (font.MeasureText("Name: " + this.Outputs.First().Value.name, Paints.TextPaint) / 2);
-            var textYY = this.Rect.Top + font.Size;
-            canvas.DrawText("Name: " + this.Outputs.First().Value.name, textXX, textYY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 45, y - 25, x + 45, y + 25);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
             this.buttonRect = new SKRect(
-            this.Rect.Left + 10,
-            this.Rect.Top + 15,
-            this.Rect.Right - 10,
-            this.Rect.Bottom - 5);
+                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Top + (int)this.Rect.Height / 4,
+                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Bottom - (int)this.Rect.Height / 4);
 
             var delta = Rect.Width / (Inputs.Count + 1);
             string[] keys = Inputs.Keys.ToArray();
@@ -96,9 +82,37 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
-            var inputs = Inputs.Values.ToArray();
-            var outputNode = Outputs.Values.First();
-            this.Code = $"dynamic {outputNode.name} = {inputs[0].name} {Code} {inputs[1].name};\n";
+            //todo
         }
     }
 }
+
+/*
+switch (operation)
+            {
+                case "AND":
+                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} & {inputs[1].name};\n";
+                    break;
+                case "OR":
+                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
+                    break;
+                case "NOT":
+                    this.Code = $"dynamic {outputNode.name} = !{inputs[0].name};\n";
+                    break;
+                case "XOR":
+                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} ^ {inputs[1].name};\n";
+                    break;
+                case "NOR":
+                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} | {inputs[1].name});\n";
+                    break;
+                case "XNOR":
+                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} ^ {inputs[1].name});\n";
+                    break;
+                case "NAND":
+                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} && {inputs[1].name});\n";
+                    break;
+                default:
+                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
+                    break;
+            }
+*/

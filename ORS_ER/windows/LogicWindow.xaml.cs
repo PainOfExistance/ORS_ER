@@ -8,29 +8,14 @@ namespace ORS_ER.windows
     /// </summary>
     public partial class LogicWindow : Window
     {
-        public string code = "==";
-        public string name = "";
-        public LogicWindow(string Name, string Code)
+        public (string, dynamic) Value = ("", null);
+        public string Code = "";
+        public LogicWindow(string Code, (string, dynamic) Value)
         {
             InitializeComponent();
-            this.name = Name;
-            this.code = Code;
-            if (Name.Contains("Gate"))
-            {
-                LogicTypeComboBox.ItemsSource = new List<string>
-                {
-                    "AND",
-                    "OR",
-                    "NOT",
-                    "XOR",
-                    "NOR",
-                    "XNOR",
-                    "NAND"
-                };
-            }
-            else if (Name.Contains("Operator"))
-            {
-                LogicTypeComboBox.ItemsSource = new List<string>
+            this.Code = Code;
+            this.Value = Value;
+            LogicTypeComboBox.ItemsSource = new List<string>
                 {
                 "+",
                 "-",
@@ -43,10 +28,15 @@ namespace ORS_ER.windows
                 "<",
                 "<=",
                 ">",
-                ">="
+                ">=",
+                "AND",
+                "OR",
+                "NOT",
+                "XOR",
+                "NOR",
+                "XNOR",
+                "NAND"
                 };
-            }
-            
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

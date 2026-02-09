@@ -9,28 +9,33 @@ namespace ORS_ER.components
 
         public While(Component component) : base(component)
         {
-            var cond = new IO { value = false };
-            Inputs.Add(cond.GetId(), cond);
             IO newNode1 = new IO();
             IO newNode2 = new IO();
-            Outputs.Add(newNode1.GetId(), newNode1);
-            Outputs.Add(newNode2.GetId(), newNode2);
+            Inputs.Add(newNode1.GetId(), newNode1);
+            Inputs.Add(newNode2.GetId(), newNode2);
+
+            IO newNode3 = new IO();
+            IO newNode4 = new IO();
+            Outputs.Add(newNode3.GetId(), newNode2);
+            Outputs.Add(newNode4.GetId(), newNode3);
         }
 
         public While(string name, string description, string category) : base(name, description, category)
         {
-            var cond = new IO { value = false };
-            Inputs.Add(cond.GetId(), cond);
             IO newNode1 = new IO();
             IO newNode2 = new IO();
-            Outputs.Add(newNode1.GetId(), newNode1);
-            Outputs.Add(newNode2.GetId(), newNode2);
+            Inputs.Add(newNode1.GetId(), newNode1);
+            Inputs.Add(newNode2.GetId(), newNode2);
+
+            IO newNode3 = new IO();
+            IO newNode4 = new IO();
+            Outputs.Add(newNode3.GetId(), newNode2);
+            Outputs.Add(newNode4.GetId(), newNode3);
         }
 
         public override void Paint(SKCanvas canvas)
         {
             canvas.DrawRect(Rect, Paints.ComponentFill);
-
             if (Selected)
                 canvas.DrawRect(Rect, Paints.SelectedStroke);
             else
@@ -42,28 +47,41 @@ namespace ORS_ER.components
             foreach (var output in Outputs.Values)
                 canvas.DrawCircle(output.node, 8, Paints.IOPaint);
 
-            font.Size = 14;
-            const string label = "WHILE";
+            font.Size = 20;
+            const string label = "While";
             var textX = Rect.MidX - (font.MeasureText(label, Paints.TextPaint) / 2);
             var textY = Rect.MidY + font.Size / 4;
             canvas.DrawText(label, textX, textY, font, Paints.TextPaint);
+            canvas.RotateDegrees(45, Rect.MidX, Rect.MidY);
         }
 
         public override void CreateRect(int x, int y)
         {
-            Rect = new SKRect(x - 65, y - 30, x + 65, y + 30);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
+            this.buttonRect = new SKRect(
+                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Top + (int)this.Rect.Height / 4,
+                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Bottom - (int)this.Rect.Height / 4);
 
-            var inKey = Inputs.Keys.First();
-            Inputs[inKey].node = new SKPoint(Rect.MidX, Rect.Top);
+            var delta = Rect.Width / (Inputs.Count + 1);
+            string[] keys = Inputs.Keys.ToArray();
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+            }
 
-            var outKey = Outputs.Keys.First();
-            Outputs[outKey].node = new SKPoint(Rect.MidX, Rect.Bottom);
+            delta = Rect.Width / (Outputs.Count + 1);
+            keys = Outputs.Keys.ToArray();
+            for (int i = 0; i < Outputs.Count; i++)
+            {
+                Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+            }
         }
 
         public override void GenerateCode()
         {
-            var cond = Inputs.Values.First();
-            Code = $"// WHILE ({cond.name}) => looping not implemented in parser\\n";
+            //todo
         }
     }
 }

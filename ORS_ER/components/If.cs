@@ -9,23 +9,22 @@ namespace ORS_ER.components
 
         public If(Component component) : base(component)
         {
-            // condition
-            var cond = new IO { value = false };
-            Inputs.Add(cond.GetId(), cond);
             IO newNode1 = new IO();
+            Inputs.Add(newNode1.GetId(), newNode1);
             IO newNode2 = new IO();
-            Outputs.Add(newNode1.GetId(), newNode1);
+            IO newNode3 = new IO();
             Outputs.Add(newNode2.GetId(), newNode2);
+            Outputs.Add(newNode3.GetId(), newNode3);
         }
 
         public If(string name, string description, string category) : base(name, description, category)
         {
-            var cond = new IO { value = false };
-            Inputs.Add(cond.GetId(), cond);
             IO newNode1 = new IO();
+            Inputs.Add(newNode1.GetId(), newNode1);
             IO newNode2 = new IO();
-            Outputs.Add(newNode1.GetId(), newNode1);
+            IO newNode3 = new IO();
             Outputs.Add(newNode2.GetId(), newNode2);
+            Outputs.Add(newNode3.GetId(), newNode3);
         }
 
         public override void Paint(SKCanvas canvas)
@@ -43,32 +42,41 @@ namespace ORS_ER.components
             foreach (var output in Outputs.Values)
                 canvas.DrawCircle(output.node, 8, Paints.IOPaint);
 
-            font.Size = 14;
+            font.Size = 20;
             const string label = "IF";
             var textX = Rect.MidX - (font.MeasureText(label, Paints.TextPaint) / 2);
             var textY = Rect.MidY + font.Size / 4;
             canvas.DrawText(label, textX, textY, font, Paints.TextPaint);
+            canvas.RotateDegrees(45, Rect.MidX, Rect.MidY);
         }
 
         public override void CreateRect(int x, int y)
         {
-            Rect = new SKRect(x - 55, y - 30, x + 55, y + 30);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
+            this.buttonRect = new SKRect(
+                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Top + (int)this.Rect.Height / 4,
+                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Bottom - (int)this.Rect.Height / 4);
 
-            // 1 input (top center)
-            var inKey = Inputs.Keys.First();
-            Inputs[inKey].node = new SKPoint(Rect.MidX, Rect.Top);
+            var delta = Rect.Width / (Inputs.Count + 1);
+            string[] keys = Inputs.Keys.ToArray();
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+            }
 
-            // 2 outputs (bottom left/right)
-            var outKeys = Outputs.Keys.ToArray();
-            Outputs[outKeys[0]].node = new SKPoint(Rect.Left + Rect.Width * 0.33f, Rect.Bottom);
-            Outputs[outKeys[1]].node = new SKPoint(Rect.Left + Rect.Width * 0.66f, Rect.Bottom);
+            delta = Rect.Width / (Outputs.Count + 1);
+            keys = Outputs.Keys.ToArray();
+            for (int i = 0; i < Outputs.Count; i++)
+            {
+                Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+            }
         }
 
         public override void GenerateCode()
         {
-            // Control-flow not supported in current linear parser; emit a comment so build/run still works.
-            var cond = Inputs.Values.First();
-            Code = $"// IF ({cond.name}) => then/else branching not implemented in parser\\n";
+            // todo
         }
     }
 }

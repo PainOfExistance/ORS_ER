@@ -38,48 +38,17 @@ namespace ORS_ER.components
                 canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
             }
 
+            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
 
-            if (string.IsNullOrEmpty(printValue))
-            {
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
-
-                const string label = "+";
-                var textX = buttonRect.MidX - (font.MeasureText(label) / 2);
-                var textY = buttonRect.MidY + font.Size / 4;
-
-                canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
-            }
-            else
-            {
-                float textX = 0;
-                float textY = 0;
-
-                var textWidth = font.MeasureText(printValue, Paints.TextPaint);
-                while (textWidth > ((buttonRect.Left - Rect.Left) - 5))
-                {
-                    font.Size--;
-                    textWidth = font.MeasureText(printValue, Paints.TextPaint);
-                }
-
-                textX = this.Rect.Left + 5;
-                textY = this.Rect.MidY + font.Size / 4;
-
-                canvas.DrawText(printValue, textX, textY, font, Paints.TextPaint);
-                font.Size = 20;
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-                canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
-
-                string label = "+";
-                textX = buttonRect.MidX - (font.MeasureText(label) / 2);
-                textY = buttonRect.MidY + font.Size / 4;
-                canvas.DrawText(label, textX, textY, font, Paints.ButtonTextPaint);
-            }
+            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
+            var textY = buttonRect.MidY + font.Size / 4;
+            canvas.DrawText(this.Code, textX, textY, font, Paints.ButtonTextPaint);
         }
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 75, y - 25, x + 75, y + 25);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
             this.buttonRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 4,
                 this.Rect.Top + (int)this.Rect.Height / 4,
@@ -92,21 +61,11 @@ namespace ORS_ER.components
             {
                 Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
-
-            if (!string.IsNullOrEmpty(printValue))
-            {
-                this.buttonRect = new SKRect(
-                this.Rect.Left + (3 * ((int)this.Rect.Width / 4)),
-                this.Rect.Top + 5,
-                this.Rect.Right - 5,
-                this.Rect.Bottom - 5);
-            }
         }
 
         public override void GenerateCode()
         {
-            var inputNode = Inputs.Values.First();
-            this.Code = $"Console.WriteLine(\"{Name}: \" +  {inputNode.name});\n";
+            //todo
         }
     }
 }
