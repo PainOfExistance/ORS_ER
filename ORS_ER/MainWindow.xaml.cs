@@ -33,8 +33,6 @@ namespace ORS_ER
             new Input("Numerical Input", "Numerical input.", "Inputs"),
             new Input("Binary Input", "Binary input.", "Inputs"),
             new Print("Print", "Prints to console.", "Outputs"),
-            new Logic("Logic Block", "Performs logical operation.", "Logic"),
-            new Gate("Logic Gate Block", "Performs bool operation.", "Logic"),
             new Operator("Operator Block", "Performs numerical operations.", "Logic"),
             new If("If", "Branches based on condition.", "Control Flow"),
             new While("While", "Repeats based on condition.", "Control Flow"),
@@ -232,10 +230,41 @@ namespace ORS_ER
                             if (_isConnecting
                                 && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId())
                             {
+
                                 connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
                                 connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
 
                                 item.Inputs[tmp.Value.Item3.GetId()].inputConnectionIds.Add(_isConnectingId);
+
+                                if (PaintItems[connections[_isConnectingId].fromComponentId] is If)
+                                {
+                                    item.IsInsideIf = connections[_isConnectingId].fromComponentId + "_" + PaintItems[connections[_isConnectingId].fromComponentId].Inputs[connections[_isConnectingId].fromId].IfTrue;
+                                }
+                                else if (PaintItems[connections[_isConnectingId].fromComponentId] is While)
+                                {
+                                    item.IsInsideWhile = connections[_isConnectingId].fromComponentId + "_" + PaintItems[connections[_isConnectingId].fromComponentId].Inputs[connections[_isConnectingId].fromId].IfTrue;
+                                }
+                                else
+                                {
+                                    int isInsideIf = 0;
+                                    foreach(var input in item.Inputs.Values)
+                                    {
+                                        foreach(var connId in input.inputConnectionIds)
+                                        {
+                                            if (connections.TryGetValue(connId, out var conn))
+                                            {
+                                                if (PaintItems[conn.fromComponentId].IsInsideIf !="")
+                                                {
+                                                    isInsideIf++;
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                    item.IsInsideIf = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
+                                    item.IsInsideWhile = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
+
+                                }
 
                                 connections[_isConnectingId].selected = false;
                                 _isConnecting = false;

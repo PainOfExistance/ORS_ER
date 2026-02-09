@@ -17,6 +17,18 @@ namespace ORS_ER.connections
         private static readonly List<RegistryEntry> _globalRegistry = new();
         private static readonly Dictionary<string, List<RegistryEntry>> _localRegistry = new();
 
+        public static List<RegistryEntry> GetGlobalRegistry()
+        {
+            return _globalRegistry;
+        }
+        public static List<RegistryEntry> GetLocalRegistry(string key)
+        {
+            return _localRegistry[key];
+        }
+        public static void ClearGlobalRegistry()
+        {
+            _globalRegistry.Clear();
+        }
         public static void RegisterGlobalValue(string key, RegistryEntry value)
         {
             for (int i = 0; i < _globalRegistry.Count; i++)

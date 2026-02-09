@@ -1,4 +1,5 @@
-﻿using System.CodeDom.Compiler;
+﻿using ORS_ER.connections;
+using System.CodeDom.Compiler;
 using System.Windows;
 
 namespace ORS_ER.windows
@@ -37,6 +38,9 @@ namespace ORS_ER.windows
                 "XNOR",
                 "NAND"
                 };
+
+            List<string> existingVariableNames = ValueRegistry.GetGlobalRegistry().Select(v => v.Name).ToList();
+            Variable1.ItemsSource = ValueRegistry.GetGlobalRegistry();
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

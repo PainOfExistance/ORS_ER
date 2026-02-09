@@ -6,13 +6,14 @@ namespace ORS_ER.components
     internal sealed class If : Component
     {
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.If);
-
         public If(Component component) : base(component)
         {
             IO newNode1 = new IO();
             Inputs.Add(newNode1.GetId(), newNode1);
             IO newNode2 = new IO();
             IO newNode3 = new IO();
+            newNode2.IfTrue = "True";
+            newNode3.IfTrue = "False";
             Outputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
@@ -23,6 +24,8 @@ namespace ORS_ER.components
             Inputs.Add(newNode1.GetId(), newNode1);
             IO newNode2 = new IO();
             IO newNode3 = new IO();
+            newNode2.IfTrue = "True";
+            newNode3.IfTrue = "False";
             Outputs.Add(newNode2.GetId(), newNode2);
             Outputs.Add(newNode3.GetId(), newNode3);
         }

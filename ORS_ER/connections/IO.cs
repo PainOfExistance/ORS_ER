@@ -9,10 +9,10 @@ namespace ORS_ER.connections
     public class IO
     {
         private string Id = Guid.NewGuid().ToString();
+        public string IfTrue { get; set; } = "";
         public SKPoint node { get; set; } = new SKPoint();
         public List<string> inputConnectionIds { get; set; } = [];
         public List<string> outputConnectionIds { get; set; } = [];
-
         public IO() { }
 
         public string GetId()

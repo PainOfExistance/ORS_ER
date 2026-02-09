@@ -17,6 +17,8 @@ namespace ORS_ER.components
         public string Category { get; set; } = category;
         public string Code { get; set; } = "";
         public bool Selected { get; set; } = false;
+        public string IsInsideIf { get; set; } = "";
+        public string IsInsideWhile { get; set; } = "";
         public Dictionary<string, IO> Inputs = new Dictionary<string, IO>();
         public Dictionary<string, IO> Outputs = new Dictionary<string, IO>();
         public SKRect Rect { get; set; }
