@@ -13,17 +13,20 @@ namespace ORS_ER
 {
     internal class Parser
     {
+
         public static Task<string> ParseAsync(
             Dictionary<string, Component> PaintItems,
             Dictionary<string, Connection> connections,
+            ValueRegistry valueRegistry,
             CancellationToken cancellationToken = default)
         {
-            return Task.Run(() => ParseCore(PaintItems, connections, cancellationToken), cancellationToken);
+            return Task.Run(() => ParseCore(PaintItems, connections, valueRegistry, cancellationToken), cancellationToken);
         }
 
         private static string ParseCore(
             Dictionary<string, Component> PaintItems,
             Dictionary<string, Connection> connections,
+            ValueRegistry valueRegistry,
             CancellationToken cancellationToken)
         {
             var sb = new StringBuilder();
@@ -45,7 +48,7 @@ namespace ORS_ER
                 var currentNode = startNodes.Dequeue();
                 queuedNodes.Remove(currentNode.GetId());
 
-                currentNode.GenerateCode();
+                currentNode.GenerateCode(ValueRegistry);
                 sb.AppendLine(currentNode.Code);
 
                 var outputConnections = connections.Values

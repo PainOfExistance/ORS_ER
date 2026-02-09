@@ -117,7 +117,7 @@ namespace ORS_ER.components
             switch (operation)
             {
                 case "AND":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} && {inputs[1].name};\n";
+                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} & {inputs[1].name};\n";
                     break;
                 case "OR":
                     this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";

@@ -100,7 +100,7 @@ namespace ORS_ER.components
             this.Selected = false;
             return null;
         }
-        abstract public void GenerateCode();
+        abstract public void GenerateCode(ValueRegistry valueRegistry);
         virtual public string ToJson()
         {
             var inputBuilder = new StringBuilder("\"inputs\": [");

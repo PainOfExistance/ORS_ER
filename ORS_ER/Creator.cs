@@ -72,11 +72,12 @@ namespace ORS_ER
             [JsonPropertyName("value")]
             public string? Value { get; set; }
 
-            [JsonPropertyName("inputId")]
-            public string? InputId { get; set; }
+            // NEW (multi) format only
+            [JsonPropertyName("inputIds")]
+            public List<string>? InputIds { get; set; }
 
-            [JsonPropertyName("outputId")]
-            public string? OutputId { get; set; }
+            [JsonPropertyName("outputIds")]
+            public List<string>? OutputIds { get; set; }
         }
 
         internal sealed class ConnectionData
@@ -134,7 +135,6 @@ namespace ORS_ER
 
             try
             {
-
                 SaveFileDialog SD = new SaveFileDialog();
                 SD.Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*";
                 SD.FileName = "diagram";
@@ -157,7 +157,6 @@ namespace ORS_ER
         {
             try
             {
-
                 OpenFileDialog openFileDialog = new();
                 openFileDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*";
                 openFileDialog.FilterIndex = 2;
@@ -202,8 +201,10 @@ namespace ORS_ER
                         newIO.SetId(input.Id);
                         newIO.name = input.Name;
                         newIO.value = input.Value;
-                        newIO.inputConnectionId = input.InputId;
-                        newIO.outputConnectionId = input.OutputId;
+
+                        newIO.inputConnectionIds = input.InputIds ?? [];
+                        newIO.outputConnectionIds = input.OutputIds ?? [];
+
                         newComponent.Inputs.Add(input.Id, newIO);
                     }
 
@@ -214,8 +215,10 @@ namespace ORS_ER
                         newIO.SetId(output.Id);
                         newIO.name = output.Name;
                         newIO.value = output.Value;
-                        newIO.inputConnectionId = output.InputId;
-                        newIO.outputConnectionId = output.OutputId;
+
+                        newIO.inputConnectionIds = output.InputIds ?? [];
+                        newIO.outputConnectionIds = output.OutputIds ?? [];
+
                         newComponent.Outputs.Add(output.Id, newIO);
                     }
 
@@ -251,8 +254,6 @@ namespace ORS_ER
                     return createPrint(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Input":
                     return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
-                case "Binary Print":
-                    return createBinaryOutput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Logic Block":
                     return createLogic(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Logic Gate Block":
@@ -260,7 +261,7 @@ namespace ORS_ER
                 case "Operator Block":
                     return createOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
                 default:
-                    throw new ArgumentException("Invalid component type");
+                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
             }
         }
 
@@ -275,16 +276,6 @@ namespace ORS_ER
         private static Component createPrint(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
             Print input = new Print(Name, Description, Category, runningIndex);
-            input.Selected = true;
-            input.Index = runningIndex;
-            runningIndex++;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
-        }
-
-        private static Component createBinaryOutput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
-        {
-            BinaryPrint input = new BinaryPrint(Name, Description, Category, runningIndex);
             input.Selected = true;
             input.Index = runningIndex;
             runningIndex++;

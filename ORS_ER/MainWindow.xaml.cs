@@ -25,6 +25,7 @@ namespace ORS_ER
         private const float MinZoom = 0.1f;
         private const float MaxZoom = 10.0f;
         private const float ZoomStep = 1.1f;
+        public ValueRegistry ValueRegistry { get; } = new();
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
 
         public ObservableCollection<Component> Items { get; } = new()
@@ -33,7 +34,6 @@ namespace ORS_ER
             new Input("Numerical Input", "Numerical input.", "Inputs", 0),
             new Input("Binary Input", "Binary input.", "Inputs", 0),
             new Print("Print", "Prints to console.", "Outputs", 0),
-            new BinaryPrint("Binary Print", "Prints binary value to console.", "Outputs", 0),
             new Logic("Logic Block", "Performs logical operation.", "Logic", 0),
             new Gate("Logic Gate Block", "Performs bool operation.", "Logic", 0),
             new Operator("Operator Block", "Performs numerical operations.", "Logic", 0),
@@ -77,8 +77,12 @@ namespace ORS_ER
         {
             if (!_isConnecting)
                 return;
+
             var conn = connections.GetValueOrDefault(_isConnectingId);
-            PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
+            if (conn is null)
+                return;
+
+            PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_isConnectingId);
             connections.Remove(_isConnectingId);
             _isConnecting = false;
             _isConnectingId = "";
@@ -94,8 +98,8 @@ namespace ORS_ER
                 {
                     if (conn.Value.selected)
                     {
-                        PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].outputConnectionId = "";
-                        PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionId = "";
+                        PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].outputConnectionIds.Remove(conn.Key);
+                        PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionIds.Remove(conn.Key);
                         connections.Remove(conn.Key);
                         Debug.WriteLine("Deleted Connection");
                         skiaElement.InvalidateVisual();
@@ -109,24 +113,32 @@ namespace ORS_ER
                     {
                         foreach (var input in item.Value.Inputs.Values)
                         {
-                            if (input.inputConnectionId != "")
+                            foreach (var id in input.inputConnectionIds.ToArray())
                             {
-                                var conn = connections[input.inputConnectionId];
-                                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
-                                connections.Remove(input.inputConnectionId);
+                                if (!connections.TryGetValue(id, out var conn))
+                                    continue;
+
+                                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(id);
+                                connections.Remove(id);
                                 Debug.WriteLine("Deleted Connection");
                             }
+                            input.inputConnectionIds.Clear();
                         }
+
                         foreach (var output in item.Value.Outputs.Values)
                         {
-                            if (output.outputConnectionId != "")
+                            foreach (var id in output.outputConnectionIds.ToArray())
                             {
-                                var conn = connections[output.outputConnectionId];
-                                PaintItems[conn.toComponentId].Inputs[conn.toId].inputConnectionId = "";
-                                connections.Remove(output.outputConnectionId);
+                                if (!connections.TryGetValue(id, out var conn))
+                                    continue;
+
+                                PaintItems[conn.toComponentId].Inputs[conn.toId].inputConnectionIds.Remove(id);
+                                connections.Remove(id);
                                 Debug.WriteLine("Deleted Connection");
                             }
+                            output.outputConnectionIds.Clear();
                         }
+
                         PaintItems.Remove(item.Key);
                         Debug.WriteLine("Deleted Component");
                         skiaElement.InvalidateVisual();
@@ -197,10 +209,15 @@ namespace ORS_ER
                             Connection newConnection = new Connection(tmp.Value.Item3.GetId(), "", tmp.Value.Item2.GetId(), "");
                             _isConnectingId = newConnection.GetId();
                             connections.Add(_isConnectingId, newConnection);
-                            item.Outputs[tmp.Value.Item3.GetId()].outputConnectionId = _isConnectingId;
+
+                            item.Outputs[tmp.Value.Item3.GetId()].outputConnectionIds.Add(_isConnectingId);
                         }
                         else
                         {
+                            // cancel current in-progress connection
+                            if (connections.TryGetValue(_isConnectingId, out var prev))
+                                PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
+
                             connections.Remove(_isConnectingId);
                             _isConnecting = false;
                             _isConnectingId = "";
@@ -211,37 +228,24 @@ namespace ORS_ER
                     {
                         try
                         {
-
-                            var fromValue = PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].value;
-                            var toValue = tmp.Value.Item3.value;
-
-                            bool isFromValueNull = fromValue == null;
-                            bool isToValueNull = toValue == null;
-                            Debug.WriteLine(isFromValueNull);
-                            Debug.WriteLine(isToValueNull);
-
-                            if (toValue == null)
-                            {
-                                toValue = fromValue;
-                            }
-
                             if (_isConnecting
-                                && tmp.Value.Item3.inputConnectionId == ""
-                                && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId()
-                                && fromValue is not null
-                                && toValue is not null
-                                && fromValue.GetType() == toValue.GetType())
+                                && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId())
                             {
                                 connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
                                 connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
-                                item.Inputs[tmp.Value.Item3.GetId()].inputConnectionId = _isConnectingId;
+
+                                item.Inputs[tmp.Value.Item3.GetId()].inputConnectionIds.Add(_isConnectingId);
+
                                 connections[_isConnectingId].selected = false;
                                 _isConnecting = false;
                                 _isConnectingId = "";
                             }
-                            else
+                            else if (_isConnecting)
                             {
-                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionId = "";
+                                // invalid drop target => cancel
+                                if (connections.TryGetValue(_isConnectingId, out var prev))
+                                    PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
+
                                 connections.Remove(_isConnectingId);
                                 _isConnecting = false;
                                 _isConnectingId = "";
@@ -260,6 +264,9 @@ namespace ORS_ER
                         returnItem = tmp;
                         if (_isConnecting)
                         {
+                            if (connections.TryGetValue(_isConnectingId, out var prev))
+                                PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
+
                             connections.Remove(_isConnectingId);
                             _isConnecting = false;
                             _isConnectingId = "";
@@ -412,7 +419,7 @@ namespace ORS_ER
         private async void Run_Click(object sender, RoutedEventArgs e)
         {
             var cts = new CancellationTokenSource();
-            string code = await Parser.ParseAsync(PaintItems, connections, cts.Token);
+            string code = await Parser.ParseAsync(PaintItems, connections, ValueRegistry, cts.Token);
             Debug.WriteLine("Generated Code:");
             Debug.WriteLine(code);
 
@@ -445,7 +452,9 @@ namespace ORS_ER
             if (_isConnecting)
             {
                 var conn = connections.GetValueOrDefault(_isConnectingId);
-                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionId = "";
+                if (conn is not null)
+                    PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_isConnectingId);
+
                 connections.Remove(_isConnectingId);
                 _isConnecting = false;
                 _isConnectingId = "";
