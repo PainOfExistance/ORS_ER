@@ -178,13 +178,6 @@ namespace ORS_ER
                     Component newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
                     newComponent.SetId(component.Id);
                     newComponent.Code = component.Code ?? "";
-                    if (component.Operation != "" && (newComponent is Gate or Logic))
-                    {
-                        if (newComponent is Gate gate)
-                            gate.operation = component.Operation;
-                        else if (newComponent is Logic logic)
-                            logic.operation = component.Operation;
-                    }
 
                     newComponent.Inputs.Clear();
                     foreach (var input in component.Inputs)

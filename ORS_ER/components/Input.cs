@@ -12,14 +12,18 @@ namespace ORS_ER.components
         {
             base.font = new SKFont();
             IO newNode = new IO();
+            IO newNode1 = new IO();
             Outputs.Add(newNode.GetId(), newNode);
+            Inputs.Add(newNode1.GetId(), newNode1);
         }
 
         public Input(string name, string description, string category) : base(name, description, category)
         {
             base.font = new SKFont();
             IO newNode = new IO();
+            IO newNode1 = new IO();
             Outputs.Add(newNode.GetId(), newNode);
+            Inputs.Add(newNode1.GetId(), newNode1);
         }
 
         public override void Paint(SKCanvas canvas)
@@ -35,6 +39,11 @@ namespace ORS_ER.components
             foreach (var output in Outputs)
             {
                 canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
+            }
+
+            foreach (var input in Inputs)
+            {
+                canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
             }
 
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
@@ -79,11 +88,29 @@ namespace ORS_ER.components
             {
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
+
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+            }
         }
 
         public override void GenerateCode()
         {
-            //todo change
+            if (this.IsInsideIf != "")
+            {
+                string key = this.IsInsideIf.Split('_')[0];
+                ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
+            }
+            else if (this.IsInsideWhile != "")
+            {
+                string key = this.IsInsideWhile.Split('_')[0];
+                ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
+            }
+            else
+            {
+                ValueRegistry.RegisterGlobalValue(this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
+            }
         }
     }
 }

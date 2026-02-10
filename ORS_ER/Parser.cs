@@ -27,12 +27,6 @@ namespace ORS_ER
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken)
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("using System;");
-            sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using System.Text;");
-            sb.AppendLine();
-
             var startNodes = new Queue<Component>(
                 PaintItems
                     .Where(kv => kv.Value.Inputs.Count == 0)
@@ -47,26 +41,27 @@ namespace ORS_ER
                 queuedNodes.Remove(currentNode.GetId());
 
                 currentNode.GenerateCode();
-                sb.AppendLine(currentNode.Code);
-
                 var outputConnections = connections.Values
                     .Where(c => c.fromComponentId == currentNode.GetId())
                     .ToList();
+
+                if (currentNode is If or While)
+                {
+                    outputConnections = connections.Values.Where(c => c.fromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Any(kv => kv.IfTrue != "")).ToList();
+                }
 
                 foreach (var conn in outputConnections)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var nextNode = PaintItems[conn.toComponentId];
-                    nextNode.Inputs[conn.toId].name = currentNode.Outputs[conn.fromId].name;
-                    nextNode.Inputs[conn.toId].value = currentNode.Outputs[conn.fromId].value;
-
+                    
                     if (queuedNodes.Add(nextNode.GetId()))
                         startNodes.Enqueue(nextNode);
 
                 }
             }
 
-            return sb.ToString();
+            return "";
         }
 
         public static Task EvaluateAsync(string code, CancellationToken cancellationToken = default)

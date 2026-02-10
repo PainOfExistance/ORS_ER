@@ -1,57 +1,50 @@
-﻿using ORS_ER.connections;
+﻿using System;
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Text;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace ORS_ER.windows
 {
     /// <summary>
-    /// Interaction logic for LogicWindow.xaml
+    /// Interaction logic for IfWindow.xaml
     /// </summary>
-    public partial class LogicWindow : Window
+    public partial class IfWindow : Window
     {
         public (string, dynamic) Value = ("", null);
         public string Code = "";
-        public LogicWindow(string Code, (string, dynamic) Value)
+        public IfWindow(string Code, (string, dynamic) Value)
         {
             InitializeComponent();
             this.Code = Code;
             this.Value = Value;
             LogicTypeComboBox.ItemsSource = new List<string>
                 {
-                "+",
-                "-",
-                "*",
-                "/",
-                "%",
-                "^",
                 "==",
                 "!=",
                 "<",
                 "<=",
                 ">",
-                ">=",
-                "AND",
-                "OR",
-                "NOT",
-                "XOR",
-                "NOR",
-                "XNOR",
-                "NAND"
+                ">="
                 };
 
             var parts = Code.Split(" ").ToList();
             if (parts.Count > 0)
             {
-                NameTextBox.Text = parts[1];
-                Variable1.Text = parts[3];
-                Variable2.Text = parts[5];
-                LogicTypeComboBox.SelectedItem = parts[4];
+                Variable1.Text = parts[1];
+                Variable2.Text = parts[3];
+                LogicTypeComboBox.SelectedItem = parts[2];
             }
         }
-
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            var candidateName = NameTextBox.Text?.Trim() ?? string.Empty;
             var candidateName1 = Variable1.Text?.Trim() ?? string.Empty;
             var candidateName2 = Variable2.Text?.Trim() ?? string.Empty;
 
@@ -61,19 +54,10 @@ namespace ORS_ER.windows
                 return;
             }
 
-            this.Value.Item1 = candidateName;
             this.Value.Item2 = LogicTypeComboBox.SelectedItem;
-            this.Code = $"dynamic {candidateName} = {Variable1.Text.Replace('"', '\"')} {LogicTypeComboBox.SelectedItem} {Variable2.Text.Replace('"', '\"')} ;".Replace("  ", " ");
+            this.Code = $"if( {Variable1.Text.Replace('"', '\"')} {LogicTypeComboBox.SelectedItem} {Variable2.Text.Replace('"', '\"')} )".Replace("  ", " ");
             DialogResult = true;
         }
-
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-        }
-
-
         private static bool IsCSharpKeyword(string name) => name switch
         {
             "abstract" or "as" or "base" or "bool" or "break" or "byte" or "case" or "catch" or "char" or "checked" or "class" or
@@ -86,18 +70,9 @@ namespace ORS_ER.windows
             "unchecked" or "unsafe" or "ushort" or "using" or "virtual" or "void" or "volatile" or "while" => true,
             _ => false
         };
-
-        private void LogicTypeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            if (LogicTypeComboBox.SelectedItem == "NOT")
-            {
-                Variable1.IsEnabled = false;
-                Variable1.Text = "";
-            }
-            else
-            {
-                Variable1.IsEnabled = true;
-            }
+            DialogResult = false;
         }
     }
 }

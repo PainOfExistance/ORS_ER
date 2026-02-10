@@ -1,4 +1,5 @@
-﻿using ORS_ER.connections;
+﻿using Microsoft.CodeAnalysis;
+using ORS_ER.connections;
 using ORS_ER.windows;
 using SkiaSharp;
 using System;
@@ -53,7 +54,7 @@ namespace ORS_ER.components
 
             float textX = buttonRect.MidX - (font.MeasureText(Code) / 2);
             float textY = buttonRect.MidY + font.Size / 4;
-            canvas.DrawText(Code, textX, textY, font, Paints.TextPaint);
+            canvas.DrawText(Code.Replace("dynamic", "").Replace(" ", ""), textX, textY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)
@@ -82,37 +83,152 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
-            //todo
+            string[] parts = this.Code.Split(' ');
+            string var = this.Value.Item1;
+            string var1 = "";
+            string var2 = "";
+            string op = this.Value.Item2;
+
+            if (this.Value.Item2 == "NOT")
+            {
+                var1 = parts[3];
+            }
+            else
+            {
+                var1 = parts[3];
+                var2 = parts[5];
+            }
+
+            dynamic variable1 = var1;
+            dynamic variable2 = var2;
+
+            if (this.IsInsideIf != "")
+            {
+                string key = this.IsInsideIf.Split('_')[0];
+                variable1 = ValueRegistry.GetLocalValue(key, var1);
+                variable2 = ValueRegistry.GetLocalValue(key, var2);
+            }
+            else if (this.IsInsideWhile != "")
+            {
+                string key = this.IsInsideWhile.Split('_')[0];
+                variable1 = ValueRegistry.GetLocalValue(key, var1);
+                variable2 = ValueRegistry.GetLocalValue(key, var2);
+            }
+            else
+            {
+                variable1 = ValueRegistry.GetGlobalValue(var1);
+                variable2 = ValueRegistry.GetGlobalValue(var2);
+            }
+
+            if (variable1 == null)
+            {
+                if (double.TryParse(var1, out double doubleResult))
+                {
+                    variable1 = doubleResult;
+                }
+                else if (bool.TryParse(var1, out bool boolResult))
+                {
+                    variable1 = boolResult;
+                }
+                else
+                {
+                    variable1 = var1.ToString();
+                }
+            }
+            else if (variable2 == null)
+            {
+                if (double.TryParse(var2, out double doubleResult))
+                {
+                    variable2 = doubleResult;
+                }
+                else if (bool.TryParse(var2, out bool boolResult))
+                {
+                    variable2 = boolResult;
+                }
+                else
+                {
+                    variable2 = var2.ToString();
+                }
+            }
+
+            switch (op)
+            {
+                case "AND":
+                    this.Value = (this.Value.Item1, variable1 & variable2);
+                    break;
+                case "OR":
+                    this.Value = (this.Value.Item1, variable1 | variable2);
+                    break;
+                case "NOT":
+                    this.Value = (this.Value.Item1, !variable1);
+                    break;
+                case "XOR":
+                    this.Value = (this.Value.Item1, variable1 ^ variable2);
+                    break;
+                case "NOR":
+                    this.Value = (this.Value.Item1, !(variable1 | variable2));
+                    break;
+                case "XNOR":
+                    this.Value = (this.Value.Item1, !(variable1 ^ variable2));
+                    break;
+                case "NAND":
+                    this.Value = (this.Value.Item1, !(variable1 & variable2));
+                    break;
+                case "==":
+                    this.Value = (this.Value.Item1, variable1 == variable2);
+                    break;
+                case "!=":
+                    this.Value = (this.Value.Item1, variable1 != variable2);
+                    break;
+                case "<":
+                    this.Value = (this.Value.Item1, variable1 < variable2);
+                    break;
+                case "<=":
+                    this.Value = (this.Value.Item1, variable1 <= variable2);
+                    break;
+                case ">":
+                    this.Value = (this.Value.Item1, variable1 > variable2);
+                    break;
+                case ">=":
+                    this.Value = (this.Value.Item1, variable1 >= variable2);
+                    break;
+                case "+":
+                    this.Value = (this.Value.Item1, variable1 + variable2);
+                    break;
+                case "-":
+                    this.Value = (this.Value.Item1, variable1 - variable2);
+                    break;
+                case "*":
+                    this.Value = (this.Value.Item1, variable1 * variable2);
+                    break;
+                case "/":
+                    this.Value = (this.Value.Item1, variable1 / variable2);
+                    break;
+                case "%":
+                    this.Value = (this.Value.Item1, variable1 % variable2);
+                    break;
+                case "^":
+                    this.Value = (this.Value.Item1, Math.Pow(variable1, variable2));
+                    break;
+                default:
+                    this.Value = (this.Value.Item1, variable1 | variable2);
+                    break;
+            }
+
+            if (this.IsInsideIf != "")
+            {
+                string key = this.IsInsideIf.Split('_')[0];
+                ValueRegistry.RegisterLocalValue(key, var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
+            }
+            else if (this.IsInsideWhile != "")
+            {
+                string key = this.IsInsideWhile.Split('_')[0];
+                ValueRegistry.RegisterLocalValue(key, var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
+            }
+            else
+            {
+                ValueRegistry.RegisterGlobalValue(var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
+            }
         }
     }
 }
-
-/*
-switch (operation)
-            {
-                case "AND":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} & {inputs[1].name};\n";
-                    break;
-                case "OR":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
-                    break;
-                case "NOT":
-                    this.Code = $"dynamic {outputNode.name} = !{inputs[0].name};\n";
-                    break;
-                case "XOR":
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} ^ {inputs[1].name};\n";
-                    break;
-                case "NOR":
-                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} | {inputs[1].name});\n";
-                    break;
-                case "XNOR":
-                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} ^ {inputs[1].name});\n";
-                    break;
-                case "NAND":
-                    this.Code = $"dynamic {outputNode.name} = !({inputs[0].name} && {inputs[1].name});\n";
-                    break;
-                default:
-                    this.Code = $"dynamic {outputNode.name} = {inputs[0].name} | {inputs[1].name};\n";
-                    break;
-            }
-*/

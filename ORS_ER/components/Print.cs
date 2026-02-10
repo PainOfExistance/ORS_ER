@@ -13,14 +13,20 @@ namespace ORS_ER.components
 
         public Print(Component component) : base(component)
         {
+            base.font = new SKFont();
             IO newNode = new IO();
-            Inputs.Add(newNode.GetId(), newNode);
+            IO newNode1 = new IO();
+            Outputs.Add(newNode.GetId(), newNode);
+            Inputs.Add(newNode1.GetId(), newNode1);
         }
 
         public Print(string name, string description, string category) : base(name, description, category)
         {
+            base.font = new SKFont();
             IO newNode = new IO();
-            Inputs.Add(newNode.GetId(), newNode);
+            IO newNode1 = new IO();
+            Outputs.Add(newNode.GetId(), newNode);
+            Inputs.Add(newNode1.GetId(), newNode1);
         }
 
         public override void Paint(SKCanvas canvas)
@@ -32,6 +38,11 @@ namespace ORS_ER.components
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
+
+            foreach (var output in Outputs)
+            {
+                canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
+            }
 
             foreach (var input in Inputs)
             {
@@ -57,6 +68,11 @@ namespace ORS_ER.components
 
             var delta = Rect.Width / (Inputs.Count + 1);
             string[] keys = Inputs.Keys.ToArray();
+            for (int i = 0; i < Outputs.Count; i++)
+            {
+                Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+            }
+
             for (int i = 0; i < Inputs.Count; i++)
             {
                 Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
@@ -65,7 +81,23 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
-            //todo
+            if (this.IsInsideIf != "")
+            {
+                string key = this.IsInsideIf.Split('_')[0];
+                var variable = ValueRegistry.GetLocalValue(key, this.Value.Item1);
+                Console.WriteLine(this.Value.Item1 + ": " + variable);
+            }
+            else if (this.IsInsideWhile != "")
+            {
+                string key = this.IsInsideWhile.Split('_')[0];
+                var variable = ValueRegistry.GetLocalValue(key, this.Value.Item1);
+                Console.WriteLine(this.Value.Item1 + ": " + variable);
+            }
+            else
+            {
+                var variable = ValueRegistry.GetGlobalValue(this.Value.Item1);
+                Console.WriteLine(this.Value.Item1 + ": " + variable);
+            }
         }
     }
 }

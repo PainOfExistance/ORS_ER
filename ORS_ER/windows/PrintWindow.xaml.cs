@@ -24,7 +24,7 @@ namespace ORS_ER.windows
             InitializeComponent();
             this.Code = Code;
             this.Value = Value;
-            VariableComboBox.SelectedItem = VariableComboBox.Items.IndexOf(this.Value.Item1);
+            VariableComboBox.Text = Value.Item1;
         }
     }
 }

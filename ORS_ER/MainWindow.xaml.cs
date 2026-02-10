@@ -246,21 +246,7 @@ namespace ORS_ER
                                 }
                                 else
                                 {
-                                    int isInsideIf = 0;
-                                    foreach(var input in item.Inputs.Values)
-                                    {
-                                        foreach(var connId in input.inputConnectionIds)
-                                        {
-                                            if (connections.TryGetValue(connId, out var conn))
-                                            {
-                                                if (PaintItems[conn.fromComponentId].IsInsideIf !="")
-                                                {
-                                                    isInsideIf++;
-                                                }
-                                            }
-                                        }
-
-                                    }
+                                    //todo all the god damn logic of connecting if and while and all of that shit
                                     item.IsInsideIf = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
                                     item.IsInsideWhile = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
 

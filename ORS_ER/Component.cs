@@ -111,7 +111,7 @@ namespace ORS_ER.components
                 }
                 else if (this.Name.Contains("Input"))
                 {
-                    var dlg = new InputWindow(this.Code, this.Value);
+                    var dlg = new InputWindow(this.Code, this.Value, this.Name);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;
@@ -129,7 +129,7 @@ namespace ORS_ER.components
                 }
                 else if (this.Name.Contains("If"))
                 {
-                    var dlg = new IfWindow(this.Name, this.Code);
+                    var dlg = new IfWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;
@@ -138,7 +138,7 @@ namespace ORS_ER.components
                 }
                 else
                 {
-                    var dlg = new WhileWindow(this.Name, this.Code);
+                    var dlg = new IfWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;

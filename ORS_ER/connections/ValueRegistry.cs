@@ -25,10 +25,12 @@ namespace ORS_ER.connections
         {
             return _localRegistry[key];
         }
+
         public static void ClearGlobalRegistry()
         {
             _globalRegistry.Clear();
         }
+
         public static void RegisterGlobalValue(string key, RegistryEntry value)
         {
             for (int i = 0; i < _globalRegistry.Count; i++)
@@ -84,7 +86,7 @@ namespace ORS_ER.connections
             {
                 if (entry.Name == key)
                 {
-                    return null;
+                    return entry;
                 }
             }
 

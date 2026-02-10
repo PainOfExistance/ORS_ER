@@ -15,7 +15,7 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8" HorizontalAlignment="center">
             <Label Content="Select variable to print:" VerticalAlignment="Center"/>
-            <ComboBox x:Name="VariableComboBox" Width="100" Margin="8,0,0,0"/>
+            <TextBox x:Name="VariableComboBox" Width="100" Margin="8,0,0,0"/>
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="center">

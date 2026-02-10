@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ORS_ER.windows"
         mc:Ignorable="d"
-        Title="LogicWindow" Height="150" Width="400">
+        Title="Logic" Height="150" Width="400">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
@@ -24,19 +24,18 @@
         <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="=" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
         <Label Grid.Row="0" Grid.Column="1" Content="Variable 1:" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="Variable1" Width="65" Margin="5"/>
+        <TextBox Grid.Row="1" Grid.Column="1" x:Name="Variable1" Width="80" Margin="5"/>
 
         <Label Grid.Row="0" Grid.Column="2" Content="Operation:" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <ComboBox Grid.Row="1" Grid.Column="2" x:Name="LogicTypeComboBox" Width="65" Margin="5"/>
+        <ComboBox Grid.Row="1" Grid.Column="2" x:Name="LogicTypeComboBox" Width="80" Margin="5" SelectionChanged="LogicTypeComboBox_SelectionChanged"/>
 
         <Label Grid.Row="0" Grid.Column="3" Content="Varaible 2:" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <ComboBox Grid.Row="1" Grid.Column="3" x:Name="Variable2" Width="65" Margin="5"/>
+        <TextBox Grid.Row="1" Grid.Column="3" x:Name="Variable2" Width="80" Margin="5"/>
 
 
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="OkButton" Content="OK" Width="80" Margin="5" Click="OkButton_Click"/>
             <Button x:Name="CancelButton" Content="Cancel" Width="80" Margin="5" Click="CancelButton_Click"/>
-            <Button x:Name="ClearButton" Content="Clear and close" Width="100" Margin="5"/>
         </StackPanel>
     </Grid>
 </Window>

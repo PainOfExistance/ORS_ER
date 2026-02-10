@@ -12,12 +12,14 @@ namespace ORS_ER.windows
     {
         public (string, dynamic) Value = ("", null);
         public string Code = "";
+        public string Type = "";
 
-        public InputWindow(string Code, (string, dynamic) Value)
+        public InputWindow(string Code, (string, dynamic) Value, string Type)
         {
             InitializeComponent();
             this.Code = Code;
             this.Value = Value;
+            this.Type = Type;
             NameTextBox.Text = Value.Item1;
             ValueTextBox.Text = Value.Item2;
         }
@@ -34,22 +36,22 @@ namespace ORS_ER.windows
                 return;
             }
 
-            ResultName = candidateName;
-            if (_inputName.Contains("String"))
+            this.Value.Item1 = candidateName;
+            if (this.Type.Contains("String"))
             {
-                ResultValue = "\"" + ValueTextBox.Text.Replace("\"", "") + "\"";
+                this.Value.Item2 = "\"" + ValueTextBox.Text.Replace("\"", "") + "\"";
             }
-            else if (_inputName.Contains("Binary"))
+            else if (this.Type.Contains("Binary"))
             {
                 bool val = false;
                 success = bool.TryParse(ValueTextBox.Text, out val);
-                ResultValue = val;
+                this.Value.Item2 = val;
             }
             else
             {
                 double val = 0.0;
                 success = double.TryParse(ValueTextBox.Text.ToLower(), out val);
-                ResultValue = val;
+                this.Value.Item2 = val;
             }
 
             if (!success)
@@ -57,6 +59,7 @@ namespace ORS_ER.windows
                 MessageBox.Show("Invalid value entered. Please enter a valid value.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+            this.Code = $"dynamic {candidateName} = {this.Value.Item2} ;";
             DialogResult = true;
         }
 
@@ -75,8 +78,6 @@ namespace ORS_ER.windows
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            if(ResultName == "" || ResultName == null)
-                ResultName = "";
             DialogResult = true;
         }
 

@@ -78,10 +78,161 @@ namespace ORS_ER.components
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
         }
-
         public override void GenerateCode()
         {
-            //todo
+            string[] parts = this.Code.Split(' ');
+            string var1 = parts[1];
+            string var2 = parts[3];
+            string op = parts[2];
+
+            dynamic variable1 = "";
+            dynamic variable2 = "";
+
+            ValueRegistry.AddLocalRegistry(this.GetId());
+            if (this.IsInsideIf != "")
+            {
+                string key = this.IsInsideIf.Split('_')[0];
+                variable1 = ValueRegistry.GetLocalValue(key, var1);
+                variable2 = ValueRegistry.GetLocalValue(key, var2);
+
+                if (variable1 == null)
+                {
+                    if (double.TryParse(var1, out double doubleResult))
+                    {
+                        variable1 = doubleResult;
+                    }
+                    else if (bool.TryParse(var1, out bool boolResult))
+                    {
+                        variable1 = boolResult;
+                    }
+                    else
+                    {
+                        variable1 = var1.ToString();
+                    }
+                }
+                else if (variable2 == null)
+                {
+                    if (double.TryParse(var2, out double doubleResult))
+                    {
+                        variable2 = doubleResult;
+                    }
+                    else if (bool.TryParse(var2, out bool boolResult))
+                    {
+                        variable2 = boolResult;
+                    }
+                    else
+                    {
+                        variable2 = var2.ToString();
+                    }
+                }
+            }
+            else if (this.IsInsideWhile != "")
+            {
+                string key = this.IsInsideWhile.Split('_')[0];
+                variable1 = ValueRegistry.GetLocalValue(key, var1);
+                variable2 = ValueRegistry.GetLocalValue(key, var2);
+
+                if (variable1 == null)
+                {
+                    if (double.TryParse(var1, out double doubleResult))
+                    {
+                        variable1 = doubleResult;
+                    }
+                    else if (bool.TryParse(var1, out bool boolResult))
+                    {
+                        variable1 = boolResult;
+                    }
+                    else
+                    {
+                        variable1 = var1.ToString();
+                    }
+                }
+                else if (variable2 == null)
+                {
+                    if (double.TryParse(var2, out double doubleResult))
+                    {
+                        variable2 = doubleResult;
+                    }
+                    else if (bool.TryParse(var2, out bool boolResult))
+                    {
+                        variable2 = boolResult;
+                    }
+                    else
+                    {
+                        variable2 = var2.ToString();
+                    }
+                }
+            }
+            else
+            {
+                variable1 = ValueRegistry.GetGlobalValue(var1);
+                variable2 = ValueRegistry.GetGlobalValue(var2);
+
+                if (variable1 == null)
+                {
+                    if (double.TryParse(var1, out double doubleResult))
+                    {
+                        variable1 = doubleResult;
+                    }
+                    else if (bool.TryParse(var1, out bool boolResult))
+                    {
+                        variable1 = boolResult;
+                    }
+                    else
+                    {
+                        variable1 = var1.ToString();
+                    }
+                }
+                else if (variable2 == null)
+                {
+                    if (double.TryParse(var2, out double doubleResult))
+                    {
+                        variable2 = doubleResult;
+                    }
+                    else if (bool.TryParse(var2, out bool boolResult))
+                    {
+                        variable2 = boolResult;
+                    }
+                    else
+                    {
+                        variable2 = var2.ToString();
+                    }
+                }
+            }
+
+            switch (op)
+            {
+                case "==":
+                    this.Value = (this.Value.Item1, variable1 == variable2);
+                    break;
+                case "!=":
+                    this.Value = (this.Value.Item1, variable1 != variable2);
+                    break;
+                case "<":
+                    this.Value = (this.Value.Item1, variable1 < variable2);
+                    break;
+                case "<=":
+                    this.Value = (this.Value.Item1, variable1 <= variable2);
+                    break;
+                case ">":
+                    this.Value = (this.Value.Item1, variable1 > variable2);
+                    break;
+                case ">=":
+                    this.Value = (this.Value.Item1, variable1 >= variable2);
+                    break;
+                default:
+                    this.Value = (this.Value.Item1, variable1 == variable2);
+                    break;
+            }
+
+            if (this.Value.Item2)
+            {
+                Outputs.Values.FirstOrDefault(o => o.IfTrue == "False")?.IfTrue = "";
+            }
+            else
+            {
+                Outputs.Values.FirstOrDefault(o => o.IfTrue == "True")?.IfTrue = "";
+            }
         }
     }
 }
