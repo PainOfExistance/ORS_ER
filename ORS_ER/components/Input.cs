@@ -75,7 +75,7 @@ namespace ORS_ER.components
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
             this.buttonRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 4,
                 this.Rect.Top + (int)this.Rect.Height / 4,
@@ -89,6 +89,8 @@ namespace ORS_ER.components
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
 
+            delta = Rect.Width / (Inputs.Count + 1);
+            keys = Inputs.Keys.ToArray();
             for (int i = 0; i < Inputs.Count; i++)
             {
                 Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);

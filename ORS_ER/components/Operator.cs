@@ -4,7 +4,9 @@ using ORS_ER.windows;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using static ORS_ER.connections.ValueRegistry;
 
 namespace ORS_ER.components
 {
@@ -59,25 +61,25 @@ namespace ORS_ER.components
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
             this.buttonRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 4,
                 this.Rect.Top + (int)this.Rect.Height / 4,
                 this.Rect.Right - (int)this.Rect.Width / 4,
                 this.Rect.Bottom - (int)this.Rect.Height / 4);
 
-            var delta = Rect.Width / (Inputs.Count + 1);
-            string[] keys = Inputs.Keys.ToArray();
-            for (int i = 0; i < Inputs.Count; i++)
-            {
-                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
-            }
-
-            delta = Rect.Width / (Outputs.Count + 1);
-            keys = Outputs.Keys.ToArray();
+            var delta = Rect.Width / (Outputs.Count + 1);
+            string[] keys = Outputs.Keys.ToArray();
             for (int i = 0; i < Outputs.Count; i++)
             {
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+            }
+
+            delta = Rect.Width / (Inputs.Count + 1);
+            keys = Inputs.Keys.ToArray();
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
         }
 
@@ -99,29 +101,22 @@ namespace ORS_ER.components
                 var2 = parts[5];
             }
 
-            dynamic variable1 = var1;
-            dynamic variable2 = var2;
+            dynamic variable1 = ValueRegistry.GetGlobalValue(var1);
+            dynamic variable2 = ValueRegistry.GetGlobalValue(var2);
 
-            if (this.IsInsideIf != "")
+            if (variable1 is not RegistryEntry)
             {
-                string key = this.IsInsideIf.Split('_')[0];
-                variable1 = ValueRegistry.GetLocalValue(key, var1);
-                variable2 = ValueRegistry.GetLocalValue(key, var2);
-            }
-            else if (this.IsInsideWhile != "")
-            {
-                string key = this.IsInsideWhile.Split('_')[0];
-                variable1 = ValueRegistry.GetLocalValue(key, var1);
-                variable2 = ValueRegistry.GetLocalValue(key, var2);
-            }
-            else
-            {
-                variable1 = ValueRegistry.GetGlobalValue(var1);
-                variable2 = ValueRegistry.GetGlobalValue(var2);
-            }
+                if (this.IsInsideIf != "")
+                {
+                    string key = this.IsInsideIf.Split('_')[0];
+                    variable1 = ValueRegistry.GetLocalValue(key, var1);
+                }
+                else if (this.IsInsideWhile != "")
+                {
+                    string key = this.IsInsideWhile.Split('_')[0];
+                    variable1 = ValueRegistry.GetLocalValue(key, var1);
+                }
 
-            if (variable1 == null)
-            {
                 if (double.TryParse(var1, out double doubleResult))
                 {
                     variable1 = doubleResult;
@@ -135,8 +130,19 @@ namespace ORS_ER.components
                     variable1 = var1.ToString();
                 }
             }
-            else if (variable2 == null)
+            else if (variable2 is not RegistryEntry)
             {
+                if (this.IsInsideIf != "")
+                {
+                    string key = this.IsInsideIf.Split('_')[0];
+                    variable2 = ValueRegistry.GetLocalValue(key, var2);
+                }
+                else if (this.IsInsideWhile != "")
+                {
+                    string key = this.IsInsideWhile.Split('_')[0];
+                    variable2 = ValueRegistry.GetLocalValue(key, var2);
+                }
+
                 if (double.TryParse(var2, out double doubleResult))
                 {
                     variable2 = doubleResult;
@@ -150,6 +156,9 @@ namespace ORS_ER.components
                     variable2 = var2.ToString();
                 }
             }
+
+            variable1 = variable1 is RegistryEntry entry1 ? entry1.Value : variable1;
+            variable2 = variable2 is RegistryEntry entry2 ? entry2.Value : variable2;
 
             switch (op)
             {
@@ -215,7 +224,11 @@ namespace ORS_ER.components
                     break;
             }
 
-            if (this.IsInsideIf != "")
+            if(ValueRegistry.GetGlobalValue(var) is RegistryEntry)
+            {
+                ValueRegistry.RegisterGlobalValue(var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
+            }
+            else if (this.IsInsideIf != "")
             {
                 string key = this.IsInsideIf.Split('_')[0];
                 ValueRegistry.RegisterLocalValue(key, var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
@@ -229,6 +242,8 @@ namespace ORS_ER.components
             {
                 ValueRegistry.RegisterGlobalValue(var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
             }
+
+            this.Value = (this.Value.Item1, op);
         }
     }
 }

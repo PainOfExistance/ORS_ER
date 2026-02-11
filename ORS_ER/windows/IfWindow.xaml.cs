@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -36,7 +37,8 @@ namespace ORS_ER.windows
                 };
 
             var parts = Code.Split(" ").ToList();
-            if (parts.Count > 0)
+            Debug.WriteLine($"Code: {parts.Count()}");
+            if (parts.Count > 0 && parts[0] != "")
             {
                 Variable1.Text = parts[1];
                 Variable2.Text = parts[3];

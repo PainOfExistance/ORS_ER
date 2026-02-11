@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ORS_ER.windows"
-        Title="Print" Width="300" Height="100"
+        Title="Print" Width="300" Height="150"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
     <Grid Margin="12">
@@ -19,8 +19,8 @@
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="center">
-            <Button Content="OK" Width="80" Margin="0,0,8,0"/>
-            <Button Content="Cancel" Width="80" />
+            <Button Content="OK" Width="80" Margin="0,0,8,0" Click="Button_Click"/>
+            <Button Content="Cancel" Width="80" Click="Button_Click_1" />
         </StackPanel>
     </Grid>
 </Window>

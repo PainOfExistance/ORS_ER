@@ -111,5 +111,11 @@ namespace ORS_ER.connections
                 _localRegistry.Remove(registryId);
             }
         }
+
+        public static void ClearAllRegistries()
+        {
+            _globalRegistry.Clear();
+            _localRegistry.Clear();
+        }
     }
 }

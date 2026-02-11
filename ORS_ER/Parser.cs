@@ -4,6 +4,7 @@ using ORS_ER.components;
 using ORS_ER.connections;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -29,9 +30,12 @@ namespace ORS_ER
         {
             var startNodes = new Queue<Component>(
                 PaintItems
-                    .Where(kv => kv.Value.Inputs.Count == 0)
+                    .Where(kv => kv.Value.Inputs.First().Value.inputConnectionIds.Count() == 0)
                     .Select(kv => kv.Value));
             var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
+
+            Debug.WriteLine(startNodes.Count());
+            Debug.WriteLine(queuedNodes.Count());
 
             while (startNodes.Count > 0)
             {
@@ -47,14 +51,15 @@ namespace ORS_ER
 
                 if (currentNode is If or While)
                 {
-                    outputConnections = connections.Values.Where(c => c.fromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Any(kv => kv.IfTrue != "")).ToList();
+                    Debug.WriteLine("Is if");
+                    outputConnections = connections.Values.Where(c => c.fromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.fromId && kv.IfTrue != "").ToList().Count() > 0).ToList();
+                    Debug.WriteLine(outputConnections.Count());
                 }
 
                 foreach (var conn in outputConnections)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var nextNode = PaintItems[conn.toComponentId];
-                    
                     if (queuedNodes.Add(nextNode.GetId()))
                         startNodes.Enqueue(nextNode);
 

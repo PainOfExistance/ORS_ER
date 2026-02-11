@@ -1,5 +1,6 @@
 ﻿using ORS_ER.connections;
 using System.CodeDom.Compiler;
+using System.Diagnostics;
 using System.Windows;
 
 namespace ORS_ER.windows
@@ -40,7 +41,11 @@ namespace ORS_ER.windows
                 };
 
             var parts = Code.Split(" ").ToList();
-            if (parts.Count > 0)
+            foreach(var part in parts)
+            {
+                Debug.WriteLine($"Part: {part}");
+            }
+            if (parts.Count > 1 && parts[0] != "")
             {
                 NameTextBox.Text = parts[1];
                 Variable1.Text = parts[3];

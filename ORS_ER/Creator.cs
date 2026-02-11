@@ -231,10 +231,6 @@ namespace ORS_ER
                     return createPrint(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Input":
                     return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
-                case "Logic Block":
-                    return createLogic(Name, Description, Category, mouseWorldX, mouseWorldY);
-                case "Logic Gate Block":
-                    return createLogicGate(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Operator Block":
                     return createOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "If":
@@ -258,25 +254,6 @@ namespace ORS_ER
         {
             Print input = new Print(Name, Description, Category);
             input.Selected = true;
-            runningIndex++;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
-        }
-
-        private static Component createLogic(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
-        {
-            Logic input = new Logic(Name, Description, Category);
-            input.Selected = true;
-            runningIndex++;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
-        }
-
-        private static Component createLogicGate(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
-        {
-            Gate input = new Gate(Name, Description, Category);
-            input.Selected = true;
-            runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }
@@ -285,7 +262,6 @@ namespace ORS_ER
         {
             Operator input = new Operator(Name, Description, Category);
             input.Selected = true;
-            runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }
@@ -294,7 +270,6 @@ namespace ORS_ER
         {
             If input = new If(Name, Description, Category);
             input.Selected = true;
-            runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }
@@ -303,7 +278,6 @@ namespace ORS_ER
         {
             While input = new While(Name, Description, Category);
             input.Selected = true;
-            runningIndex++;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }

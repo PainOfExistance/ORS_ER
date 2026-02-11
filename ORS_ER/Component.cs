@@ -3,6 +3,7 @@ using ORS_ER.windows;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 
@@ -105,8 +106,9 @@ namespace ORS_ER.components
                     var dlg = new LogicWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
-                        this.Value = dlg.Value;
                         this.Code = dlg.Code;
+                        this.Value = dlg.Value;
+                        Debug.WriteLine($"LogicWindow returned: {this.Value.Item2}");
                     }
                 }
                 else if (this.Name.Contains("Input"))
@@ -158,6 +160,7 @@ namespace ORS_ER.components
             this.Selected = false;
             return null;
         }
+        virtual public void Reset() { }
         abstract public void GenerateCode();
         virtual public string ToJson()
         {

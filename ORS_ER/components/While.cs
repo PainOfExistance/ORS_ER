@@ -1,5 +1,6 @@
 using ORS_ER.connections;
 using SkiaSharp;
+using static ORS_ER.connections.ValueRegistry;
 
 namespace ORS_ER.components
 {
@@ -16,8 +17,10 @@ namespace ORS_ER.components
 
             IO newNode3 = new IO();
             IO newNode4 = new IO();
-            Outputs.Add(newNode3.GetId(), newNode2);
-            Outputs.Add(newNode4.GetId(), newNode3);
+            newNode3.IfTrue = "True";
+            newNode4.IfTrue = "False";
+            Outputs.Add(newNode4.GetId(), newNode4);
+            Outputs.Add(newNode3.GetId(), newNode3);
         }
 
         public While(string name, string description, string category) : base(name, description, category)
@@ -29,8 +32,10 @@ namespace ORS_ER.components
 
             IO newNode3 = new IO();
             IO newNode4 = new IO();
-            Outputs.Add(newNode3.GetId(), newNode2);
-            Outputs.Add(newNode4.GetId(), newNode3);
+            newNode3.IfTrue = "True";
+            newNode4.IfTrue = "False";
+            Outputs.Add(newNode4.GetId(), newNode4);
+            Outputs.Add(newNode3.GetId(), newNode3);
         }
 
         public override void Paint(SKCanvas canvas)
@@ -44,38 +49,48 @@ namespace ORS_ER.components
             foreach (var input in Inputs.Values)
                 canvas.DrawCircle(input.node, 8, Paints.IOPaint);
 
-            foreach (var output in Outputs.Values)
+            string[] labels = { "False", "True" };
+            for (int i = 0; i < Outputs.Count(); i++)
+            {
+                var output = Outputs.Values.ElementAt(i);
                 canvas.DrawCircle(output.node, 8, Paints.IOPaint);
+                font.Size = 20;
+                var textXX = output.node.X - (font.MeasureText(labels[i], Paints.TextPaint) / 2);
+                var textYY = output.node.Y - font.Size / 3;
+                canvas.DrawText(labels[i], textXX, textYY, font, Paints.TextPaint);
+            }
+
+            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
 
             font.Size = 20;
             const string label = "While";
             var textX = Rect.MidX - (font.MeasureText(label, Paints.TextPaint) / 2);
             var textY = Rect.MidY + font.Size / 4;
             canvas.DrawText(label, textX, textY, font, Paints.TextPaint);
-            canvas.RotateDegrees(45, Rect.MidX, Rect.MidY);
         }
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 100, y - 15, x + 100, y + 50);
+            this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
             this.buttonRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 4,
                 this.Rect.Top + (int)this.Rect.Height / 4,
                 this.Rect.Right - (int)this.Rect.Width / 4,
                 this.Rect.Bottom - (int)this.Rect.Height / 4);
 
-            var delta = Rect.Width / (Inputs.Count + 1);
-            string[] keys = Inputs.Keys.ToArray();
-            for (int i = 0; i < Inputs.Count; i++)
-            {
-                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
-            }
-
-            delta = Rect.Width / (Outputs.Count + 1);
-            keys = Outputs.Keys.ToArray();
+            var delta = Rect.Width / (Outputs.Count + 1);
+            string[] keys = Outputs.Keys.ToArray();
             for (int i = 0; i < Outputs.Count; i++)
             {
                 Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+            }
+
+            delta = Rect.Width / (Inputs.Count + 1);
+            keys = Inputs.Keys.ToArray();
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
         }
         public override void GenerateCode()
@@ -85,8 +100,8 @@ namespace ORS_ER.components
             string var2 = parts[3];
             string op = parts[2];
 
-            dynamic variable1 = "";
-            dynamic variable2 = "";
+            dynamic? variable1 = "";
+            dynamic? variable2 = "";
 
             ValueRegistry.AddLocalRegistry(this.GetId());
             if (this.IsInsideIf != "")
@@ -95,7 +110,7 @@ namespace ORS_ER.components
                 variable1 = ValueRegistry.GetLocalValue(key, var1);
                 variable2 = ValueRegistry.GetLocalValue(key, var2);
 
-                if (variable1 == null)
+                if (variable1 is not RegistryEntry)
                 {
                     if (double.TryParse(var1, out double doubleResult))
                     {
@@ -110,7 +125,7 @@ namespace ORS_ER.components
                         variable1 = var1.ToString();
                     }
                 }
-                else if (variable2 == null)
+                else if (variable2 is not RegistryEntry)
                 {
                     if (double.TryParse(var2, out double doubleResult))
                     {
@@ -132,7 +147,7 @@ namespace ORS_ER.components
                 variable1 = ValueRegistry.GetLocalValue(key, var1);
                 variable2 = ValueRegistry.GetLocalValue(key, var2);
 
-                if (variable1 == null)
+                if (variable1 is not RegistryEntry)
                 {
                     if (double.TryParse(var1, out double doubleResult))
                     {
@@ -147,7 +162,7 @@ namespace ORS_ER.components
                         variable1 = var1.ToString();
                     }
                 }
-                else if (variable2 == null)
+                else if (variable2 is not RegistryEntry)
                 {
                     if (double.TryParse(var2, out double doubleResult))
                     {
@@ -168,7 +183,7 @@ namespace ORS_ER.components
                 variable1 = ValueRegistry.GetGlobalValue(var1);
                 variable2 = ValueRegistry.GetGlobalValue(var2);
 
-                if (variable1 == null)
+                if (variable1 is not RegistryEntry)
                 {
                     if (double.TryParse(var1, out double doubleResult))
                     {
@@ -183,7 +198,7 @@ namespace ORS_ER.components
                         variable1 = var1.ToString();
                     }
                 }
-                else if (variable2 == null)
+                else if (variable2 is not RegistryEntry)
                 {
                     if (double.TryParse(var2, out double doubleResult))
                     {
@@ -199,6 +214,9 @@ namespace ORS_ER.components
                     }
                 }
             }
+
+            variable1 = variable1 is RegistryEntry entry1 ? entry1.Value : variable1;
+            variable2 = variable2 is RegistryEntry entry2 ? entry2.Value : variable2;
 
             switch (op)
             {
@@ -225,6 +243,9 @@ namespace ORS_ER.components
                     break;
             }
 
+            this.Outputs.Last().Value.IfTrue = "True";
+            this.Outputs.First().Value.IfTrue = "False";
+
             if (this.Value.Item2)
             {
                 Outputs.Values.FirstOrDefault(o => o.IfTrue == "False")?.IfTrue = "";
@@ -233,6 +254,12 @@ namespace ORS_ER.components
             {
                 Outputs.Values.FirstOrDefault(o => o.IfTrue == "True")?.IfTrue = "";
             }
+        }
+
+        public override void Reset()
+        {
+            this.Outputs.Last().Value.IfTrue = "True";
+            this.Outputs.First().Value.IfTrue = "False";
         }
     }
 }

@@ -26,5 +26,17 @@ namespace ORS_ER.windows
             this.Value = Value;
             VariableComboBox.Text = Value.Item1;
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Value.Item1 = VariableComboBox.Text?.Trim() ?? string.Empty;
+            this.Code = $"Console.WriteLine({this.Value.Item1});";
+            DialogResult = true;
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+        }
     }
 }

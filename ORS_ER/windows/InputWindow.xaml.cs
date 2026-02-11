@@ -21,7 +21,10 @@ namespace ORS_ER.windows
             this.Value = Value;
             this.Type = Type;
             NameTextBox.Text = Value.Item1;
-            ValueTextBox.Text = Value.Item2;
+            if (Value.Item2 != null)
+            {
+                ValueTextBox.Text = Value.Item2.ToString();
+            }
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)
