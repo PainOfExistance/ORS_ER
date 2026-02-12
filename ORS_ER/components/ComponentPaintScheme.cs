@@ -142,7 +142,7 @@ namespace ORS_ER.components
             ComponentPaintScheme.Print => new ComponentPaints(
                 fill: SKColors.IndianRed,
                 stroke: SKColors.YellowGreen,
-                text: SKColors.LightCyan,
+                text: SKColors.DarkBlue,
                 selected: SKColors.Red,
                 io: SKColors.Black),
             ComponentPaintScheme.Logic => new ComponentPaints(

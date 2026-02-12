@@ -54,9 +54,9 @@ namespace ORS_ER.components
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
 
-            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
+            var textX = buttonRect.MidX - (font.MeasureText(this.IsInsideIf) / 2);
             var textY = buttonRect.MidY + font.Size / 4;
-            canvas.DrawText(this.Code, textX, textY, font, Paints.ButtonTextPaint);
+            canvas.DrawText(this.IsInsideIf, textX, textY, font, Paints.TextPaint);
         }
 
         public override void CreateRect(int x, int y)

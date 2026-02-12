@@ -93,10 +93,23 @@ namespace ORS_ER
         {
             if (e.Key == Key.Delete)
             {
+                List<string> toRemove = new();
+
                 foreach (var conn in connections)
                 {
                     if (conn.Value.selected)
                     {
+                        if (PaintItems[conn.Value.toComponentId].IsInsideIf != "")
+                        {
+                            toRemove.Add(conn.Value.toComponentId);
+                            ConnectionYeetMaster(PaintItems[conn.Value.toComponentId].IsInsideIf, toRemove);
+                        }
+                        else if (PaintItems[conn.Value.toComponentId].IsInsideWhile != "")
+                        {
+                            toRemove.Add(conn.Value.toComponentId);
+                            ConnectionYeetMaster(PaintItems[conn.Value.toComponentId].IsInsideWhile, toRemove);
+                        }
+
                         PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].outputConnectionIds.Remove(conn.Key);
                         PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionIds.Remove(conn.Key);
                         connections.Remove(conn.Key);
@@ -131,13 +144,15 @@ namespace ORS_ER
                                 if (!connections.TryGetValue(id, out var conn))
                                     continue;
 
+                                toRemove.Add(conn.toComponentId);
                                 PaintItems[conn.toComponentId].Inputs[conn.toId].inputConnectionIds.Remove(id);
                                 connections.Remove(id);
                                 Debug.WriteLine("Deleted Connection");
                             }
                             output.outputConnectionIds.Clear();
                         }
-
+                        ConnectionYeetMaster(item.Value.IsInsideIf, toRemove);
+                        ConnectionYeetMaster(item.Value.IsInsideWhile, toRemove);
                         PaintItems.Remove(item.Key);
                         Debug.WriteLine("Deleted Component");
                         skiaElement.InvalidateVisual();
@@ -147,6 +162,38 @@ namespace ORS_ER
             }
 
             e.Handled = true;
+        }
+
+        public void ConnectionYeetMaster(string ifTrue, List<string> toRemove)
+        {
+            for (; toRemove.Count() > 0;)
+            {
+                string current = toRemove.First();
+                toRemove.RemoveAt(0);
+                if (PaintItems[current].IsInsideIf == ifTrue)
+                {
+                    PaintItems[current].IsInsideIf = "";
+                    foreach (string outputKey in PaintItems[current].Outputs.Keys)
+                    {
+                        for (int i = 0; i < PaintItems[current].Outputs[outputKey].outputConnectionIds.Count(); i++)
+                        {
+                            toRemove.Add(connections[PaintItems[current].Outputs[outputKey].outputConnectionIds[i]].toComponentId);
+                        }
+                    }
+                }
+
+                if (PaintItems[current].IsInsideWhile == ifTrue)
+                {
+                    PaintItems[current].IsInsideWhile = "";
+                    foreach (string outputKey in PaintItems[current].Outputs.Keys)
+                    {
+                        for (int i = 0; i < PaintItems[current].Outputs[outputKey].outputConnectionIds.Count(); i++)
+                        {
+                            toRemove.Add(connections[PaintItems[current].Outputs[outputKey].outputConnectionIds[i]].toComponentId);
+                        }
+                    }
+                }
+            }
         }
 
         private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
@@ -190,6 +237,15 @@ namespace ORS_ER
 
         private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
 
+        public void CancelConnection()
+        {
+            if (connections.TryGetValue(_isConnectingId, out var prev))
+                PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
+            connections.Remove(_isConnectingId);
+            _isConnecting = false;
+            _isConnectingId = "";
+        }
+
         private (string, Component, IO)? HitTest(SKPoint world)
         {
             (string, Component, IO)? returnItem = null;
@@ -227,49 +283,57 @@ namespace ORS_ER
                     {
                         try
                         {
+                            bool clearId = false;
+
+                            /*if(item.IsInsideIf != "" && 
+                                PaintItems[connections[_isConnectingId].fromComponentId] is If &&
+                                item.Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() == 1)*/
+                            //todo skip connection from T/F to outside of it block connection needed
+                            else if (item.IsInsideIf != "" &&
+                                item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0]) &&
+                                PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[1] != item.IsInsideIf.Split("_")[1] &&
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count()==1
+                                )
+                            {
+                                clearId = true;
+                                Debug.WriteLine("Protected");
+                                //if termination allowed
+                            }
+                            else if (item.IsInsideIf != "" || item.IsInsideWhile != "")
+                            {
+                                //outside connection forbiden
+                                CancelConnection();
+                                returnItem = tmp;
+                                return returnItem;
+                            }
+                            else if (PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf != "" &&
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1)
+                            {
+                                //if branching forbiden
+                                CancelConnection();
+                                returnItem = tmp;
+                                return returnItem;
+                            }
+                            else if (PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile != "" &&
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1)
+                            {
+                                //while branching forbiden
+                                CancelConnection();
+                                returnItem = tmp;
+                                return returnItem;
+                            }
+                            else if ((item.IsInsideIf != "" || item.IsInsideWhile != "") && item.Inputs[connections[_isConnectingId].toId].inputConnectionIds.Count() > 0)
+                            {
+                                //incesting in if forbiden
+                                CancelConnection();
+                                returnItem = tmp;
+                                return returnItem;
+                            }
+
                             if (_isConnecting
                                 && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId()
                                 )
                             {
-                                var numOfInputConnections = item.Inputs[tmp.Value.Item3.GetId()].inputConnectionIds.Count();
-
-                                Debug.WriteLine("-----------------------------");
-                                Debug.WriteLine(!item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf));
-                                Debug.WriteLine(!item.IsInsideWhile.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile));
-                                Debug.WriteLine(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf == "");
-                                Debug.WriteLine(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile == "");
-                                Debug.WriteLine(item.IsInsideIf != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf);
-                                Debug.WriteLine(item.IsInsideWhile != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile);
-                                Debug.WriteLine("-----------------------------");
-
-                                if (numOfInputConnections >= 1 && (PaintItems[connections[_isConnectingId].fromComponentId] is If ||
-                                    PaintItems[connections[_isConnectingId].fromComponentId] is While ||
-                                    !item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf) ||
-                                    !item.IsInsideWhile.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile) ||
-                                    PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf == "" ||
-                                    PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile == ""
-                                    )
-                                    )
-                                {
-                                    if (PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1 ||
-                                        (item.IsInsideIf != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf ||
-                                        item.IsInsideWhile != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile
-                                        )
-                                        )
-                                    {
-
-                                        //todo fix this
-                                        if (connections.TryGetValue(_isConnectingId, out var prev))
-                                            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
-
-                                        connections.Remove(_isConnectingId);
-                                        _isConnecting = false;
-                                        _isConnectingId = "";
-                                        returnItem = tmp;
-                                        return returnItem;
-                                    }
-                                }
-
                                 if (PaintItems[connections[_isConnectingId].fromComponentId] is If)
                                 {
                                     item.IsInsideIf = connections[_isConnectingId].fromComponentId + "_" + PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].IfTrue;
@@ -280,34 +344,19 @@ namespace ORS_ER
                                 }
                                 else
                                 {
-                                    int isEnding = 0;
-                                    if (item.Inputs.Count() >= 1)
-                                    {
-                                        foreach (var input in item.Inputs.Values)
-                                        {
-                                            foreach (var id in input.inputConnectionIds)
-                                            {
-                                                if (!connections.TryGetValue(id, out var conn))
-                                                    continue;
-                                                if (PaintItems[conn.fromComponentId].IsInsideIf.Contains(item.IsInsideIf) || PaintItems[conn.fromComponentId].IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf))
-                                                {
-                                                    isEnding++;
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if (isEnding >= 2)
+                                    if (clearId || (item is While && PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Contains(item.GetId())))
                                     {
                                         item.IsInsideIf = "";
+                                        item.IsInsideWhile = "";
                                     }
                                     else
                                     {
                                         item.IsInsideIf = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
-                                        item.IsInsideWhile = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
+                                        item.IsInsideWhile = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile;
                                     }
                                 }
-
+                                Debug.WriteLine(item.IsInsideIf);
+                                Debug.WriteLine(item.IsInsideWhile);
                                 connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
                                 connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
                                 item.Inputs[tmp.Value.Item3.GetId()].inputConnectionIds.Add(_isConnectingId);
@@ -317,18 +366,13 @@ namespace ORS_ER
                             }
                             else if (_isConnecting)
                             {
-                                // invalid drop target => cancel
-                                if (connections.TryGetValue(_isConnectingId, out var prev))
-                                    PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
-
-                                connections.Remove(_isConnectingId);
-                                _isConnecting = false;
-                                _isConnectingId = "";
+                                CancelConnection();
                             }
                         }
                         catch (Exception ex)
                         {
                             Debug.WriteLine("Error during connection: " + ex.Message);
+                            CancelConnection();
                         }
 
                         returnItem = tmp;
@@ -568,6 +612,47 @@ namespace ORS_ER
             }
             e.Handled = true;
             skiaElement.InvalidateVisual();
+        }
+
+        private void CancelInProgressConnection()
+        {
+            if (!_isConnecting)
+                return;
+
+            if (connections.TryGetValue(_isConnectingId, out var prev))
+                PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
+
+            connections.Remove(_isConnectingId);
+            _isConnecting = false;
+            _isConnectingId = "";
+        }
+
+        private static string ScopeKey(string scope) => string.IsNullOrWhiteSpace(scope) ? "" : scope.Split('_')[0];
+        private static string ScopeBranch(string scope) => string.IsNullOrWhiteSpace(scope) ? "" : scope.Split('_').Skip(1).FirstOrDefault() ?? "";
+
+        private bool IsIfTerminationMergeAllowed(string fromScope, Component target, string targetInputId)
+        {
+            // Allows ONLY the 2nd connection into the same input socket, if it forms:
+            // same ifId, opposite branches (True vs False).
+            var existingIds = target.Inputs[targetInputId].inputConnectionIds;
+            if (existingIds.Count != 1)
+                return false;
+
+            if (!connections.TryGetValue(existingIds[0], out var existingConn))
+                return false;
+
+            if (!PaintItems.TryGetValue(existingConn.fromComponentId, out var existingFromComp))
+                return false;
+
+            var aKey = ScopeKey(fromScope);
+            var aBr = ScopeBranch(fromScope);
+            var bKey = ScopeKey(existingFromComp.IsInsideIf);
+            var bBr = ScopeBranch(existingFromComp.IsInsideIf);
+
+            if (string.IsNullOrWhiteSpace(aKey) || string.IsNullOrWhiteSpace(aBr))
+                return false;
+
+            return aKey == bKey && aBr != bBr;
         }
     }
 }
