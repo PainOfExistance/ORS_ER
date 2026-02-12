@@ -232,17 +232,42 @@ namespace ORS_ER
                                 )
                             {
                                 var numOfInputConnections = item.Inputs[tmp.Value.Item3.GetId()].inputConnectionIds.Count();
-                                if (numOfInputConnections >= 1 && (PaintItems[connections[_isConnectingId].fromComponentId] is If || PaintItems[connections[_isConnectingId].fromComponentId] is While || !item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0]) || !item.IsInsideWhile.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Split("_")[0])))
-                                {
-                                    //todo fix this
-                                    if (connections.TryGetValue(_isConnectingId, out var prev))
-                                        PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
 
-                                    connections.Remove(_isConnectingId);
-                                    _isConnecting = false;
-                                    _isConnectingId = "";
-                                    returnItem = tmp;
-                                    return returnItem;
+                                Debug.WriteLine("-----------------------------");
+                                Debug.WriteLine(!item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf));
+                                Debug.WriteLine(!item.IsInsideWhile.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile));
+                                Debug.WriteLine(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf == "");
+                                Debug.WriteLine(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile == "");
+                                Debug.WriteLine(item.IsInsideIf != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf);
+                                Debug.WriteLine(item.IsInsideWhile != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile);
+                                Debug.WriteLine("-----------------------------");
+
+                                if (numOfInputConnections >= 1 && (PaintItems[connections[_isConnectingId].fromComponentId] is If ||
+                                    PaintItems[connections[_isConnectingId].fromComponentId] is While ||
+                                    !item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf) ||
+                                    !item.IsInsideWhile.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile) ||
+                                    PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf == "" ||
+                                    PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile == ""
+                                    )
+                                    )
+                                {
+                                    if (PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1 ||
+                                        (item.IsInsideIf != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf ||
+                                        item.IsInsideWhile != PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile
+                                        )
+                                        )
+                                    {
+
+                                        //todo fix this
+                                        if (connections.TryGetValue(_isConnectingId, out var prev))
+                                            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
+
+                                        connections.Remove(_isConnectingId);
+                                        _isConnecting = false;
+                                        _isConnectingId = "";
+                                        returnItem = tmp;
+                                        return returnItem;
+                                    }
                                 }
 
                                 if (PaintItems[connections[_isConnectingId].fromComponentId] is If)
