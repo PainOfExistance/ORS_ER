@@ -56,16 +56,34 @@ namespace ORS_ER.components
 
             float textX = buttonRect.MidX - (font.MeasureText(Code) / 2);
             float textY = buttonRect.MidY + font.Size / 4;
-            canvas.DrawText(Code.Replace("dynamic", "").Replace(" ", ""), textX, textY, font, Paints.TextPaint);
+            if (this.Code == "==")
+            {
+                textX = buttonRect.MidX - (font.MeasureText("+") / 2);
+                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
+            }
+            else
+            {
+                string[] parts = this.Code.Split(' ');
+                string displayCode = parts[1] + " = " + parts[3] + " " + parts[4] + " " + parts[5];
+
+                while (buttonRect.Width < (font.MeasureText(displayCode) + 5))
+                {
+                    font.Size--;
+                }
+
+                textX = buttonRect.MidX - (font.MeasureText(displayCode) / 2);
+                canvas.DrawText(displayCode, textX, textY, font, Paints.ButtonTextPaint);
+            }
+
         }
 
         public override void CreateRect(int x, int y)
         {
             this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
             this.buttonRect = new SKRect(
-                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Left + (int)this.Rect.Width / 8,
                 this.Rect.Top + (int)this.Rect.Height / 4,
-                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Right - (int)this.Rect.Width / 8,
                 this.Rect.Bottom - (int)this.Rect.Height / 4);
 
             var delta = Rect.Width / (Outputs.Count + 1);
@@ -224,7 +242,7 @@ namespace ORS_ER.components
                     break;
             }
 
-            if(ValueRegistry.GetGlobalValue(var) is RegistryEntry)
+            if (ValueRegistry.GetGlobalValue(var) is RegistryEntry)
             {
                 ValueRegistry.RegisterGlobalValue(var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
             }

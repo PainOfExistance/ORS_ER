@@ -30,7 +30,15 @@ namespace ORS_ER.windows
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.Value.Item1 = VariableComboBox.Text?.Trim() ?? string.Empty;
-            this.Code = $"Console.WriteLine({this.Value.Item1});";
+            if (VariableComboBox.Text?.Trim() == "")
+            {
+                this.Code = "";
+            }
+            else
+            {
+                this.Code = $"Console.WriteLine({this.Value.Item1});";
+            }
+
             DialogResult = true;
         }
 

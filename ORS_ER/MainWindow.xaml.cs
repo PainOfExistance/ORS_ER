@@ -285,19 +285,37 @@ namespace ORS_ER
                         {
                             bool clearId = false;
 
-                            /*if(item.IsInsideIf != "" && 
+                            if (item is While &&
+                                item.Inputs.First().Value.GetId() == tmp.Value.Item3.GetId()
+                                )
+                            {
+                                if (!PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Contains(item.GetId()) ||
+                                tmp.Value.Item3.inputConnectionIds.Count() > 0 ||
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1
+                                )
+                                {
+                                    CancelConnection();
+                                    returnItem = tmp;
+                                    return returnItem;
+                                }
+                            }
+                            else if (item.IsInsideIf != "" &&
                                 PaintItems[connections[_isConnectingId].fromComponentId] is If &&
-                                item.Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() == 1)*/
-                            //todo skip connection from T/F to outside of it block connection needed
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() == 1 &&
+                                tmp.Value.Item3.inputConnectionIds.Count() == 1
+                                )
+                            {
+                                //skip connection from T/F to outside of it block connection needed
+                                clearId = true;
+                            }
                             else if (item.IsInsideIf != "" &&
                                 item.IsInsideIf.Contains(PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0]) &&
                                 PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[1] != item.IsInsideIf.Split("_")[1] &&
-                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count()==1
+                                PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() == 1
                                 )
                             {
-                                clearId = true;
-                                Debug.WriteLine("Protected");
                                 //if termination allowed
+                                clearId = true;
                             }
                             else if (item.IsInsideIf != "" || item.IsInsideWhile != "")
                             {
@@ -306,7 +324,7 @@ namespace ORS_ER
                                 returnItem = tmp;
                                 return returnItem;
                             }
-                            else if (PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf != "" &&
+                            else if ((PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf != "" || PaintItems[connections[_isConnectingId].fromComponentId] is If) &&
                                 PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1)
                             {
                                 //if branching forbiden
@@ -314,7 +332,7 @@ namespace ORS_ER
                                 returnItem = tmp;
                                 return returnItem;
                             }
-                            else if (PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile != "" &&
+                            else if ((PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile != "" || PaintItems[connections[_isConnectingId].fromComponentId] is While) &&
                                 PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].outputConnectionIds.Count() > 1)
                             {
                                 //while branching forbiden
@@ -334,7 +352,7 @@ namespace ORS_ER
                                 && connections[_isConnectingId].fromComponentId != tmp.Value.Item2.GetId()
                                 )
                             {
-                                if (PaintItems[connections[_isConnectingId].fromComponentId] is If)
+                                if (PaintItems[connections[_isConnectingId].fromComponentId] is If && !clearId)
                                 {
                                     item.IsInsideIf = connections[_isConnectingId].fromComponentId + "_" + PaintItems[connections[_isConnectingId].fromComponentId].Outputs[connections[_isConnectingId].fromId].IfTrue;
                                 }
@@ -355,8 +373,6 @@ namespace ORS_ER
                                         item.IsInsideWhile = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile;
                                     }
                                 }
-                                Debug.WriteLine(item.IsInsideIf);
-                                Debug.WriteLine(item.IsInsideWhile);
                                 connections[_isConnectingId].toId = tmp.Value.Item3.GetId();
                                 connections[_isConnectingId].toComponentId = tmp.Value.Item2.GetId();
                                 item.Inputs[tmp.Value.Item3.GetId()].inputConnectionIds.Add(_isConnectingId);
@@ -477,7 +493,6 @@ namespace ORS_ER
             if (_isPanning)
             {
                 var mouse = new SKPoint((float)p.X, (float)p.Y);
-
                 var deltaScreen = mouse - _panStartMouse;
                 _panOffset = _panStartOffset + deltaScreen;
                 skiaElement.InvalidateVisual();
@@ -541,6 +556,8 @@ namespace ORS_ER
             {
                 var cts = new CancellationTokenSource();
                 ValueRegistry.ClearAllRegistries();
+                ConsoleOutput.Text = "";
+
                 foreach (var item in PaintItems.Values)
                 {
                     item.Reset();
@@ -562,6 +579,8 @@ namespace ORS_ER
         private void New_Click(object sender, RoutedEventArgs e)
         {
             ValueRegistry.ClearAllRegistries();
+            ConsoleOutput.Text = "";
+
             foreach (var item in PaintItems.Values)
             {
                 item.Reset();
@@ -612,47 +631,6 @@ namespace ORS_ER
             }
             e.Handled = true;
             skiaElement.InvalidateVisual();
-        }
-
-        private void CancelInProgressConnection()
-        {
-            if (!_isConnecting)
-                return;
-
-            if (connections.TryGetValue(_isConnectingId, out var prev))
-                PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_isConnectingId);
-
-            connections.Remove(_isConnectingId);
-            _isConnecting = false;
-            _isConnectingId = "";
-        }
-
-        private static string ScopeKey(string scope) => string.IsNullOrWhiteSpace(scope) ? "" : scope.Split('_')[0];
-        private static string ScopeBranch(string scope) => string.IsNullOrWhiteSpace(scope) ? "" : scope.Split('_').Skip(1).FirstOrDefault() ?? "";
-
-        private bool IsIfTerminationMergeAllowed(string fromScope, Component target, string targetInputId)
-        {
-            // Allows ONLY the 2nd connection into the same input socket, if it forms:
-            // same ifId, opposite branches (True vs False).
-            var existingIds = target.Inputs[targetInputId].inputConnectionIds;
-            if (existingIds.Count != 1)
-                return false;
-
-            if (!connections.TryGetValue(existingIds[0], out var existingConn))
-                return false;
-
-            if (!PaintItems.TryGetValue(existingConn.fromComponentId, out var existingFromComp))
-                return false;
-
-            var aKey = ScopeKey(fromScope);
-            var aBr = ScopeBranch(fromScope);
-            var bKey = ScopeKey(existingFromComp.IsInsideIf);
-            var bBr = ScopeBranch(existingFromComp.IsInsideIf);
-
-            if (string.IsNullOrWhiteSpace(aKey) || string.IsNullOrWhiteSpace(aBr))
-                return false;
-
-            return aKey == bKey && aBr != bBr;
         }
     }
 }

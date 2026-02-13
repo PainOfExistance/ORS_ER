@@ -11,7 +11,6 @@ namespace ORS_ER.components
     class Print : Component
     {
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Print);
-        string printValue = "";
 
         public Print(Component component) : base(component)
         {
@@ -54,18 +53,35 @@ namespace ORS_ER.components
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
 
-            var textX = buttonRect.MidX - (font.MeasureText(this.IsInsideIf) / 2);
+            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
             var textY = buttonRect.MidY + font.Size / 4;
-            canvas.DrawText(this.IsInsideIf, textX, textY, font, Paints.TextPaint);
+            if (this.Code == "")
+            {
+                textX = buttonRect.MidX - (font.MeasureText("+") / 2);
+                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
+            }
+            else
+            {
+                string[] parts = this.Code.Split('(');
+                string displayCode = parts[1].Split(')')[0];
+
+                while (buttonRect.Width < (font.MeasureText(displayCode) + 5))
+                {
+                    font.Size--;
+                }
+
+                textX = buttonRect.MidX - (font.MeasureText(displayCode) / 2);
+                canvas.DrawText(displayCode, textX, textY, font, Paints.ButtonTextPaint);
+            }
         }
 
         public override void CreateRect(int x, int y)
         {
             this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
             this.buttonRect = new SKRect(
-                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Left + (int)this.Rect.Width / 8,
                 this.Rect.Top + (int)this.Rect.Height / 4,
-                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Right - (int)this.Rect.Width / 8,
                 this.Rect.Bottom - (int)this.Rect.Height / 4);
 
             var delta = Rect.Width / (Outputs.Count + 1);

@@ -1,5 +1,7 @@
-using ORS_ER.connections;
+﻿using ORS_ER.connections;
 using SkiaSharp;
+using System.Diagnostics;
+using System.Windows.Documents;
 using static ORS_ER.connections.ValueRegistry;
 
 namespace ORS_ER.components
@@ -40,58 +42,80 @@ namespace ORS_ER.components
 
         public override void Paint(SKCanvas canvas)
         {
+            canvas.Save();
+            canvas.RotateDegrees(45, this.Rect.MidX, this.Rect.MidY);
             canvas.DrawRect(Rect, Paints.ComponentFill);
             if (Selected)
                 canvas.DrawRect(Rect, Paints.SelectedStroke);
             else
                 canvas.DrawRect(Rect, Paints.ComponentStroke);
 
-            foreach (var input in Inputs.Values)
-                canvas.DrawCircle(input.node, 8, Paints.IOPaint);
-
-            string[] labels = { "False", "True" };
-            for (int i = 0; i < Outputs.Count(); i++)
-            {
-                var output = Outputs.Values.ElementAt(i);
-                canvas.DrawCircle(output.node, 8, Paints.IOPaint);
-                font.Size = 20;
-                var textXX = output.node.X - (font.MeasureText(labels[i], Paints.TextPaint) / 2);
-                var textYY = output.node.Y - font.Size / 3;
-                canvas.DrawText(labels[i], textXX, textYY, font, Paints.TextPaint);
-            }
-
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
+            canvas.Restore();
 
             font.Size = 20;
-            const string label = "While";
-            var textX = Rect.MidX - (font.MeasureText(label, Paints.TextPaint) / 2);
-            var textY = Rect.MidY + font.Size / 4;
-            canvas.DrawText(label, textX, textY, font, Paints.TextPaint);
+            var input1 = Inputs.Values.First();
+            var input2 = Inputs.Values.Last();
+            canvas.DrawCircle(input1.node, 8, Paints.IOPaint);
+            canvas.DrawCircle(input2.node, 8, Paints.IOPaint);
+
+            var textXX = input1.node.X - (font.MeasureText("↑", Paints.TextPaint) / 2);
+            var textYY = input1.node.Y - 10;
+            canvas.DrawText("↑", textXX, textYY, font, Paints.TextPaint);
+
+            string[] labels = { "F", "T" };
+            var output1 = Outputs.Values.First();
+            var output2 = Outputs.Values.Last();
+            canvas.DrawCircle(output1.node, 8, Paints.IOPaint);
+            canvas.DrawCircle(output2.node, 8, Paints.IOPaint);
+
+            textXX = output1.node.X + 10;
+            textYY = output1.node.Y + font.Size / 3;
+            canvas.DrawText(labels[0], textXX, textYY, font, Paints.TextPaint);
+
+            textXX = output2.node.X - 20;
+            textYY = output2.node.Y + font.Size / 3;
+            canvas.DrawText(labels[1], textXX, textYY, font, Paints.TextPaint);
+
+            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
+            var textY = buttonRect.MidY + font.Size / 4;
+            if (this.Code == "")
+            {
+                textX = buttonRect.MidX - (font.MeasureText("WHILE") / 2);
+                canvas.DrawText("WHILE", textX, textY, font, Paints.ButtonTextPaint);
+            }
+            else
+            {
+                string[] parts = this.Code.Split(' ');
+                string displayCode = "WHILE " + parts[1] + parts[2] + parts[3];
+
+                while (buttonRect.Width < (font.MeasureText(displayCode) + 5))
+                {
+                    font.Size--;
+                }
+
+                textX = buttonRect.MidX - (font.MeasureText(displayCode) / 2);
+                canvas.DrawText(displayCode, textX, textY, font, Paints.ButtonTextPaint);
+            }
         }
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
+            this.Rect = new SkiaSharp.SKRect(x - 75, y - 75, x + 75, y + 75);
             this.buttonRect = new SKRect(
-                this.Rect.Left + (int)this.Rect.Width / 4,
-                this.Rect.Top + (int)this.Rect.Height / 4,
-                this.Rect.Right - (int)this.Rect.Width / 4,
-                this.Rect.Bottom - (int)this.Rect.Height / 4);
+                this.Rect.Left + (int)this.Rect.Width / 6,
+                this.Rect.Top + (int)this.Rect.Height / 6,
+                this.Rect.Right - (int)this.Rect.Width / 6,
+                this.Rect.Bottom - (int)this.Rect.Height / 6);
 
-            var delta = Rect.Width / (Outputs.Count + 1);
-            string[] keys = Outputs.Keys.ToArray();
-            for (int i = 0; i < Outputs.Count; i++)
-            {
-                Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
-            }
+            SKMatrix matrix = SKMatrix.CreateRotationDegrees(45, Rect.MidX, Rect.MidY);
 
-            delta = Rect.Width / (Inputs.Count + 1);
-            keys = Inputs.Keys.ToArray();
-            for (int i = 0; i < Inputs.Count; i++)
-            {
-                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
-            }
+            Outputs.First().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Bottom));
+            Outputs.Last().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Top));
+
+            Inputs.First().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Bottom));
+            Inputs.Last().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Top));
         }
         public override void GenerateCode()
         {

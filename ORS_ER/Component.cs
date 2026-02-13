@@ -25,7 +25,6 @@ namespace ORS_ER.components
         public SKRect Rect { get; set; }
         public SKRect buttonRect { get; set; }
         public SKFont font = new SKFont();
-
         public Component(Component component) : this(component.Name, component.Description, component.Category)
         {
             this.Id = component.Id;
@@ -84,6 +83,8 @@ namespace ORS_ER.components
                 return (dx * dx + dy * dy) <= r2;
             }
 
+            // 1) IO nodes are stored in world-space (While rotates them in CreateRect),
+            // so hit-test them in world-space (no transforms).
             foreach (var io in Inputs)
                 if (HitPoint(io.Value.node, world, hitRadius2))
                 {
@@ -98,9 +99,19 @@ namespace ORS_ER.components
                     return ("output", this, io.Value);
                 }
 
-            if (this.buttonRect.Contains(world))
+            // 2) For rotated components (While), map mouse into the component's local (unrotated) space
+            // before using Rect.Contains / buttonRect.Contains.
+            var local = world;
+            if (this is While || this is If)
+            {
+                var inv = SKMatrix.CreateRotationDegrees(45, Rect.MidX, Rect.MidY);
+                local = inv.MapPoint(world);
+            }
+
+            if (this.buttonRect.Contains(local))
             {
                 this.Selected = true;
+
                 if (this.Name.Contains("Operator"))
                 {
                     var dlg = new LogicWindow(this.Code, this.Value);
@@ -148,10 +159,10 @@ namespace ORS_ER.components
                     }
                 }
 
-                    return ("button", this, null);
+                return ("button", this, null);
             }
 
-            if (Rect.Contains(world))
+            if (Rect.Contains(local))
             {
                 this.Selected = true;
                 return ("rect", this, null);

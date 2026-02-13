@@ -14,6 +14,8 @@ namespace ORS_ER.connections
             public dynamic Value { get; set; }
         }
 
+        //todo finish this so it cascades values
+
         private static readonly List<RegistryEntry> _globalRegistry = new();
         private static readonly Dictionary<string, List<RegistryEntry>> _localRegistry = new();
 

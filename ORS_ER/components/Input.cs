@@ -51,7 +51,24 @@ namespace ORS_ER.components
 
             var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
             var textY = buttonRect.MidY + font.Size / 4;
-            canvas.DrawText(this.Code, textX, textY, font, Paints.ButtonTextPaint);
+            if (this.Code == "")
+            {
+                textX = buttonRect.MidX - (font.MeasureText("+") / 2);
+                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
+            }
+            else
+            {
+                string[] parts = this.Code.Split(' ');
+                string displayCode = parts[1] + " = " + parts[3];
+
+                while (buttonRect.Width < (font.MeasureText(displayCode) + 5))
+                {
+                    font.Size--;
+                }
+
+                textX = buttonRect.MidX - (font.MeasureText(displayCode) / 2);
+                canvas.DrawText(displayCode, textX, textY, font, Paints.ButtonTextPaint);
+            }
 
             string label = "";
             if (this.Name.Contains("String"))
@@ -77,9 +94,9 @@ namespace ORS_ER.components
         {
             this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
             this.buttonRect = new SKRect(
-                this.Rect.Left + (int)this.Rect.Width / 4,
+                this.Rect.Left + (int)this.Rect.Width / 8,
                 this.Rect.Top + (int)this.Rect.Height / 4,
-                this.Rect.Right - (int)this.Rect.Width / 4,
+                this.Rect.Right - (int)this.Rect.Width / 8,
                 this.Rect.Bottom - (int)this.Rect.Height / 4);
 
             var delta = Rect.Width / (Outputs.Count + 1);
@@ -99,14 +116,18 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
+            string key = "";
             if (this.IsInsideIf != "")
             {
-                string key = this.IsInsideIf.Split('_')[0];
-                ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
+                key = this.IsInsideIf.Split('_')[0];
             }
             else if (this.IsInsideWhile != "")
             {
-                string key = this.IsInsideWhile.Split('_')[0];
+                key = this.IsInsideWhile.Split('_')[0];
+            }
+
+            if (key != "")
+            {
                 ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
             }
             else

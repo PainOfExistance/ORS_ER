@@ -51,9 +51,7 @@ namespace ORS_ER
 
                 if (currentNode is If or While)
                 {
-                    Debug.WriteLine("Is if");
                     outputConnections = connections.Values.Where(c => c.fromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.fromId && kv.IfTrue != "").ToList().Count() > 0).ToList();
-                    Debug.WriteLine(outputConnections.Count());
                 }
 
                 foreach (var conn in outputConnections)
