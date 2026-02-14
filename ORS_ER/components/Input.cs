@@ -126,14 +126,7 @@ namespace ORS_ER.components
                 key = this.IsInsideWhile.Split('_')[0];
             }
 
-            if (key != "")
-            {
-                ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
-            }
-            else
-            {
-                ValueRegistry.RegisterGlobalValue(this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
-            }
+            ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
         }
     }
 }

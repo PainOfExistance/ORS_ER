@@ -127,117 +127,52 @@ namespace ORS_ER.components
             dynamic? variable1 = "";
             dynamic? variable2 = "";
 
-            ValueRegistry.AddLocalRegistry(this.GetId());
+            ValueRegistry.AddLocalRegistry(this.GetId(), this.IsInsideIf != "" ? this.IsInsideIf.Split('_')[0] : this.IsInsideWhile.Split('_')[0]);
+
+            string key = "";
             if (this.IsInsideIf != "")
             {
-                string key = this.IsInsideIf.Split('_')[0];
-                variable1 = ValueRegistry.GetLocalValue(key, var1);
-                variable2 = ValueRegistry.GetLocalValue(key, var2);
-
-                if (variable1 is not RegistryEntry)
-                {
-                    if (double.TryParse(var1, out double doubleResult))
-                    {
-                        variable1 = doubleResult;
-                    }
-                    else if (bool.TryParse(var1, out bool boolResult))
-                    {
-                        variable1 = boolResult;
-                    }
-                    else
-                    {
-                        variable1 = var1.ToString();
-                    }
-                }
-                else if (variable2 is not RegistryEntry)
-                {
-                    if (double.TryParse(var2, out double doubleResult))
-                    {
-                        variable2 = doubleResult;
-                    }
-                    else if (bool.TryParse(var2, out bool boolResult))
-                    {
-                        variable2 = boolResult;
-                    }
-                    else
-                    {
-                        variable2 = var2.ToString();
-                    }
-                }
+                key = this.IsInsideIf.Split('_')[0];
             }
             else if (this.IsInsideWhile != "")
             {
-                string key = this.IsInsideWhile.Split('_')[0];
-                variable1 = ValueRegistry.GetLocalValue(key, var1);
-                variable2 = ValueRegistry.GetLocalValue(key, var2);
-
-                if (variable1 is not RegistryEntry)
-                {
-                    if (double.TryParse(var1, out double doubleResult))
-                    {
-                        variable1 = doubleResult;
-                    }
-                    else if (bool.TryParse(var1, out bool boolResult))
-                    {
-                        variable1 = boolResult;
-                    }
-                    else
-                    {
-                        variable1 = var1.ToString();
-                    }
-                }
-                else if (variable2 is not RegistryEntry)
-                {
-                    if (double.TryParse(var2, out double doubleResult))
-                    {
-                        variable2 = doubleResult;
-                    }
-                    else if (bool.TryParse(var2, out bool boolResult))
-                    {
-                        variable2 = boolResult;
-                    }
-                    else
-                    {
-                        variable2 = var2.ToString();
-                    }
-                }
+                key = this.IsInsideWhile.Split('_')[0];
             }
-            else
+
+            variable1 = ValueRegistry.GetLocalValue(key, var1);
+            variable2 = ValueRegistry.GetLocalValue(key, var2);
+
+            if (variable1 is not RegistryEntry)
             {
-                variable1 = ValueRegistry.GetGlobalValue(var1);
-                variable2 = ValueRegistry.GetGlobalValue(var2);
-
-                if (variable1 is not RegistryEntry)
+                if (double.TryParse(var1, out double doubleResult))
                 {
-                    if (double.TryParse(var1, out double doubleResult))
-                    {
-                        variable1 = doubleResult;
-                    }
-                    else if (bool.TryParse(var1, out bool boolResult))
-                    {
-                        variable1 = boolResult;
-                    }
-                    else
-                    {
-                        variable1 = var1.ToString();
-                    }
+                    variable1 = doubleResult;
                 }
-                else if (variable2 is not RegistryEntry)
+                else if (bool.TryParse(var1, out bool boolResult))
                 {
-                    if (double.TryParse(var2, out double doubleResult))
-                    {
-                        variable2 = doubleResult;
-                    }
-                    else if (bool.TryParse(var2, out bool boolResult))
-                    {
-                        variable2 = boolResult;
-                    }
-                    else
-                    {
-                        variable2 = var2.ToString();
-                    }
+                    variable1 = boolResult;
+                }
+                else
+                {
+                    variable1 = var1.ToString();
                 }
             }
+            else if (variable2 is not RegistryEntry)
+            {
+                if (double.TryParse(var2, out double doubleResult))
+                {
+                    variable2 = doubleResult;
+                }
+                else if (bool.TryParse(var2, out bool boolResult))
+                {
+                    variable2 = boolResult;
+                }
+                else
+                {
+                    variable2 = var2.ToString();
+                }
+            }
+
 
             variable1 = variable1 is RegistryEntry entry1 ? entry1.Value : variable1;
             variable2 = variable2 is RegistryEntry entry2 ? entry2.Value : variable2;

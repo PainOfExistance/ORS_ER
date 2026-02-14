@@ -119,22 +119,21 @@ namespace ORS_ER.components
                 var2 = parts[5];
             }
 
-            dynamic variable1 = ValueRegistry.GetGlobalValue(var1);
-            dynamic variable2 = ValueRegistry.GetGlobalValue(var2);
+            string key = "";
+            if (this.IsInsideIf != "")
+            {
+                key = this.IsInsideIf.Split('_')[0];
+            }
+            else if (this.IsInsideWhile != "")
+            {
+                key = this.IsInsideWhile.Split('_')[0];
+            }
+
+            dynamic variable1 = ValueRegistry.GetLocalValue(key, var1);
+            dynamic variable2 = ValueRegistry.GetLocalValue(key, var2);
 
             if (variable1 is not RegistryEntry)
             {
-                if (this.IsInsideIf != "")
-                {
-                    string key = this.IsInsideIf.Split('_')[0];
-                    variable1 = ValueRegistry.GetLocalValue(key, var1);
-                }
-                else if (this.IsInsideWhile != "")
-                {
-                    string key = this.IsInsideWhile.Split('_')[0];
-                    variable1 = ValueRegistry.GetLocalValue(key, var1);
-                }
-
                 if (double.TryParse(var1, out double doubleResult))
                 {
                     variable1 = doubleResult;
@@ -150,17 +149,6 @@ namespace ORS_ER.components
             }
             else if (variable2 is not RegistryEntry)
             {
-                if (this.IsInsideIf != "")
-                {
-                    string key = this.IsInsideIf.Split('_')[0];
-                    variable2 = ValueRegistry.GetLocalValue(key, var2);
-                }
-                else if (this.IsInsideWhile != "")
-                {
-                    string key = this.IsInsideWhile.Split('_')[0];
-                    variable2 = ValueRegistry.GetLocalValue(key, var2);
-                }
-
                 if (double.TryParse(var2, out double doubleResult))
                 {
                     variable2 = doubleResult;
@@ -242,25 +230,7 @@ namespace ORS_ER.components
                     break;
             }
 
-            if (ValueRegistry.GetGlobalValue(var) is RegistryEntry)
-            {
-                ValueRegistry.RegisterGlobalValue(var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
-            }
-            else if (this.IsInsideIf != "")
-            {
-                string key = this.IsInsideIf.Split('_')[0];
-                ValueRegistry.RegisterLocalValue(key, var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
-            }
-            else if (this.IsInsideWhile != "")
-            {
-                string key = this.IsInsideWhile.Split('_')[0];
-                ValueRegistry.RegisterLocalValue(key, var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
-            }
-            else
-            {
-                ValueRegistry.RegisterGlobalValue(var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
-            }
-
+            ValueRegistry.RegisterLocalValue(key, var, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = var, Value = this.Value.Item2 });
             this.Value = (this.Value.Item1, op);
         }
     }

@@ -362,6 +362,12 @@ namespace ORS_ER
                                 }
                                 else
                                 {
+                                    if (false)
+                                    {
+                                        //todo fix backpropagation with nested while and if blocks
+                                        item.IsInsideIf = PaintItems[PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
+                                        item.IsInsideWhile = PaintItems[PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
+                                    }
                                     if (clearId || (item is While && PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Contains(item.GetId())))
                                     {
                                         item.IsInsideIf = "";

@@ -101,46 +101,24 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
+            string key = "";
             if (this.IsInsideIf != "")
             {
-                string key = this.IsInsideIf.Split('_')[0];
-                var variable = ValueRegistry.GetLocalValue(key, this.Value.Item1);
-                if (variable is not RegistryEntry)
-                {
-                    Console.WriteLine(this.Value.Item1);
-
-                }
-                else
-                {
-                    Console.WriteLine(this.Value.Item1 + ": " + variable?.Value);
-                }
+                key = this.IsInsideIf.Split('_')[0];
             }
             else if (this.IsInsideWhile != "")
             {
-                string key = this.IsInsideWhile.Split('_')[0];
-                var variable = ValueRegistry.GetLocalValue(key, this.Value.Item1);
-                if (variable is not RegistryEntry)
-                {
-                    Console.WriteLine(this.Value.Item1);
+                key = this.IsInsideWhile.Split('_')[0];
+            }
 
-                }
-                else
-                {
-                    Console.WriteLine(this.Value.Item1 + ": " + variable?.Value);
-                }
+            var variable = ValueRegistry.GetLocalValue(key, this.Value.Item1);
+            if (variable is not RegistryEntry)
+            {
+                Console.WriteLine(this.Value.Item1);
             }
             else
             {
-                var variable = ValueRegistry.GetGlobalValue(this.Value.Item1);
-                if (variable is not RegistryEntry)
-                {
-                    Console.WriteLine(this.Value.Item1);
-
-                }
-                else
-                {
-                    Console.WriteLine(this.Value.Item1 + ": " + variable?.Value);
-                }
+                Console.WriteLine(this.Value.Item1 + ": " + variable?.Value);
             }
         }
     }
