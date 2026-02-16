@@ -14,8 +14,6 @@ namespace ORS_ER.connections
             public dynamic Value { get; set; }
         }
 
-        //todo finish this so it cascades values
-
         private static readonly List<RegistryEntry> _globalRegistry = new();
         private static readonly Dictionary<string, (string, List<RegistryEntry>)> _localRegistry = new();
 
@@ -30,18 +28,6 @@ namespace ORS_ER.connections
                 }
             }
             _globalRegistry.Add(value);
-        }
-
-        public static RegistryEntry? GetGlobalValue(string key)
-        {
-            foreach (var entry in _globalRegistry)
-            {
-                if (entry.Name == key)
-                {
-                    return entry;
-                }
-            }
-            return null;
         }
 
         public static void AddLocalRegistry(string registryId, string parrent)

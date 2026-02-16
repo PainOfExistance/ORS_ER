@@ -58,7 +58,7 @@ namespace ORS_ER.components
             if (this.Code == "")
             {
                 textX = buttonRect.MidX - (font.MeasureText("+") / 2);
-                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
+                canvas.DrawText(this.IsInsideIf, textX, textY, font, Paints.ButtonTextPaint);
             }
             else
             {

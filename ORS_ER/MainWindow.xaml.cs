@@ -362,18 +362,20 @@ namespace ORS_ER
                                 }
                                 else
                                 {
-                                    if (false)
+                                    if (clearId)
                                     {
                                         //todo fix backpropagation with nested while and if blocks
-                                        item.IsInsideIf = PaintItems[PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
-                                        item.IsInsideWhile = PaintItems[PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
+                                        if (PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0] != "")
+                                        {
+                                            item.IsInsideIf = PaintItems[PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
+                                        }
+                                        else if (PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Split("_")[0] != "")
+                                        {
+                                            item.IsInsideWhile = PaintItems[PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
+                                        }
                                     }
-                                    if (clearId || (item is While && PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Contains(item.GetId())))
-                                    {
-                                        item.IsInsideIf = "";
-                                        item.IsInsideWhile = "";
-                                    }
-                                    else
+
+                                    if (!(item is While && PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile.Contains(item.GetId())))
                                     {
                                         item.IsInsideIf = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideIf;
                                         item.IsInsideWhile = PaintItems[connections[_isConnectingId].fromComponentId].IsInsideWhile;
