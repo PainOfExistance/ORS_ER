@@ -14,6 +14,69 @@ namespace ORS_ER
 {
     internal class Parser
     {
+        public static string ParseCircuitAsync(
+    Dictionary<string, Component> PaintItems,
+    Dictionary<string, Connection> connections
+ )
+        {
+            var startNodes = new Queue<Component>(
+                PaintItems
+                    .Where(kv => kv.Value.Inputs.Count() == 0)
+                    .Select(kv => kv.Value));
+            var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
+
+            while (startNodes.Count > 0)
+            {
+
+                var currentNode = startNodes.Dequeue();
+                queuedNodes.Remove(currentNode.GetId());
+
+                bool val1 = false;
+                bool val2 = false;
+                try
+                {
+                    val1 = PaintItems[connections[currentNode.Inputs.First().Value.inputConnectionIds.First()].fromComponentId].Value.Item2;
+
+                }
+                catch (Exception ex)
+                {
+                    val1 = false;
+                }
+
+                try
+                {
+                    val2 = PaintItems[connections[currentNode.Inputs.Last().Value.inputConnectionIds.First()].fromComponentId].Value.Item2;
+                }
+                catch (Exception ex)
+                {
+                    val2 = false;
+                }
+
+                try
+                {
+                    currentNode.GenerateCode(val1, val2);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} error: {ex.Message}");
+                    return "";
+                }
+
+                var outputConnections = connections.Values
+                    .Where(c => c.fromComponentId == currentNode.GetId())
+                    .ToList();
+
+                foreach (var conn in outputConnections)
+                {
+                    var nextNode = PaintItems[conn.toComponentId];
+                    if (queuedNodes.Add(nextNode.GetId()))
+                        startNodes.Enqueue(nextNode);
+
+                }
+            }
+
+            return "";
+        }
 
         public static Task<string> ParseAsync(
             Dictionary<string, Component> PaintItems,

@@ -353,5 +353,28 @@ namespace ORS_ER
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }
+
+
+        public static Component CreateLG(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        {
+            switch (Name)
+            {
+                case "Binary Input":
+                    BinaryInput component = new BinaryInput(Name, Description, Category);
+                    component.Selected = true;
+                    component.CreateRect(mouseWorldX, mouseWorldY);
+                    return component;
+                case "Binary Output":
+                    BinaryOutput component2 = new BinaryOutput(Name, Description, Category);
+                    component2.Selected = true;
+                    component2.CreateRect(mouseWorldX, mouseWorldY);
+                    return component2;
+                default:
+                    Gate meow = new Gate(Name, Description, Category);
+                    meow.Selected = true;
+                    meow.CreateRect(mouseWorldX, mouseWorldY);
+                    return meow;
+            }
+        }
     }
 }

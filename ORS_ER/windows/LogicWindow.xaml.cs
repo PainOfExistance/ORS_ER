@@ -31,13 +31,13 @@ namespace ORS_ER.windows
                 "<=",
                 ">",
                 ">=",
-                "AND",
+                /*"AND",
                 "OR",
                 "NOT",
                 "XOR",
                 "NOR",
                 "XNOR",
-                "NAND"
+                "NAND"*/
                 };
 
             var parts = Code.Split(" ").ToList();

@@ -115,7 +115,11 @@ namespace ORS_ER.components
                 this.IsBroken = false;
                 this.Selected = true;
 
-                if (this.Name.Contains("Operator"))
+                if (this.GetType() == typeof(BinaryInput))
+                {
+                    this.Value = ("bool", !this.Value.Item2);
+                }
+                else if (this.Name.Contains("Operator"))
                 {
                     var dlg = new LogicWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
@@ -176,7 +180,8 @@ namespace ORS_ER.components
             return null;
         }
         virtual public void Reset() { }
-        abstract public void GenerateCode();
+        virtual public void GenerateCode() { }
+        virtual public void GenerateCode(bool val1, bool val2) { }
         virtual public string ToJson()
         {
             static string JsonString(string? s)
