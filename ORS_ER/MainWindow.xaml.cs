@@ -46,6 +46,45 @@ namespace ORS_ER
         public bool _isConnecting { get; set; } = false;
         string _isConnectingId = "";
 
+        private bool WouldCreateSkipConnection(string fromComponentId, string toComponentId)
+        {
+            if (string.IsNullOrWhiteSpace(fromComponentId) || string.IsNullOrWhiteSpace(toComponentId))
+                return false;
+
+            if (fromComponentId == toComponentId)
+                return true;
+
+            // Reject if 'to' is already reachable from 'from'
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+            var stack = new Stack<string>();
+            stack.Push(fromComponentId);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (!visited.Add(current))
+                    continue;
+
+                foreach (var conn in connections.Values)
+                {
+                    // Ignore in-progress connection (no target yet)
+                    if (string.IsNullOrWhiteSpace(conn.toComponentId))
+                        continue;
+
+                    if (!string.Equals(conn.fromComponentId, current, StringComparison.Ordinal))
+                        continue;
+
+                    var next = conn.toComponentId;
+                    if (string.Equals(next, toComponentId, StringComparison.Ordinal))
+                        return true;
+
+                    stack.Push(next);
+                }
+            }
+
+            return false;
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -284,6 +323,20 @@ namespace ORS_ER
                         try
                         {
                             bool clearId = false;
+
+                            // NEW: block skip connections (A->C when A=>...=>C already exists)
+                            if (_isConnecting && connections.TryGetValue(_isConnectingId, out var inProgress))
+                            {
+                                var fromComponentId = inProgress.fromComponentId;
+                                var toComponentId = tmp.Value.Item2.GetId();
+
+                                if (WouldCreateSkipConnection(fromComponentId, toComponentId))
+                                {
+                                    CancelConnection();
+                                    returnItem = tmp;
+                                    return returnItem;
+                                }
+                            }
 
                             if (item is While &&
                                 item.Inputs.First().Value.GetId() == tmp.Value.Item3.GetId()
