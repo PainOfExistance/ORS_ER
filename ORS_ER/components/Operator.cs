@@ -36,7 +36,12 @@ namespace ORS_ER.components
             canvas.DrawRect(this.Rect, Paints.ComponentFill);
             font.Size = 20;
 
-            if (this.Selected)
+            if (this.IsBroken)
+            {
+                canvas.DrawRect(this.Rect, Paints.BrokenBlock);
+                canvas.DrawRect(this.Rect, Paints.BrokenBlockStroke);
+            }
+            else if (this.Selected)
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
@@ -147,7 +152,7 @@ namespace ORS_ER.components
                     variable1 = var1.ToString();
                 }
             }
-            else if (variable2 is not RegistryEntry)
+            if (variable2 is not RegistryEntry)
             {
                 if (double.TryParse(var2, out double doubleResult))
                 {

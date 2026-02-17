@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 
 namespace ORS_ER.components
@@ -20,6 +21,7 @@ namespace ORS_ER.components
         public bool Selected { get; set; } = false;
         public string IsInsideIf { get; set; } = "";
         public string IsInsideWhile { get; set; } = "";
+        public bool IsBroken { get; set; } = false;
         public Dictionary<string, IO> Inputs = new Dictionary<string, IO>();
         public Dictionary<string, IO> Outputs = new Dictionary<string, IO>();
         public SKRect Rect { get; set; }
@@ -110,6 +112,7 @@ namespace ORS_ER.components
 
             if (this.buttonRect.Contains(local))
             {
+                this.IsBroken = false;
                 this.Selected = true;
 
                 if (this.Name.Contains("Operator"))
@@ -164,6 +167,7 @@ namespace ORS_ER.components
 
             if (Rect.Contains(local))
             {
+                this.IsBroken = false;
                 this.Selected = true;
                 return ("rect", this, null);
             }
@@ -175,21 +179,62 @@ namespace ORS_ER.components
         abstract public void GenerateCode();
         virtual public string ToJson()
         {
+            static string JsonString(string? s)
+            {
+                s ??= "";
+                return s.Replace("\\", "\\\\")
+                        .Replace("\"", "\\\"")
+                        .Replace("\r", "\\r")
+                        .Replace("\n", "\\n")
+                        .Replace("\t", "\\t");
+            }
+
+            string valueJson;
+            try
+            {
+                var nameJson = JsonSerializer.Serialize(Value.Item1 ?? "");
+                var v = Value.Item2;
+                var valuePart = v switch
+                {
+                    null => "null",
+                    string s => JsonSerializer.Serialize(s),
+                    bool b => b ? "true" : "false",
+                    byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal =>
+                        Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture) ?? "0",
+                    JsonElement je => je.GetRawText(),
+                    _ => JsonSerializer.Serialize(v.ToString() ?? "")
+                };
+
+                valueJson = $"{{\"name\":{nameJson},\"value\":{valuePart}}}";
+            }
+            catch
+            {
+                valueJson = "{\"name\":\"\",\"value\":null}";
+            }
+
             var inputBuilder = new StringBuilder("\"inputs\": [");
+            bool firstIn = true;
             foreach (var input in Inputs)
             {
+                if (!firstIn)
+                    inputBuilder.Append(',');
+                firstIn = false;
                 inputBuilder.Append(input.Value.ToJson());
             }
             inputBuilder.Append(']');
-            var inputJsons = inputBuilder.ToString().TrimEnd(',', '\n', '\r', '\t', ' ');
+            var inputJsons = inputBuilder.ToString();
 
             var outputBuilder = new StringBuilder("\"outputs\": [");
+            bool firstOut = true;
             foreach (var output in Outputs)
             {
+                if (!firstOut)
+                    outputBuilder.Append(',');
+                firstOut = false;
                 outputBuilder.Append(output.Value.ToJson());
             }
             outputBuilder.Append(']');
-            var outputJsons = outputBuilder.ToString().TrimEnd(',', '\n', '\r', '\t', ' ');
+            var outputJsons = outputBuilder.ToString();
 
             return $"{{\n" +
                 $"\"name\": \"{Name}\",\n" +
@@ -201,6 +246,9 @@ namespace ORS_ER.components
                 .Replace("\r", "\\r")
                 .Replace("\n", "\\n")
                 .Replace("\t", "\\t")}\",\n" +
+                $"\"value\": {valueJson},\n" +
+                $"\"isInsideIf\": \"{JsonString(IsInsideIf)}\",\n" +
+                $"\"isInsideWhile\": \"{JsonString(IsInsideWhile)}\",\n" +
                 $"\"description\": \"{Description}\",\n" +
                 $"\"category\": \"{Category}\",\n" +
                 $"{inputJsons},\n" +

@@ -39,6 +39,15 @@ namespace ORS_ER
             [JsonPropertyName("code")]
             public string? Code { get; set; }
 
+            [JsonPropertyName("value")]
+            public JsonElement? Value { get; set; }
+
+            [JsonPropertyName("isInsideIf")]
+            public string? IsInsideIf { get; set; }
+
+            [JsonPropertyName("isInsideWhile")]
+            public string? IsInsideWhile { get; set; }
+
             [JsonPropertyName("description")]
             public string? Description { get; set; }
 
@@ -68,6 +77,9 @@ namespace ORS_ER
 
             [JsonPropertyName("value")]
             public string? Value { get; set; }
+
+            [JsonPropertyName("ifTrue")]
+            public string? IfTrue { get; set; }
 
             // NEW (multi) format only
             [JsonPropertyName("inputIds")]
@@ -155,10 +167,10 @@ namespace ORS_ER
                 openFileDialog.FilterIndex = 2;
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.ShowDialog();
-                string filePath = "";
+                if (string.IsNullOrWhiteSpace(openFileDialog.FileName))
+                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
 
-                if (openFileDialog.FileName != "")
-                    filePath = openFileDialog.FileName;
+                string filePath = openFileDialog.FileName;
 
                 var jsonData = File.ReadAllText(filePath);
                 var options = new JsonSerializerOptions
@@ -178,15 +190,64 @@ namespace ORS_ER
                     Component newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
                     newComponent.SetId(component.Id);
                     newComponent.Code = component.Code ?? "";
+                    newComponent.IsInsideIf = component.IsInsideIf ?? "";
+                    newComponent.IsInsideWhile = component.IsInsideWhile ?? "";
+
+                    if (component.Value is JsonElement ve)
+                    {
+                        try
+                        {
+                            if (ve.ValueKind == JsonValueKind.Object)
+                            {
+                                var name = ve.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String ? n.GetString() : "";
+                                dynamic d1 = null;
+                                if (ve.TryGetProperty("value", out var v))
+                                {
+                                    d1 = v.ValueKind switch
+                                    {
+                                        JsonValueKind.String => v.GetString() ?? "",
+                                        JsonValueKind.Number => v.TryGetDouble(out var d) ? d : v,
+                                        JsonValueKind.True => true,
+                                        JsonValueKind.False => false,
+                                        JsonValueKind.Null => null,
+                                        _ => v
+                                    };
+                                }
+                                newComponent.Value = (name ?? "", d1);
+                            }
+                            else if (ve.ValueKind == JsonValueKind.Array && ve.GetArrayLength() == 2)
+                            {
+                                var item0 = ve[0];
+                                var item1 = ve[1];
+                                var s0 = item0.ValueKind == JsonValueKind.String ? item0.GetString() : item0.ToString();
+                                dynamic d1 = item1.ValueKind == JsonValueKind.String ? (item1.GetString() ?? "") : item1;
+                                newComponent.Value = (s0 ?? "", d1);
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
 
                     newComponent.Inputs.Clear();
                     foreach (var input in component.Inputs)
                     {
                         IO newIO = new IO();
                         newIO.SetId(input.Id);
-                        newIO.inputConnectionIds = input.InputIds ?? [];
-                        newIO.outputConnectionIds = input.OutputIds ?? [];
-                        newComponent.Inputs.Add(input.Id, newIO);
+                        newIO.IfTrue = input.IfTrue ?? "";
+                        if (input.InputIds != null || input.OutputIds != null)
+                        {
+                            newIO.inputConnectionIds = input.InputIds ?? [];
+                            newIO.outputConnectionIds = input.OutputIds ?? [];
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrWhiteSpace(input.Value))
+                                newIO.inputConnectionIds = [input.Value];
+                        }
+
+                        var ioKey = string.IsNullOrWhiteSpace(input.Id) ? newIO.GetId() : input.Id;
+                        newComponent.Inputs.Add(ioKey, newIO);
                     }
 
                     newComponent.Outputs.Clear();
@@ -194,9 +255,20 @@ namespace ORS_ER
                     {
                         IO newIO = new IO();
                         newIO.SetId(output.Id);
-                        newIO.inputConnectionIds = output.InputIds ?? [];
-                        newIO.outputConnectionIds = output.OutputIds ?? [];
-                        newComponent.Outputs.Add(output.Id, newIO);
+                        newIO.IfTrue = output.IfTrue ?? "";
+                        if (output.InputIds != null || output.OutputIds != null)
+                        {
+                            newIO.inputConnectionIds = output.InputIds ?? [];
+                            newIO.outputConnectionIds = output.OutputIds ?? [];
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrWhiteSpace(output.Value))
+                                newIO.outputConnectionIds = [output.Value];
+                        }
+
+                        var ioKey = string.IsNullOrWhiteSpace(output.Id) ? newIO.GetId() : output.Id;
+                        newComponent.Outputs.Add(ioKey, newIO);
                     }
 
                     newComponent.CreateRect((int)component.X, (int)component.Y);

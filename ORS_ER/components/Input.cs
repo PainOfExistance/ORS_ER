@@ -31,7 +31,12 @@ namespace ORS_ER.components
             canvas.DrawRect(this.Rect, Paints.ComponentFill);
             font.Size = 20;
 
-            if (this.Selected)
+            if (this.IsBroken)
+            {
+                canvas.DrawRect(this.Rect, Paints.BrokenBlock);
+                canvas.DrawRect(this.Rect, Paints.BrokenBlockStroke);
+            }
+            else if (this.Selected)
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);

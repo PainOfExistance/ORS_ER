@@ -35,7 +35,12 @@ namespace ORS_ER.components
             canvas.DrawRect(this.Rect, Paints.ComponentFill);
             font.Size = 20;
 
-            if (this.Selected)
+            if (this.IsBroken)
+            {
+                canvas.DrawRect(this.Rect, Paints.BrokenBlock);
+                canvas.DrawRect(this.Rect, Paints.BrokenBlockStroke);
+            }
+            else if (this.Selected)
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
             else
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
@@ -58,7 +63,7 @@ namespace ORS_ER.components
             if (this.Code == "")
             {
                 textX = buttonRect.MidX - (font.MeasureText("+") / 2);
-                canvas.DrawText(this.IsInsideIf, textX, textY, font, Paints.ButtonTextPaint);
+                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
             }
             else
             {

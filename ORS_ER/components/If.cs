@@ -36,10 +36,16 @@ namespace ORS_ER.components
             canvas.Save();
             canvas.RotateDegrees(45, this.Rect.MidX, this.Rect.MidY);
             canvas.DrawRect(Rect, Paints.ComponentFill);
-            if (Selected)
-                canvas.DrawRect(Rect, Paints.SelectedStroke);
+
+            if (this.IsBroken)
+            {
+                canvas.DrawRect(this.Rect, Paints.BrokenBlock);
+                canvas.DrawRect(this.Rect, Paints.BrokenBlockStroke);
+            }
+            else if (this.Selected)
+                canvas.DrawRect(this.Rect, Paints.SelectedStroke);
             else
-                canvas.DrawRect(Rect, Paints.ComponentStroke);
+                canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
             canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
@@ -143,7 +149,7 @@ namespace ORS_ER.components
                     variable1 = var1.ToString();
                 }
             }
-            else if (variable2 is not RegistryEntry)
+            if (variable2 is not RegistryEntry)
             {
                 if (double.TryParse(var2, out double doubleResult))
                 {

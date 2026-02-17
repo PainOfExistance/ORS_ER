@@ -51,11 +51,12 @@ namespace ORS_ER.connections
 
         public string ToJson()
         {
-            return $"{{\n" +
-                $"\"id\": \"{JsonString(Id)}\",\n" +
-                $"\"inputIds\": {JsonStringList(inputConnectionIds)},\n" +
-                $"\"outputIds\": {JsonStringList(outputConnectionIds)}\n" +
-                $"}}\n";
+            return $"{{" +
+                $"\"id\": \"{JsonString(Id)}\"," +
+                $"\"ifTrue\": \"{JsonString(IfTrue)}\"," +
+                $"\"inputIds\": {JsonStringList(inputConnectionIds)}," +
+                $"\"outputIds\": {JsonStringList(outputConnectionIds)}" +
+                $"}}";
         }
     }
 }

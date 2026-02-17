@@ -44,7 +44,41 @@ namespace ORS_ER
                 var currentNode = startNodes.Dequeue();
                 queuedNodes.Remove(currentNode.GetId());
 
-                currentNode.GenerateCode();
+                try
+                {
+                    currentNode.GenerateCode();
+                }
+                catch (DivideByZeroException ex)
+                {
+                    currentNode.IsBroken = true;
+                    Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} divide by zero error: \n{ex.Message}");
+                    return "";
+                }
+                catch (NullReferenceException ex)
+                {
+                    currentNode.IsBroken = true;
+                    Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} null reference error: \n{ex.Message}");
+                    return "";
+                }
+                catch (ArgumentException ex)
+                {
+                    currentNode.IsBroken = true;
+                    Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} argument error: \n{ex.Message}");
+                    return "";
+                }
+                catch (InvalidOperationException ex)
+                {
+                    currentNode.IsBroken = true;
+                    Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} invalid operation error: \n{ex.Message}");
+                    return "";
+                }
+                catch (Exception ex)
+                {
+                    currentNode.IsBroken = true;
+                    Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} error");
+                    return "";
+                }
+
                 var outputConnections = connections.Values
                     .Where(c => c.fromComponentId == currentNode.GetId())
                     .ToList();
@@ -65,26 +99,6 @@ namespace ORS_ER
             }
 
             return "";
-        }
-
-        public static Task EvaluateAsync(string code, CancellationToken cancellationToken = default)
-        {
-            var options = ScriptOptions.Default
-                .WithReferences(
-                    typeof(object).Assembly,
-                    typeof(Enumerable).Assembly,
-                    typeof(Console).Assembly,
-                    typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly,
-                    typeof(System.Dynamic.DynamicObject).Assembly,
-                    typeof(Microsoft.CSharp.RuntimeBinder.Binder).Assembly)
-                .WithImports(
-                    "System",
-                    "System.Linq",
-                    "System.Collections.Generic",
-                    "System.Text",
-                    "System.Dynamic");
-
-            return CSharpScript.RunAsync(code, options, globals: null, cancellationToken: cancellationToken);
         }
     }
 }

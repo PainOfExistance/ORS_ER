@@ -27,6 +27,8 @@ namespace ORS_ER.components
         public SKPaint ButtonTextPaint { get; }
         public SKPaint ValueTrue { get; }
         public SKPaint ValueFalse { get; }
+        public SKPaint BrokenBlock { get; }
+        public SKPaint BrokenBlockStroke { get; }
 
         private ComponentPaints(
             SKColor fill,
@@ -128,6 +130,21 @@ namespace ORS_ER.components
                 Color = SKColors.Red,
                 IsAntialias = true,
                 TextSize = 14,
+            };
+
+            BrokenBlock = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                Color = SKColors.HotPink,
+                IsAntialias = true,
+            };
+
+            BrokenBlockStroke = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = lineStrokeWidth * 2,
+                Color = SKColors.HotPink,
+                IsAntialias = true,
             };
         }
 
