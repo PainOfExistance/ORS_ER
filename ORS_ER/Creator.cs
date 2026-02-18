@@ -369,6 +369,16 @@ namespace ORS_ER
                     component2.Selected = true;
                     component2.CreateRect(mouseWorldX, mouseWorldY);
                     return component2;
+                case "Half Adder":
+                    Adder adder = new Adder(Name, Description, Category);
+                    adder.Selected = true;
+                    adder.CreateRect(mouseWorldX, mouseWorldY);
+                    return adder;
+                case "Full Adder":
+                    Adder fullAdder = new Adder(Name, Description, Category);
+                    fullAdder.Selected = true;
+                    fullAdder.CreateRect(mouseWorldX, mouseWorldY);
+                    return fullAdder;
                 default:
                     Gate meow = new Gate(Name, Description, Category);
                     meow.Selected = true;

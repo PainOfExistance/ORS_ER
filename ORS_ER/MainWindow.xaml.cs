@@ -138,14 +138,18 @@ namespace ORS_ER
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
                 fc.NewDiagram();
+            else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                lg.NewDiagram();
 
-                e.Handled = true;
+            e.Handled = true;
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
                 fc.SaveDiagram();
+            else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                lg.SaveDiagram();
 
             e.Handled = true;
         }
@@ -154,6 +158,8 @@ namespace ORS_ER
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
                 fc.LoadDiagram();
+            else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                lg.LoadDiagram();
 
             e.Handled = true;
         }

@@ -23,38 +23,42 @@ namespace ORS_ER
                 PaintItems
                     .Where(kv => kv.Value.Inputs.Count() == 0)
                     .Select(kv => kv.Value));
-            var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
-
+            List<string> done = new List<string>();
             while (startNodes.Count > 0)
             {
-
                 var currentNode = startNodes.Dequeue();
-                queuedNodes.Remove(currentNode.GetId());
+                if (done.Contains(currentNode.GetId()))
+                    continue;
+                done.Add(currentNode.GetId());
 
-                bool val1 = false;
-                bool val2 = false;
+                List<bool> vals = new();
+                foreach (var io in currentNode.Inputs.Values)
+                {
+                    bool val = false;
+                    try
+                    {
+                        dynamic tmp = PaintItems[connections[io.inputConnectionIds.First()].fromComponentId].Value.Item2;
+                        if (tmp is bool)
+                        {
+                            val = tmp;
+                        }
+                        else
+                        {
+                            var fromId = connections[io.inputConnectionIds.First()].fromId;
+                            var index = PaintItems[connections[io.inputConnectionIds.First()].fromComponentId].Outputs[fromId].IfTrue;
+                            val = tmp[int.Parse(index)];
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        val = false;
+                    }
+                    vals.Add(val);
+                }
+
                 try
                 {
-                    val1 = PaintItems[connections[currentNode.Inputs.First().Value.inputConnectionIds.First()].fromComponentId].Value.Item2;
-
-                }
-                catch (Exception ex)
-                {
-                    val1 = false;
-                }
-
-                try
-                {
-                    val2 = PaintItems[connections[currentNode.Inputs.Last().Value.inputConnectionIds.First()].fromComponentId].Value.Item2;
-                }
-                catch (Exception ex)
-                {
-                    val2 = false;
-                }
-
-                try
-                {
-                    currentNode.GenerateCode(val1, val2);
+                    currentNode.GenerateCode(vals);
                 }
                 catch (Exception ex)
                 {
@@ -69,8 +73,7 @@ namespace ORS_ER
                 foreach (var conn in outputConnections)
                 {
                     var nextNode = PaintItems[conn.toComponentId];
-                    if (queuedNodes.Add(nextNode.GetId()))
-                        startNodes.Enqueue(nextNode);
+                    startNodes.Enqueue(nextNode);
 
                 }
             }

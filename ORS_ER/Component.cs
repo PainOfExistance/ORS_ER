@@ -119,6 +119,10 @@ namespace ORS_ER.components
                 {
                     this.Value = ("bool", !this.Value.Item2);
                 }
+                else if (this.GetType() == typeof(BinaryOutput) || this.GetType() == typeof(Gate) || this.GetType() == typeof(Adder))
+                {
+
+                }
                 else if (this.Name.Contains("Operator"))
                 {
                     var dlg = new LogicWindow(this.Code, this.Value);
@@ -181,7 +185,7 @@ namespace ORS_ER.components
         }
         virtual public void Reset() { }
         virtual public void GenerateCode() { }
-        virtual public void GenerateCode(bool val1, bool val2) { }
+        virtual public void GenerateCode(List<bool> vals) { }
         virtual public string ToJson()
         {
             static string JsonString(string? s)

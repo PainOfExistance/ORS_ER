@@ -40,7 +40,9 @@ public partial class LogicGatesSimulationView : UserControl
         new Gate("XOR Gate", "Outputs true if exactly one input is true.", "Gates"),
         new Gate("NAND Gate", "Outputs false if both inputs are true.", "Gates"),
         new Gate("NOR Gate", "Outputs true if both inputs are false.", "Gates"),
-        new Gate("XNOR Gate", "Outputs true if both inputs are the same.", "Gates")
+        new Gate("XNOR Gate", "Outputs true if both inputs are the same.", "Gates"),
+        new Adder("Half Adder", "Half addition.", "Adders"),
+        new Adder("Full Adder", "Full addition.", "Adders")
     };
 
     public Dictionary<string, Component> PaintItems { get; } = new();

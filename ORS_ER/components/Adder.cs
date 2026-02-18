@@ -11,39 +11,51 @@ using static ORS_ER.connections.ValueRegistry;
 
 namespace ORS_ER.components
 {
-    class Gate : Component
+    class Adder : Component
     {
-        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Gate);
-        public Gate(Component component) : base(component)
+        private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Operator);
+        public Adder(Component component) : base(component)
         {
             this.Code = component.Name.Split(" ")[0];
             base.font = new SKFont();
-            this.Value = ("bool", false);
+            this.Value = ("bool", new bool[2] { false, false });
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
+            IO newNode4 = new IO();
+            newNode4.IfTrue = "0";
+            IO newNode5 = new IO();
+            newNode5.IfTrue = "1";
             Inputs.Add(newNode1.GetId(), newNode1);
-            if (this.Code != "NOT")
-                Inputs.Add(newNode2.GetId(), newNode2);
-            else
-                this.Value = ("bool", true);
-            Outputs.Add(newNode3.GetId(), newNode3);
+            Inputs.Add(newNode2.GetId(), newNode2);
+
+            if (this.Name.Contains("Full"))
+                Inputs.Add(newNode3.GetId(), newNode3);
+
+            Outputs.Add(newNode4.GetId(), newNode4);
+            Outputs.Add(newNode5.GetId(), newNode5);
         }
 
-        public Gate(string name, string description, string category) : base(name, description, category)
+        public Adder(string name, string description, string category) : base(name, description, category)
         {
             this.Code = name.Split(" ")[0];
             base.font = new SKFont();
-            this.Value = ("bool", false);
+            this.Value = ("bool", new bool[2] { false, false });
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
+            IO newNode4 = new IO();
+            newNode4.IfTrue = "0";
+            IO newNode5 = new IO();
+            newNode5.IfTrue = "1";
             Inputs.Add(newNode1.GetId(), newNode1);
-            if (this.Code != "NOT")
-                Inputs.Add(newNode2.GetId(), newNode2);
-            else
-                this.Value = ("bool", true);
-            Outputs.Add(newNode3.GetId(), newNode3);
+            Inputs.Add(newNode2.GetId(), newNode2);
+
+            if (this.Name.Contains("Full"))
+                Inputs.Add(newNode3.GetId(), newNode3);
+
+            Outputs.Add(newNode4.GetId(), newNode4);
+            Outputs.Add(newNode5.GetId(), newNode5);
         }
 
         public override void Paint(SKCanvas canvas)
@@ -63,7 +75,7 @@ namespace ORS_ER.components
 
             foreach (var output in this.Outputs)
             {
-                if (this.Value.Item2)
+                if (this.Value.Item2[int.Parse(output.Value.IfTrue)])
                     canvas.DrawCircle(output.Value.node, 8, Paints.IOPaintActive);
                 else
                     canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
@@ -79,7 +91,7 @@ namespace ORS_ER.components
 
         public override void CreateRect(int x, int y)
         {
-            this.Rect = new SKRect(x - 45, y - 45, x + 45, y + 45);
+            this.Rect = new SKRect(x - 60, y - 45, x + 60, y + 45);
             this.buttonRect = new SKRect(
                 this.Rect.Left + 10,
                 this.Rect.Top + 10,
@@ -103,34 +115,20 @@ namespace ORS_ER.components
 
         public override void GenerateCode(List<bool> vals)
         {
-            bool val1 = vals.First();
-            bool val2 = vals.Last();
-            switch (this.Code)
+            if (this.Name.Contains("Full"))
             {
-                case "AND":
-                    this.Value = (this.Value.Item1, val1 & val2);
-                    break;
-                case "OR":
-                    this.Value = (this.Value.Item1, val1 | val2);
-                    break;
-                case "NOT":
-                    this.Value = (this.Value.Item1, !val1);
-                    break;
-                case "XOR":
-                    this.Value = (this.Value.Item1, val1 ^ val2);
-                    break;
-                case "NOR":
-                    this.Value = (this.Value.Item1, !(val1 | val2));
-                    break;
-                case "XNOR":
-                    this.Value = (this.Value.Item1, !(val1 ^ val2));
-                    break;
-                case "NAND":
-                    this.Value = (this.Value.Item1, !(val1 & val2));
-                    break;
-                default:
-                    this.Value = (this.Value.Item1, val1 | val2);
-                    break;
+                bool xor1 = vals[1] ^ vals[2];
+                bool and1 = vals[1] && vals[2];
+                bool and2 = vals[0] && xor1;
+                bool xor2 = vals[0] ^ xor1;
+                bool xor3 = and1 ^ and2;
+                this.Value = ("bool", new bool[2] { xor3, xor2 });
+            }
+            else
+            {
+                bool XorVal = vals[0] ^ vals[1];
+                bool AndVal = vals[0] && vals[1];
+                this.Value = ("bool", new bool[2] { AndVal, XorVal });
             }
         }
     }

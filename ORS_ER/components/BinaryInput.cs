@@ -84,7 +84,7 @@ namespace ORS_ER.components
             }
         }
 
-        public override void GenerateCode(bool val1, bool val2)
+        public override void GenerateCode(List<bool> vals)
         {
         }
     }
