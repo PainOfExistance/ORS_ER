@@ -221,8 +221,10 @@ public partial class LogicGatesSimulationView : UserControl
 
     private static void DrawPalettePreview(SKCanvas canvas, int width, int height, Component c)
     {
-        var isGate = c is Gate or Adder;
+        var isGate = c is Gate;
         var scheme = isGate ? ComponentPaintScheme.Gate : ComponentPaintScheme.Input;
+        isGate = c is Adder;
+        scheme = isGate ? ComponentPaintScheme.Operator : scheme;
         var paints = ComponentPaints.Create(scheme);
 
         using var stroke = paints.ComponentStroke;
@@ -239,7 +241,7 @@ public partial class LogicGatesSimulationView : UserControl
 
         var type = c.GetType().Name;
 
-        if (type.Contains("Gate", StringComparison.OrdinalIgnoreCase) || type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
+        if (type.Contains("Gate", StringComparison.OrdinalIgnoreCase))
         {
             float bodyW = rect.Width * 0.55f;
             float bodyH = rect.Height * 0.55f;
@@ -248,7 +250,22 @@ public partial class LogicGatesSimulationView : UserControl
             canvas.DrawRoundRect(bodyR, fill);
             canvas.DrawRoundRect(bodyR, stroke);
 
-            using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
+            using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
+            var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
+            var bounds = new SKRect();
+            text.MeasureText(label, ref bounds);
+            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+        }
+        else if(type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
+        {
+            float bodyW = rect.Width * 0.55f;
+            float bodyH = rect.Height * 0.55f;
+            var body = SKRect.Create(cx - bodyW * 0.5f, cy - bodyH * 0.5f, bodyW, bodyH);
+            var bodyR = new SKRoundRect(body, 6, 6);
+            canvas.DrawRoundRect(bodyR, fill);
+            canvas.DrawRoundRect(bodyR, stroke);
+
+            using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
