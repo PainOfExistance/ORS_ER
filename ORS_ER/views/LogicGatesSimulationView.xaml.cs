@@ -2,9 +2,12 @@ using ORS_ER.components;
 using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.WPF;
 using System.Collections.ObjectModel;
+using ICollectionView = System.ComponentModel.ICollectionView;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -45,6 +48,11 @@ public partial class LogicGatesSimulationView : UserControl
         new Adder("Full Adder", "Full addition.", "Adders")
     };
 
+    public ICollectionView FilteredItems { get; }
+
+    private string _paletteQuery = string.Empty;
+    private string _paletteCategory = "All";
+
     public Dictionary<string, Component> PaintItems { get; } = new();
 
     public Dictionary<string, Connection> connections { get; set; } = new();
@@ -56,9 +64,29 @@ public partial class LogicGatesSimulationView : UserControl
         InitializeComponent();
         DataContext = this;
 
+        FilteredItems = CollectionViewSource.GetDefaultView(Items);
+        FilteredItems.Filter = PaletteFilter;
+
         PreviewMouseRightButtonDown += FlowchartSimulationView_PreviewMouseRightButtonDown;
         PreviewKeyDown += FlowchartSimulationView_PreviewKeyDown;
         Focusable = true;
+    }
+
+    private bool PaletteFilter(object obj)
+    {
+        if (obj is not Component c)
+            return false;
+
+        if (!string.Equals(_paletteCategory, "All", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(c.Category, _paletteCategory, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_paletteQuery))
+            return true;
+
+        return (c.Name?.Contains(_paletteQuery, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (c.Description?.Contains(_paletteQuery, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (c.Category?.Contains(_paletteQuery, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     public void FocusCanvas()
@@ -178,6 +206,75 @@ public partial class LogicGatesSimulationView : UserControl
 
         foreach (var item in PaintItems)
             item.Value.Paint(canvas);
+    }
+
+    private void PalettePreview_OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(new SKColor(0xF2, 0xF2, 0xF2));
+
+        if (sender is not SKElement element || element.Tag is not Component c)
+            return;
+
+        DrawPalettePreview(canvas, e.Info.Width, e.Info.Height, c);
+    }
+
+    private static void DrawPalettePreview(SKCanvas canvas, int width, int height, Component c)
+    {
+        var isGate = c is Gate or Adder;
+        var scheme = isGate ? ComponentPaintScheme.Gate : ComponentPaintScheme.Input;
+        var paints = ComponentPaints.Create(scheme);
+
+        using var stroke = paints.ComponentStroke;
+        using var fill = paints.ComponentFill;
+
+        float pad = 6;
+        var rect = new SKRect(pad, pad, width - pad, height - pad);
+        var rrect = new SKRoundRect(rect, 6, 6);
+        canvas.DrawRoundRect(rrect, fill);
+        canvas.DrawRoundRect(rrect, stroke);
+
+        var cx = rect.MidX;
+        var cy = rect.MidY;
+
+        var type = c.GetType().Name;
+
+        if (type.Contains("Gate", StringComparison.OrdinalIgnoreCase) || type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
+        {
+            float bodyW = rect.Width * 0.55f;
+            float bodyH = rect.Height * 0.55f;
+            var body = SKRect.Create(cx - bodyW * 0.5f, cy - bodyH * 0.5f, bodyW, bodyH);
+            var bodyR = new SKRoundRect(body, 6, 6);
+            canvas.DrawRoundRect(bodyR, fill);
+            canvas.DrawRoundRect(bodyR, stroke);
+
+            using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
+            var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
+            var bounds = new SKRect();
+            text.MeasureText(label, ref bounds);
+            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+        }
+        else if (type.Contains("Input", StringComparison.OrdinalIgnoreCase))
+        {
+            using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
+            var label = "In";
+            var bounds = new SKRect();
+            text.MeasureText(label, ref bounds);
+            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+        }
+        else if (type.Contains("Output", StringComparison.OrdinalIgnoreCase))
+        {
+            using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
+            var label = "Out";
+            var bounds = new SKRect();
+            text.MeasureText(label, ref bounds);
+            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+        }
+        else
+        {
+            var fallback = SKRect.Create(rect.Left + rect.Width * 0.25f, rect.Top + rect.Height * 0.25f, rect.Width * 0.5f, rect.Height * 0.5f);
+            canvas.DrawRect(fallback, stroke);
+        }
     }
 
     private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);

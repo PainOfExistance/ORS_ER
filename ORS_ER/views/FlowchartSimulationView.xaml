@@ -12,58 +12,60 @@
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0">
-            <ListView x:Name="LayersListView"
-              ItemsSource="{Binding Items}"
-              Margin="5"
-              ScrollViewer.VerticalScrollBarVisibility="Hidden"
-              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-              ScrollViewer.CanContentScroll="True">
+        <Border Grid.Column="0" Margin="8" CornerRadius="8" BorderBrush="#2A000000" BorderThickness="1" Background="#FFF7F7F7" Padding="8">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Text="Components" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,8"/>
 
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="0,5" Width="{Binding RelativeSource={RelativeSource AncestorType=ListViewItem}, Path=ActualWidth}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                <ListView x:Name="LayersListView"
+                         ItemsSource="{Binding Items}"
+                         Margin="0"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.CanContentScroll="True">
 
-                            <TextBlock Grid.Row="0" 
-                               Text="{Binding Name}" 
-                               FontWeight="Bold"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,2"/>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,8" Padding="8" Background="White" BorderBrush="#22000000" BorderThickness="1" CornerRadius="6">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="52"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="1" 
-                               Text="{Binding Description}" 
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,2"/>
+                                    <Border Width="44" Height="44" CornerRadius="6" Background="#FFF2F2F2" BorderBrush="#22000000" BorderThickness="1" VerticalAlignment="Top">
+                                        <skia:SKElement Tag="{Binding}" Loaded="PalettePreviewElement_Loaded" />
+                                    </Border>
 
-                            <TextBlock Grid.Row="2" 
-                               Text="{Binding Category}" 
-                               Foreground="Gray"
-                               TextWrapping="Wrap"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Description}" Foreground="#99000000" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                        <TextBlock Text="{Binding Category}" Foreground="#66000000" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </DockPanel>
+        </Border>
 
-        <skia:SKElement x:Name="skiaElement"
-                        Grid.Column="1"
-                        PaintSurface="OnPaintSurface"
-                        MouseDown="SkiaElement_OnMouseDown"
-                        MouseMove="SkiaElement_OnMouseMove"
-                        MouseUp="SkiaElement_OnMouseUp"
-                        MouseWheel="SkiaElement_OnMouseWheel"/>
+        <Border Grid.Column="1" Margin="8" CornerRadius="8" BorderBrush="#2A000000" BorderThickness="1" Background="White" SnapsToDevicePixels="True">
+            <skia:SKElement x:Name="skiaElement"
+                            PaintSurface="OnPaintSurface"
+                            MouseDown="SkiaElement_OnMouseDown"
+                            MouseMove="SkiaElement_OnMouseMove"
+                            MouseUp="SkiaElement_OnMouseUp"
+                            MouseWheel="SkiaElement_OnMouseWheel"/>
+        </Border>
 
-        <TextBox x:Name="ConsoleOutput" Grid.Column="2"
-                 Text="------Console Output------&#x0a;"
-                 Margin="5"
-                 TextWrapping="Wrap"
-                 AcceptsReturn="True"
-                 IsReadOnly="True"
-                 VerticalScrollBarVisibility="Auto"/>
+        <Border Grid.Column="2" Margin="8" CornerRadius="8" BorderBrush="#2A000000" BorderThickness="1" Background="White" Padding="6">
+            <TextBox x:Name="ConsoleOutput"
+                     Text="------Console Output------&#x0a;"
+                     Margin="0"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     IsReadOnly="True"
+                     VerticalScrollBarVisibility="Auto"/>
+        </Border>
     </Grid>
 </UserControl>

@@ -9,6 +9,7 @@ using ORS_ER.components;
 using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.WPF;
 
 namespace ORS_ER.views;
 
@@ -29,6 +30,9 @@ public partial class FlowchartSimulationView : UserControl
     private const float MaxZoom = 10.0f;
     private const float ZoomStep = 1.1f;
     private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
+
+    private const float PalettePreviewZoom = 0.35f;
+
 
     public ObservableCollection<Component> Items { get; } = new()
     {
@@ -96,6 +100,16 @@ public partial class FlowchartSimulationView : UserControl
     public void ClearPaletteSelection() => LayersListView.SelectedItem = null;
 
     public void Invalidate() => skiaElement.InvalidateVisual();
+
+    private void PalettePreviewElement_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not SKElement el)
+            return;
+
+        el.PaintSurface -= PalettePreview_OnPaintSurface;
+        el.PaintSurface += PalettePreview_OnPaintSurface;
+        el.InvalidateVisual();
+    }
 
     private void FlowchartSimulationView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -285,7 +299,50 @@ public partial class FlowchartSimulationView : UserControl
             item.Value.Paint(canvas);
     }
 
+
     private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
+
+    private void PalettePreview_OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(new SKColor(0xF2, 0xF2, 0xF2));
+
+        if (sender is not SKElement element || element.Tag is not Component c)
+            return;
+
+        DrawPalettePreview(canvas, e.Info.Width, e.Info.Height, c);
+    }
+
+    private static void DrawPalettePreview(SKCanvas canvas, int width, int height, Component c)
+    {
+        float pad = 4;
+        var clip = new SKRoundRect(new SKRect(pad, pad, width - pad, height - pad), 6, 6);
+
+        using var border = new SKPaint
+        {
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            Color = new SKColor(0x22, 0x00, 0x00, 0x00),
+            StrokeWidth = 1
+        };
+
+        canvas.Save();
+        canvas.ClipRoundRect(clip, SKClipOperation.Intersect, true);
+
+        // Use the actual component paint (for consistent shapes + colors).
+        // Create a temporary instance positioned around the origin.
+        var clone = Creator.Create(c.Name, c.Description, c.Category, 0, 0);
+
+        var content = SKRect.Create(pad, pad, width - (pad * 2), height - (pad * 2));
+        canvas.Translate(content.MidX, content.MidY);
+        canvas.Scale(PalettePreviewZoom);
+        canvas.Translate(-80, -50);
+
+        clone.Paint(canvas);
+        canvas.Restore();
+
+        canvas.DrawRoundRect(clip, border);
+    }
 
     public void CancelConnection()
     {
