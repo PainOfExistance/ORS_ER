@@ -81,15 +81,15 @@ namespace ORS_ER
             return "";
         }
 
-        public static Task<string> ParseAsync(
+        public static void ParseAsync(
             Dictionary<string, Component> PaintItems,
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken = default)
         {
-            return Task.Run(() => ParseCore(PaintItems, connections, cancellationToken), cancellationToken);
+            Task.Run(() => ParseCore(PaintItems, connections, cancellationToken), cancellationToken);
         }
 
-        private static string ParseCore(
+        private static void ParseCore(
             Dictionary<string, Component> PaintItems,
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken)
@@ -99,9 +99,6 @@ namespace ORS_ER
                     .Where(kv => kv.Value.Inputs.First().Value.inputConnectionIds.Count() == 0)
                     .Select(kv => kv.Value));
             var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
-
-            Debug.WriteLine(startNodes.Count());
-            Debug.WriteLine(queuedNodes.Count());
 
             while (startNodes.Count > 0)
             {
@@ -118,31 +115,26 @@ namespace ORS_ER
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} divide by zero error: \n{ex.Message}");
-                    return "";
                 }
                 catch (NullReferenceException ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} null reference error: \n{ex.Message}");
-                    return "";
                 }
                 catch (ArgumentException ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} argument error: \n{ex.Message}");
-                    return "";
                 }
                 catch (InvalidOperationException ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} invalid operation error: \n{ex.Message}");
-                    return "";
                 }
                 catch (Exception ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} error");
-                    return "";
                 }
 
                 var outputConnections = connections.Values
@@ -163,8 +155,6 @@ namespace ORS_ER
 
                 }
             }
-
-            return "";
         }
     }
 }

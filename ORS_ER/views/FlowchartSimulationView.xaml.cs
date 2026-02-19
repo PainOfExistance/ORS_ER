@@ -224,19 +224,6 @@ public partial class FlowchartSimulationView : UserControl
         }
     }
 
-    private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
-    {
-        while (current is not null)
-        {
-            if (current is T match)
-                return match;
-
-            current = VisualTreeHelper.GetParent(current);
-        }
-
-        return null;
-    }
-
     private bool WouldCreateSkipConnection(string fromComponentId, string toComponentId)
     {
         if (string.IsNullOrWhiteSpace(fromComponentId) || string.IsNullOrWhiteSpace(toComponentId))
@@ -625,9 +612,7 @@ public partial class FlowchartSimulationView : UserControl
         foreach (var item in PaintItems.Values)
             item.Reset();
 
-        string code = await Parser.ParseAsync(PaintItems, connections, cancellationToken);
-        Debug.WriteLine("Generated Code:");
-        Debug.WriteLine(code);
+        Parser.ParseAsync(PaintItems, connections, cancellationToken);
 
         skiaElement.InvalidateVisual();
     }
