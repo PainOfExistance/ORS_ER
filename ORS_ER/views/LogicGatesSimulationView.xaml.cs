@@ -107,6 +107,7 @@ public partial class LogicGatesSimulationView : UserControl
             skiaElement.InvalidateVisual();
             e.Handled = true;
             Parser.ParseCircuitAsync(PaintItems, connections);
+            Parser.ParseCircuitAsync(PaintItems, connections);
             return;
         }
 
@@ -145,6 +146,7 @@ public partial class LogicGatesSimulationView : UserControl
 
             PaintItems.Remove(item.Key);
             Debug.WriteLine("Deleted Component");
+            Parser.ParseCircuitAsync(PaintItems, connections);
             Parser.ParseCircuitAsync(PaintItems, connections);
             skiaElement.InvalidateVisual();
             e.Handled = true;
@@ -233,6 +235,7 @@ public partial class LogicGatesSimulationView : UserControl
                             connections[_isConnectingId].selected = false;
                             _isConnecting = false;
                             _isConnectingId = "";
+                            Parser.ParseCircuitAsync(PaintItems, connections);
                             Parser.ParseCircuitAsync(PaintItems, connections);
                         }
                         else if (_isConnecting)
@@ -324,6 +327,7 @@ public partial class LogicGatesSimulationView : UserControl
         else if (hit != null && hit.Value.Item1 == "button")
         {
             Parser.ParseCircuitAsync(PaintItems, connections);
+            Parser.ParseCircuitAsync(PaintItems, connections);
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
@@ -402,10 +406,6 @@ public partial class LogicGatesSimulationView : UserControl
 
         skiaElement.InvalidateVisual();
         e.Handled = true;
-    }
-
-    public async Task RunAsync(CancellationToken cancellationToken)
-    {
     }
 
     public void NewDiagram()
