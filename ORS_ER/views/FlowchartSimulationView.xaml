@@ -23,25 +23,26 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.CanContentScroll="True">
 
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>      
+
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,8" Padding="8" Background="White" BorderBrush="#22000000" BorderThickness="1" CornerRadius="6">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="52"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Width="44" Height="44" CornerRadius="6" Background="#FFF2F2F2" BorderBrush="#22000000" BorderThickness="1" VerticalAlignment="Top">
+                            <Border Margin="0,0,0,8" Padding="8" Background="White" BorderBrush="#22000000" BorderThickness="1" CornerRadius="6" HorizontalAlignment="Stretch">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <Border Width="56" Height="56" CornerRadius="8" Background="#FFF2F2F2" BorderBrush="#22000000" BorderThickness="1" HorizontalAlignment="Center" Margin="0,0,0,8">
                                         <skia:SKElement Tag="{Binding}" Loaded="PalettePreviewElement_Loaded" />
                                     </Border>
 
-                                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Description}" Foreground="#99000000" TextWrapping="Wrap" Margin="0,2,0,0" />
-                                        <TextBlock Text="{Binding Category}" Foreground="#66000000" Margin="0,4,0,0" />
+                                    <StackPanel HorizontalAlignment="Stretch">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextAlignment="Center" />
+                                        <TextBlock Text="{Binding Description}" Foreground="#99000000" TextWrapping="Wrap" Margin="0,2,0,0" TextAlignment="Center" />
+                                        <TextBlock Text="{Binding Category}" Foreground="#66000000" Margin="0,4,0,0" TextAlignment="Center" />
                                     </StackPanel>
-                                </Grid>
+                                </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ListView.ItemTemplate>

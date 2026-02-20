@@ -163,6 +163,16 @@ namespace ORS_ER
 
             e.Handled = true;
         }
+
+		private void ExportPng_Click(object sender, RoutedEventArgs e)
+		{
+			if (GetSelectedSimulation() is FlowchartSimulationView fc)
+				fc.SaveCanvasAsPng();
+			else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+				lg.SaveCanvasAsPng();
+
+			e.Handled = true;
+		}
     }
 }
 /*

@@ -31,7 +31,7 @@ public partial class FlowchartSimulationView : UserControl
     private const float ZoomStep = 1.1f;
     private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
 
-    private const float PalettePreviewZoom = 0.35f;
+    private const float PalettePreviewZoom = 0.225f;
 
 
     public ObservableCollection<Component> Items { get; } = new()
@@ -336,7 +336,6 @@ public partial class FlowchartSimulationView : UserControl
         var content = SKRect.Create(pad, pad, width - (pad * 2), height - (pad * 2));
         canvas.Translate(content.MidX, content.MidY);
         canvas.Scale(PalettePreviewZoom);
-        canvas.Translate(-80, -50);
 
         clone.Paint(canvas);
         canvas.Restore();
@@ -706,6 +705,23 @@ public partial class FlowchartSimulationView : UserControl
 
         Creator.Save(PaintItems, connections);
     }
+
+	public void SaveCanvasAsPng()
+	{
+		if (_isConnecting)
+		{
+			var conn = connections.GetValueOrDefault(_isConnectingId);
+			if (conn is not null)
+				PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_isConnectingId);
+
+			connections.Remove(_isConnectingId);
+			_isConnecting = false;
+			_isConnectingId = "";
+			skiaElement.InvalidateVisual();
+		}
+
+		CanvasExport.SaveAsPng(PaintItems, connections);
+	}
 
     public void LoadDiagram()
     {

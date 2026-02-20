@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ORS_ER"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="800"
+        Title="MainWindow" Height="700" Width="800" MinWidth="1220"
         PreviewMouseDown="Window_PreviewMouseDown">
     <Grid>
         <Grid.RowDefinitions>
@@ -29,6 +29,7 @@
                 <Button x:Name="New" Content="New" Click="New_Click"/>
                 <Button x:Name="Save" Content="Save diagram" Click="Save_Click"/>
                 <Button x:Name="Load" Content="Load diagram" Click="Load_Click"/>
+                <Button x:Name="ExportPng" Content="Export PNG" Click="ExportPng_Click"/>
                 <Separator/>
                 <Button x:Name="Run" Content="Run" Click="Run_Click"/>
             </ToolBar>

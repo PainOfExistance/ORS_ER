@@ -227,7 +227,7 @@ public partial class LogicGatesSimulationView : UserControl
         scheme = isGate ? ComponentPaintScheme.Operator : scheme;
         var paints = ComponentPaints.Create(scheme);
 
-        using var stroke = paints.ComponentStroke;
+        using var stroke = paints.SelectedLineStroke;
         using var fill = paints.ComponentFill;
 
         float pad = 6;
@@ -243,13 +243,6 @@ public partial class LogicGatesSimulationView : UserControl
 
         if (type.Contains("Gate", StringComparison.OrdinalIgnoreCase))
         {
-            float bodyW = rect.Width * 0.55f;
-            float bodyH = rect.Height * 0.55f;
-            var body = SKRect.Create(cx - bodyW * 0.5f, cy - bodyH * 0.5f, bodyW, bodyH);
-            var bodyR = new SKRoundRect(body, 6, 6);
-            canvas.DrawRoundRect(bodyR, fill);
-            canvas.DrawRoundRect(bodyR, stroke);
-
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
             var bounds = new SKRect();
@@ -258,13 +251,6 @@ public partial class LogicGatesSimulationView : UserControl
         }
         else if(type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
         {
-            float bodyW = rect.Width * 0.55f;
-            float bodyH = rect.Height * 0.55f;
-            var body = SKRect.Create(cx - bodyW * 0.5f, cy - bodyH * 0.5f, bodyW, bodyH);
-            var bodyR = new SKRoundRect(body, 6, 6);
-            canvas.DrawRoundRect(bodyR, fill);
-            canvas.DrawRoundRect(bodyR, stroke);
-
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
             var bounds = new SKRect();
@@ -550,6 +536,23 @@ public partial class LogicGatesSimulationView : UserControl
 
         Creator.Save(PaintItems, connections);
     }
+
+	public void SaveCanvasAsPng()
+	{
+		if (_isConnecting)
+		{
+			var conn = connections.GetValueOrDefault(_isConnectingId);
+			if (conn is not null)
+				PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_isConnectingId);
+
+			connections.Remove(_isConnectingId);
+			_isConnecting = false;
+			_isConnectingId = "";
+			skiaElement.InvalidateVisual();
+		}
+
+		CanvasExport.SaveAsPng(PaintItems, connections);
+	}
 
     public void LoadDiagram()
     {
