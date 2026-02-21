@@ -18,7 +18,7 @@
                 </StackPanel>
 
                 <ListView x:Name="LayersListView"
-                         ItemsSource="{Binding FilteredItems}"
+                         ItemsSource="{Binding Items}"
                          Margin="0"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"

@@ -119,7 +119,7 @@ namespace ORS_ER.components
                 {
                     this.Value = ("bool", !this.Value.Item2);
                 }
-                else if (this.GetType() == typeof(BinaryOutput) || this.GetType() == typeof(Gate) || this.GetType() == typeof(Adder))
+                else if (this.GetType() == typeof(BinaryOutput) || this.GetType() == typeof(Gate) || this.GetType() == typeof(Adder) || this.GetType()==typeof(SubCircuitComponent))
                 {
 
                 }

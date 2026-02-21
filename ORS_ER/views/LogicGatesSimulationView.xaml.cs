@@ -8,6 +8,7 @@ using ICollectionView = System.ComponentModel.ICollectionView;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Data;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -48,7 +49,6 @@ public partial class LogicGatesSimulationView : UserControl
         new Adder("Full Adder", "Full addition.", "Adders")
     };
 
-    public ICollectionView FilteredItems { get; }
 
     private string _paletteQuery = string.Empty;
     private string _paletteCategory = "All";
@@ -64,29 +64,38 @@ public partial class LogicGatesSimulationView : UserControl
         InitializeComponent();
         DataContext = this;
 
-        FilteredItems = CollectionViewSource.GetDefaultView(Items);
-        FilteredItems.Filter = PaletteFilter;
+        foreach (var data in Creator.GetCachedLogicComponents())
+            AddCustomComponentToPalette(data);
 
         PreviewMouseRightButtonDown += FlowchartSimulationView_PreviewMouseRightButtonDown;
         PreviewKeyDown += FlowchartSimulationView_PreviewKeyDown;
         Focusable = true;
     }
 
-    private bool PaletteFilter(object obj)
+    public void SaveDiagramAsComponent(string? name = null, string? description = null, string? category = null)
     {
-        if (obj is not Component c)
-            return false;
+        var data = Creator.SaveLogicComponent(PaintItems, connections, name, description, category);
+        if (data is null)
+            return;
 
-        if (!string.Equals(_paletteCategory, "All", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(c.Category, _paletteCategory, StringComparison.OrdinalIgnoreCase))
-            return false;
+        AddCustomComponentToPalette(data);
+    }
 
-        if (string.IsNullOrWhiteSpace(_paletteQuery))
-            return true;
+    public void LoadLogicComponentFromFile()
+    {
+        var data = Creator.LoadLogicComponentFromFile();
+        if (data is null)
+            return;
 
-        return (c.Name?.Contains(_paletteQuery, StringComparison.OrdinalIgnoreCase) ?? false)
-            || (c.Description?.Contains(_paletteQuery, StringComparison.OrdinalIgnoreCase) ?? false)
-            || (c.Category?.Contains(_paletteQuery, StringComparison.OrdinalIgnoreCase) ?? false);
+        AddCustomComponentToPalette(data);
+    }
+
+    private void AddCustomComponentToPalette(Creator.SubCircuitData data)
+    {
+        if (Items.Any(item => string.Equals(item.Name, data.Name, StringComparison.OrdinalIgnoreCase)))
+            return;
+
+        Items.Add(new SubCircuitComponent(data));
     }
 
     public void FocusCanvas()
@@ -223,8 +232,9 @@ public partial class LogicGatesSimulationView : UserControl
     {
         var isGate = c is Gate;
         var scheme = isGate ? ComponentPaintScheme.Gate : ComponentPaintScheme.Input;
-        isGate = c is Adder;
+        isGate = c is (Adder or SubCircuitComponent);
         scheme = isGate ? ComponentPaintScheme.Operator : scheme;
+        
         var paints = ComponentPaints.Create(scheme);
 
         using var stroke = paints.SelectedLineStroke;
@@ -253,6 +263,14 @@ public partial class LogicGatesSimulationView : UserControl
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
+            var bounds = new SKRect();
+            text.MeasureText(label, ref bounds);
+            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+        }
+        else if (type.Contains("SubCircuit", StringComparison.OrdinalIgnoreCase))
+        {
+            using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.18f) };
+            var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "C";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
             canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);

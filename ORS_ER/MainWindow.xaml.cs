@@ -56,6 +56,9 @@ namespace ORS_ER
             SimulationPicker.SelectionChanged += SimulationPicker_SelectionChanged;
             SimulationHost.Content = GetSelectedSimulation();
 
+            SaveComponent.IsEnabled = SimulationHost.Content is LogicGatesSimulationView;
+            LoadComponent.IsEnabled = SimulationHost.Content is LogicGatesSimulationView;
+
             if (SimulationHost.Content is FlowchartSimulationView fc)
                 fc.FocusCanvas();
         }
@@ -108,11 +111,15 @@ namespace ORS_ER
             {
                 fc.FocusCanvas();
                 Run.IsEnabled = true;
+                SaveComponent.IsEnabled = false;
+                LoadComponent.IsEnabled = false;
             }
             else if (SimulationHost.Content is LogicGatesSimulationView lg)
             {
                 //lg.FocusCanvas();
                 Run.IsEnabled = false;
+                SaveComponent.IsEnabled = true;
+                LoadComponent.IsEnabled = true;
             }
         }
 
@@ -130,6 +137,22 @@ namespace ORS_ER
             {
                 Debug.WriteLine("Error during code generation: " + ex.Message);
             }
+
+            e.Handled = true;
+        }
+
+        private void SaveComponent_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                lg.SaveDiagramAsComponent();
+
+            e.Handled = true;
+        }
+
+        private void LoadComponent_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                lg.LoadLogicComponentFromFile();
 
             e.Handled = true;
         }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -20,6 +21,36 @@ namespace ORS_ER
 
             [JsonPropertyName("connections")]
             public List<ConnectionData> Connections { get; set; } = [];
+        }
+
+        internal sealed class SubCircuitData
+        {
+            [JsonPropertyName("name")]
+            public string? Name { get; set; }
+
+            [JsonPropertyName("description")]
+            public string? Description { get; set; }
+
+            [JsonPropertyName("category")]
+            public string? Category { get; set; }
+
+            [JsonPropertyName("inputs")]
+            public List<SubCircuitPinData> Inputs { get; set; } = [];
+
+            [JsonPropertyName("outputs")]
+            public List<SubCircuitPinData> Outputs { get; set; } = [];
+
+            [JsonPropertyName("diagram")]
+            public DiagramData? Diagram { get; set; }
+        }
+
+        internal sealed class SubCircuitPinData
+        {
+            [JsonPropertyName("componentId")]
+            public string? ComponentId { get; set; }
+
+            [JsonPropertyName("ioId")]
+            public string? IoId { get; set; }
         }
 
         internal sealed class ComponentData
@@ -107,6 +138,8 @@ namespace ORS_ER
             public string? ToComponentId { get; set; }
         }
 
+        private static readonly Dictionary<string, SubCircuitData> CachedLogicComponents = new(StringComparer.OrdinalIgnoreCase);
+
         public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections)
         {
             static void TrimTrailing(StringBuilder builder)
@@ -173,13 +206,7 @@ namespace ORS_ER
                 string filePath = openFileDialog.FileName;
 
                 var jsonData = File.ReadAllText(filePath);
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true,
-                    NumberHandling = JsonNumberHandling.AllowReadingFromString
-                };
+                var options = GetDiagramJsonOptions();
 
                 var rawData = JsonSerializer.Deserialize<DiagramData>(jsonData, options);
                 Dictionary<string, Component> components = new Dictionary<string, Component>();
@@ -291,6 +318,265 @@ namespace ORS_ER
             }
         }
 
+        internal static (Dictionary<string, Component>, Dictionary<string, Connection>) BuildLogicCircuit(DiagramData rawData)
+        {
+            var components = new Dictionary<string, Component>();
+            var connections = new Dictionary<string, Connection>();
+
+            foreach (var component in rawData.Components)
+            {
+                var newComponent = CreateLG(component.Name ?? "", component.Description ?? "", component.Category ?? "", (int)component.X, (int)component.Y);
+                newComponent.SetId(component.Id ?? newComponent.GetId());
+                newComponent.Code = component.Code ?? "";
+                newComponent.IsInsideIf = component.IsInsideIf ?? "";
+                newComponent.IsInsideWhile = component.IsInsideWhile ?? "";
+
+                if (component.Value is JsonElement ve)
+                    SetComponentValue(newComponent, ve);
+
+                newComponent.Inputs.Clear();
+                foreach (var input in component.Inputs)
+                {
+                    var newIO = new IO();
+                    newIO.SetId(input.Id ?? newIO.GetId());
+                    newIO.IfTrue = input.IfTrue ?? "";
+                    if (input.InputIds != null || input.OutputIds != null)
+                    {
+                        newIO.inputConnectionIds = input.InputIds ?? [];
+                        newIO.outputConnectionIds = input.OutputIds ?? [];
+                    }
+                    else if (!string.IsNullOrWhiteSpace(input.Value))
+                    {
+                        newIO.inputConnectionIds = [input.Value];
+                    }
+
+                    newComponent.Inputs.Add(newIO.GetId(), newIO);
+                }
+
+                newComponent.Outputs.Clear();
+                foreach (var output in component.Outputs)
+                {
+                    var newIO = new IO();
+                    newIO.SetId(output.Id ?? newIO.GetId());
+                    newIO.IfTrue = output.IfTrue ?? "";
+                    if (output.InputIds != null || output.OutputIds != null)
+                    {
+                        newIO.inputConnectionIds = output.InputIds ?? [];
+                        newIO.outputConnectionIds = output.OutputIds ?? [];
+                    }
+                    else if (!string.IsNullOrWhiteSpace(output.Value))
+                    {
+                        newIO.outputConnectionIds = [output.Value];
+                    }
+
+                    newComponent.Outputs.Add(newIO.GetId(), newIO);
+                }
+
+                newComponent.CreateRect((int)component.X, (int)component.Y);
+                components.Add(newComponent.GetId(), newComponent);
+            }
+
+            foreach (var connection in rawData.Connections)
+            {
+                var newConnection = new Connection(connection.FromId ?? "", connection.ToId ?? "", connection.FromComponentId ?? "", connection.ToComponentId ?? "");
+                if (!string.IsNullOrWhiteSpace(connection.Id))
+                    newConnection.SetId(connection.Id);
+                connections.Add(newConnection.GetId(), newConnection);
+            }
+
+            return (components, connections);
+        }
+
+        public static SubCircuitData? SaveLogicComponent(Dictionary<string, Component> components, Dictionary<string, Connection> connections, string? name = null, string? description = null, string? category = null)
+        {
+            try
+            {
+                var dialog = new SaveFileDialog
+                {
+                    Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*",
+                    FileName = string.IsNullOrWhiteSpace(name) ? "logic_component" : name,
+                    Title = "Save Logic Component"
+                };
+
+                dialog.ShowDialog();
+                if (string.IsNullOrWhiteSpace(dialog.FileName))
+                    return null;
+
+                var filePath = dialog.FileName.EndsWith(".json") ? dialog.FileName : dialog.FileName + ".json";
+                var componentName = string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(filePath) : name;
+                var componentDescription = string.IsNullOrWhiteSpace(description) ? "Custom logic component." : description;
+                var componentCategory = string.IsNullOrWhiteSpace(category) ? "Custom" : category;
+
+                var orderedInputs = components.Values
+                    .OfType<BinaryInput>()
+                    .OrderBy(component => component.Rect.MidX)
+                    .ThenBy(component => component.Rect.MidY)
+                    .Select(component => new SubCircuitPinData
+                    {
+                        ComponentId = component.GetId(),
+                        IoId = component.Outputs.Keys.FirstOrDefault()
+                    })
+                    .ToList();
+
+                var orderedOutputs = components.Values
+                    .OfType<BinaryOutput>()
+                    .OrderBy(component => component.Rect.MidX)
+                    .ThenBy(component => component.Rect.MidY)
+                    .Select(component => new SubCircuitPinData
+                    {
+                        ComponentId = component.GetId(),
+                        IoId = component.Inputs.Keys.FirstOrDefault()
+                    })
+                    .ToList();
+
+                var excludedIds = new HashSet<string>(orderedInputs.Select(p => p.ComponentId ?? string.Empty).Where(id => id.Length > 0));
+                excludedIds.UnionWith(orderedOutputs.Select(p => p.ComponentId ?? string.Empty).Where(id => id.Length > 0));
+
+                var diagram = BuildDiagramData(components, connections, excludedIds);
+                var data = new SubCircuitData
+                {
+                    Name = componentName,
+                    Description = componentDescription,
+                    Category = componentCategory,
+                    Inputs = orderedInputs,
+                    Outputs = orderedOutputs,
+                    Diagram = diagram
+                };
+
+                var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(filePath, json);
+                CacheLogicComponent(data);
+                Debug.WriteLine("Saved logic component " + filePath);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error saving logic component: " + ex.Message);
+                return null;
+            }
+        }
+
+        public static SubCircuitData? LoadLogicComponentFromFile()
+        {
+            try
+            {
+                var dialog = new OpenFileDialog
+                {
+                    Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                    FilterIndex = 2,
+                    RestoreDirectory = true
+                };
+
+                dialog.ShowDialog();
+                if (string.IsNullOrWhiteSpace(dialog.FileName))
+                    return null;
+
+                var jsonData = File.ReadAllText(dialog.FileName);
+                var options = GetDiagramJsonOptions();
+                var data = JsonSerializer.Deserialize<SubCircuitData>(jsonData, options);
+                if (data is null || string.IsNullOrWhiteSpace(data.Name))
+                    return null;
+
+                CacheLogicComponent(data);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error loading logic component: " + ex.Message);
+                return null;
+            }
+        }
+
+        public static IReadOnlyCollection<SubCircuitData> GetCachedLogicComponents() => CachedLogicComponents.Values.ToList();
+
+        public static bool TryGetLogicComponent(string name, out SubCircuitData data) => CachedLogicComponents.TryGetValue(name, out data);
+
+        private static void CacheLogicComponent(SubCircuitData data)
+        {
+            if (string.IsNullOrWhiteSpace(data.Name))
+                return;
+
+            CachedLogicComponents[data.Name] = data;
+        }
+
+        private static DiagramData BuildDiagramData(Dictionary<string, Component> components, Dictionary<string, Connection> connections, HashSet<string> excludedIds)
+        {
+            var diagram = new DiagramData();
+            var options = GetDiagramJsonOptions();
+
+            foreach (var component in components.Values)
+            {
+                if (excludedIds.Contains(component.GetId()))
+                    continue;
+
+                var json = component.ToJson();
+                var data = JsonSerializer.Deserialize<ComponentData>(json, options);
+                if (data is not null)
+                    diagram.Components.Add(data);
+            }
+
+            foreach (var connection in connections.Values)
+            {
+                diagram.Connections.Add(new ConnectionData
+                {
+                    Id = connection.GetId(),
+                    FromId = connection.fromId,
+                    ToId = connection.toId,
+                    FromComponentId = connection.fromComponentId,
+                    ToComponentId = connection.toComponentId
+                });
+            }
+
+            return diagram;
+        }
+
+        private static JsonSerializerOptions GetDiagramJsonOptions()
+        {
+            return new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
+            };
+        }
+
+        private static void SetComponentValue(Component newComponent, JsonElement ve)
+        {
+            try
+            {
+                if (ve.ValueKind == JsonValueKind.Object)
+                {
+                    var name = ve.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String ? n.GetString() : "";
+                    dynamic d1 = null;
+                    if (ve.TryGetProperty("value", out var v))
+                    {
+                        d1 = v.ValueKind switch
+                        {
+                            JsonValueKind.String => v.GetString() ?? "",
+                            JsonValueKind.Number => v.TryGetDouble(out var d) ? d : v,
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            JsonValueKind.Null => null,
+                            _ => v
+                        };
+                    }
+                    newComponent.Value = (name ?? "", d1);
+                }
+                else if (ve.ValueKind == JsonValueKind.Array && ve.GetArrayLength() == 2)
+                {
+                    var item0 = ve[0];
+                    var item1 = ve[1];
+                    var s0 = item0.ValueKind == JsonValueKind.String ? item0.GetString() : item0.ToString();
+                    dynamic d1 = item1.ValueKind == JsonValueKind.String ? (item1.GetString() ?? "") : item1;
+                    newComponent.Value = (s0 ?? "", d1);
+                }
+            }
+            catch
+            {
+            }
+        }
+
         public static Component Create(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
             switch (Name)
@@ -357,6 +643,14 @@ namespace ORS_ER
 
         public static Component CreateLG(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
         {
+            if (TryGetLogicComponent(Name, out var cached))
+            {
+                var customComponent = new SubCircuitComponent(cached);
+                customComponent.Selected = true;
+                customComponent.CreateRect(mouseWorldX, mouseWorldY);
+                return customComponent;
+            }
+
             switch (Name)
             {
                 case "Binary Input":
