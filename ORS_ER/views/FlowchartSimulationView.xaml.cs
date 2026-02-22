@@ -663,7 +663,7 @@ public partial class FlowchartSimulationView : UserControl
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         ValueRegistry.ClearAllRegistries();
-        ConsoleOutput.Text = "";
+        ConsoleOutput.Text = "------Console Output------";
 
         foreach (var item in PaintItems.Values)
             item.Reset();
@@ -676,7 +676,7 @@ public partial class FlowchartSimulationView : UserControl
     public void NewDiagram()
     {
         ValueRegistry.ClearAllRegistries();
-        ConsoleOutput.Text = "";
+        ConsoleOutput.Text = "------Console Output------";
 
         foreach (var item in PaintItems.Values)
             item.Reset();
@@ -703,7 +703,7 @@ public partial class FlowchartSimulationView : UserControl
             skiaElement.InvalidateVisual();
         }
 
-        Creator.Save(PaintItems, connections);
+        Creator.Save(PaintItems, connections, "Flowchart");
     }
 
 	public void SaveCanvasAsPng()
@@ -725,7 +725,19 @@ public partial class FlowchartSimulationView : UserControl
 
     public void LoadDiagram()
     {
-        var items = Creator.Load();
+        if (_isConnecting)
+        {
+            var conn = connections.GetValueOrDefault(_isConnectingId);
+            if (conn is not null)
+                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_isConnectingId);
+
+            connections.Remove(_isConnectingId);
+            _isConnecting = false;
+            _isConnectingId = "";
+            skiaElement.InvalidateVisual();
+        }
+
+        var items = Creator.Load("Flowchart");
         if (items.Item1.Count == 0)
             return;
 

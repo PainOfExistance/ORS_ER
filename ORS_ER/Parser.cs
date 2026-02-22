@@ -96,7 +96,7 @@ namespace ORS_ER
         {
             var startNodes = new Queue<Component>(
                 PaintItems
-                    .Where(kv => kv.Value.Inputs.First().Value.inputConnectionIds.Count() == 0)
+                    .Where(kv => kv.Value.Inputs.First().Value.inputConnectionIds.Count() == 0 && (kv.Value.GetType() == typeof(Input) || kv.Value.GetType() == typeof(Operator)))
                     .Select(kv => kv.Value));
             var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
 

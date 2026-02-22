@@ -552,7 +552,7 @@ public partial class LogicGatesSimulationView : UserControl
             skiaElement.InvalidateVisual();
         }
 
-        Creator.Save(PaintItems, connections);
+        Creator.Save(PaintItems, connections, "LogicGates");
     }
 
 	public void SaveCanvasAsPng()
@@ -574,7 +574,7 @@ public partial class LogicGatesSimulationView : UserControl
 
     public void LoadDiagram()
     {
-        var items = Creator.Load();
+        var items = Creator.Load("LogicGates");
         if (items.Item1.Count == 0)
             return;
 

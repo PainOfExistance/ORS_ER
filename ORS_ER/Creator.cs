@@ -16,6 +16,9 @@ namespace ORS_ER
     {
         internal sealed class DiagramData
         {
+            [JsonPropertyName("diagramType")]
+            public string? DiagramType { get; set; }
+
             [JsonPropertyName("components")]
             public List<ComponentData> Components { get; set; } = [];
 
@@ -140,7 +143,7 @@ namespace ORS_ER
 
         private static readonly Dictionary<string, SubCircuitData> CachedLogicComponents = new(StringComparer.OrdinalIgnoreCase);
 
-        public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections)
+        public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections, string diagramType)
         {
             static void TrimTrailing(StringBuilder builder)
             {
@@ -155,7 +158,9 @@ namespace ORS_ER
             }
 
             var saveBuilder = new StringBuilder();
-            saveBuilder.Append("{\n\"components\": [\n");
+            saveBuilder.Append("{\n\"diagramType\": \"")
+                .Append(diagramType)
+                .Append("\",\n\"components\": [\n");
             foreach (var component in components.Values)
             {
                 saveBuilder.Append(component.ToJson()).Append(",\n");
@@ -191,7 +196,7 @@ namespace ORS_ER
             }
         }
 
-        public static (Dictionary<string, Component>, Dictionary<string, Connection>) Load()
+        public static (Dictionary<string, Component>, Dictionary<string, Connection>) Load(string expectedDiagramType)
         {
             try
             {
@@ -209,6 +214,14 @@ namespace ORS_ER
                 var options = GetDiagramJsonOptions();
 
                 var rawData = JsonSerializer.Deserialize<DiagramData>(jsonData, options);
+                if (rawData is null)
+                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
+
+                if (!string.Equals(rawData.DiagramType, expectedDiagramType, StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.WriteLine("Diagram type mismatch when loading file.");
+                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
+                }
                 Dictionary<string, Component> components = new Dictionary<string, Component>();
                 Dictionary<string, Connection> connections = new Dictionary<string, Connection>();
 

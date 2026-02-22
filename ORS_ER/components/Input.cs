@@ -58,11 +58,31 @@ namespace ORS_ER.components
             var textY = buttonRect.MidY + font.Size / 4;
             if (this.Code == "")
             {
-                textX = buttonRect.MidX - (font.MeasureText("+") / 2);
-                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
+                string lab = "Set";
+                if (this.Name.Contains("String"))
+                {
+                    lab = "Make a String variable";
+                }
+                else if (this.Name.Contains("Binary"))
+                {
+                    lab = "Make a Binary variable";
+                }
+                else
+                {
+                    lab = "Make a Numerical variable";
+                }
+
+                while (buttonRect.Width < (font.MeasureText(lab) + 5))
+                {
+                    font.Size--;
+                }
+
+                textX = buttonRect.MidX - (font.MeasureText(lab) / 2);
+                canvas.DrawText(lab, textX, textY, font, Paints.ButtonTextPaint);
             }
             else
             {
+                font.Size = 20;
                 string[] parts = this.Code.Split(' ');
                 string displayCode = parts[1] + " = " + parts[3];
 
