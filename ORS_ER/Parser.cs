@@ -1,69 +1,60 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
-using ORS_ER.components;
+﻿using ORS_ER.components;
 using ORS_ER.connections;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ORS_ER
 {
     internal class Parser
     {
-        public static string ParseCircuitAsync(
-    Dictionary<string, Component> PaintItems,
+        public static void RunCircuitSimulation(
+    Dictionary<string, Component> paintItems,
     Dictionary<string, Connection> connections
  )
         {
-            var startNodes = new Queue<Component>(
-                PaintItems
+            var queuedNodes = new Queue<Component>(
+                paintItems
                     .Where(kv => kv.Value.Inputs.Count() == 0)
                     .Select(kv => kv.Value));
-            List<string> done = new List<string>();
-            while (startNodes.Count > 0)
+            List<string> processedNodes = new List<string>();
+            while (queuedNodes.Count > 0)
             {
-                var currentNode = startNodes.Dequeue();
-                if (done.Contains(currentNode.GetId()))
+                var currentNode = queuedNodes.Dequeue();
+                if (processedNodes.Contains(currentNode.GetId()))
                     continue;
-                done.Add(currentNode.GetId());
+                processedNodes.Add(currentNode.GetId());
 
-                List<bool> vals = new();
-                foreach (var io in currentNode.Inputs.Values)
+                List<bool> inputValues = new();
+                foreach (var inputs in currentNode.Inputs.Values)
                 {
-                    bool val = false;
+                    bool vallueToAdd = false;
                     try
                     {
-                        dynamic tmp = PaintItems[connections[io.inputConnectionIds.First()].fromComponentId].Value.Item2;
-                        if (tmp is bool)
+                        dynamic inputValue = paintItems[connections[inputs.inputConnectionIds.First()].fromComponentId].Value.Item2;
+                        if (inputValue is bool)
                         {
-                            val = tmp;
+                            vallueToAdd = inputValue;
                         }
                         else
                         {
-                            var fromId = connections[io.inputConnectionIds.First()].fromId;
-                            var index = PaintItems[connections[io.inputConnectionIds.First()].fromComponentId].Outputs[fromId].IfTrue;
-                            val = tmp[int.Parse(index)];
+                            var fromId = connections[inputs.inputConnectionIds.First()].fromId;
+                            var index = paintItems[connections[inputs.inputConnectionIds.First()].fromComponentId].Outputs[fromId].IfTrue;
+                            vallueToAdd = inputValue[int.Parse(index)];
                         }
                     }
                     catch (Exception ex)
                     {
-                        val = false;
+                        vallueToAdd = false;
                     }
-                    vals.Add(val);
+                    inputValues.Add(vallueToAdd);
                 }
 
                 try
                 {
-                    currentNode.GenerateCode(vals);
+                    currentNode.RunInternalSimulation(inputValues);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} error: {ex.Message}");
-                    return "";
+                    return;
                 }
 
                 var outputConnections = connections.Values
@@ -72,40 +63,38 @@ namespace ORS_ER
 
                 foreach (var conn in outputConnections)
                 {
-                    var nextNode = PaintItems[conn.toComponentId];
-                    startNodes.Enqueue(nextNode);
+                    var nextNode = paintItems[conn.toComponentId];
+                    queuedNodes.Enqueue(nextNode);
 
                 }
             }
-
-            return "";
         }
 
-        public static void ParseAsync(
-            Dictionary<string, Component> PaintItems,
+        public static void ParseFlowchartAsync(
+            Dictionary<string, Component> paintItems,
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken = default)
         {
-            Task.Run(() => ParseCore(PaintItems, connections, cancellationToken), cancellationToken);
+            Task.Run(() => ParseFlowchartCore(paintItems, connections, cancellationToken), cancellationToken);
         }
 
-        private static void ParseCore(
-            Dictionary<string, Component> PaintItems,
+        private static void ParseFlowchartCore(
+            Dictionary<string, Component> paintItems,
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken)
         {
-            var startNodes = new Queue<Component>(
-                PaintItems
+            var queuedNodes = new Queue<Component>(
+                paintItems
                     .Where(kv => kv.Value.Inputs.First().Value.inputConnectionIds.Count() == 0 && (kv.Value.GetType() == typeof(Input) || kv.Value.GetType() == typeof(Operator)))
                     .Select(kv => kv.Value));
-            var queuedNodes = new HashSet<string>(startNodes.Select(node => node.GetId()));
+            var nodeIdHashed = new HashSet<string>(queuedNodes.Select(node => node.GetId()));
 
-            while (startNodes.Count > 0)
+            while (queuedNodes.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var currentNode = startNodes.Dequeue();
-                queuedNodes.Remove(currentNode.GetId());
+                var currentNode = queuedNodes.Dequeue();
+                nodeIdHashed.Remove(currentNode.GetId());
 
                 try
                 {
@@ -115,26 +104,31 @@ namespace ORS_ER
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} divide by zero error: \n{ex.Message}");
+                    return;
                 }
                 catch (NullReferenceException ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} null reference error: \n{ex.Message}");
+                    return;
                 }
                 catch (ArgumentException ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} argument error: \n{ex.Message}");
+                    return;
                 }
                 catch (InvalidOperationException ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} invalid operation error: \n{ex.Message}");
+                    return;
                 }
                 catch (Exception ex)
                 {
                     currentNode.IsBroken = true;
                     Console.WriteLine($"In block {currentNode.Name} with id {currentNode.GetId()} error");
+                    return;
                 }
 
                 var outputConnections = connections.Values
@@ -149,10 +143,9 @@ namespace ORS_ER
                 foreach (var conn in outputConnections)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var nextNode = PaintItems[conn.toComponentId];
-                    if (queuedNodes.Add(nextNode.GetId()))
-                        startNodes.Enqueue(nextNode);
-
+                    var nextNode = paintItems[conn.toComponentId];
+                    if (nodeIdHashed.Add(nextNode.GetId()))
+                        queuedNodes.Enqueue(nextNode);
                 }
             }
         }

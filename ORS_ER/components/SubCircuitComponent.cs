@@ -102,7 +102,7 @@ namespace ORS_ER.components
                 Inputs[keys[i]].node = new SKPoint(Rect.Left + delta * (i + 1), Rect.Top);
         }
 
-        public override void GenerateCode(List<bool> vals)
+        public override void RunInternalSimulation(List<bool> vals)
         {
             EnsureInternalGraph();
             if (_internalComponents is null || _internalConnections is null)

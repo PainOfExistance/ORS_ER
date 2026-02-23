@@ -315,10 +315,10 @@ namespace ORS_ER
                     components.Add(newComponent.GetId(), newComponent);
                 }
 
-                foreach (var connection in rawData.Connections)
+                foreach (var conn in rawData.Connections)
                 {
-                    Connection newConnection = new Connection(connection.FromId, connection.ToId, connection.FromComponentId, connection.ToComponentId);
-                    newConnection.SetId(connection.Id);
+                    Connection newConnection = new Connection(conn.FromId, conn.ToId, conn.FromComponentId, conn.ToComponentId);
+                    newConnection.SetId(conn.Id);
                     connections.Add(newConnection.GetId(), newConnection);
                 }
 

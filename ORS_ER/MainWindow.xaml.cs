@@ -116,7 +116,7 @@ namespace ORS_ER
             }
             else if (SimulationHost.Content is LogicGatesSimulationView lg)
             {
-                //lg.FocusCanvas();
+                lg.FocusCanvas();
                 Run.IsEnabled = false;
                 SaveComponent.IsEnabled = true;
                 LoadComponent.IsEnabled = true;

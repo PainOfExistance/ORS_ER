@@ -185,7 +185,7 @@ namespace ORS_ER.components
         }
         virtual public void Reset() { }
         virtual public void GenerateCode() { }
-        virtual public void GenerateCode(List<bool> vals) { }
+        virtual public void RunInternalSimulation(List<bool> vals) { }
         virtual public string ToJson()
         {
             static string JsonString(string? s)

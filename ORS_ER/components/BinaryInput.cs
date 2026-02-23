@@ -84,7 +84,7 @@ namespace ORS_ER.components
             }
         }
 
-        public override void GenerateCode(List<bool> vals)
+        public override void RunInternalSimulation(List<bool> vals)
         {
         }
     }
