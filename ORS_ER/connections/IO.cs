@@ -8,21 +8,21 @@ namespace ORS_ER.connections
 {
     public class IO
     {
-        private string Id = Guid.NewGuid().ToString();
+        private string _id = Guid.NewGuid().ToString();
         public string IfTrue { get; set; } = "";
-        public SKPoint node { get; set; } = new SKPoint();
-        public List<string> inputConnectionIds { get; set; } = [];
-        public List<string> outputConnectionIds { get; set; } = [];
+        public SKPoint Node { get; set; } = new SKPoint();
+        public List<string> InputConnectionIds { get; set; } = [];
+        public List<string> OutputConnectionIds { get; set; } = [];
         public IO() { }
 
         public string GetId()
         {
-            return Id;
+            return _id;
         }
 
         public void SetId(string id)
         {
-            Id = id;
+            _id = id;
         }
 
         private static string JsonString(string? s)
@@ -52,10 +52,10 @@ namespace ORS_ER.connections
         public string ToJson()
         {
             return $"{{" +
-                $"\"id\": \"{JsonString(Id)}\"," +
+                $"\"id\": \"{JsonString(_id)}\"," +
                 $"\"ifTrue\": \"{JsonString(IfTrue)}\"," +
-                $"\"inputIds\": {JsonStringList(inputConnectionIds)}," +
-                $"\"outputIds\": {JsonStringList(outputConnectionIds)}" +
+                $"\"inputIds\": {JsonStringList(InputConnectionIds)}," +
+                $"\"outputIds\": {JsonStringList(OutputConnectionIds)}" +
                 $"}}";
         }
     }

@@ -12,7 +12,7 @@ namespace ORS_ER.components
 {
     abstract public class Component(string name, string description, string category)
     {
-        private string Id = Guid.NewGuid().ToString();
+        private string _id = Guid.NewGuid().ToString();
         public string Name { get; set; } = name;
         public (string, dynamic) Value { get; set; }
         public string Description { get; set; } = description;
@@ -25,11 +25,11 @@ namespace ORS_ER.components
         public Dictionary<string, IO> Inputs = new Dictionary<string, IO>();
         public Dictionary<string, IO> Outputs = new Dictionary<string, IO>();
         public SKRect Rect { get; set; }
-        public SKRect buttonRect { get; set; }
-        public SKFont font = new SKFont();
+        public SKRect InteractionRect { get; set; }
+        public SKFont Font = new SKFont();
         public Component(Component component) : this(component.Name, component.Description, component.Category)
         {
-            this.Id = component.Id;
+            this._id = component._id;
             this.Code = component.Code;
             this.Inputs = component.Inputs;
             this.Outputs = component.Outputs;
@@ -37,11 +37,11 @@ namespace ORS_ER.components
 
         public string GetId()
         {
-            return Id;
+            return _id;
         }
         public void SetId(string id)
         {
-            Id = id;
+            _id = id;
         }
         abstract public void Paint(SKCanvas canvas);
         abstract public void CreateRect(int x, int y);
@@ -57,21 +57,21 @@ namespace ORS_ER.components
             var node = new SKPoint();
             foreach (var i in Inputs.Keys)
             {
-                node = Inputs[i].node;
+                node = Inputs[i].Node;
                 node.Offset(dx, dy);
-                Inputs[i].node = node;
+                Inputs[i].Node = node;
             }
 
             foreach (var i in Outputs.Keys)
             {
-                node = Outputs[i].node;
+                node = Outputs[i].Node;
                 node.Offset(dx, dy);
-                Outputs[i].node = node;
+                Outputs[i].Node = node;
             }
 
-            rect = this.buttonRect;
+            rect = this.InteractionRect;
             rect.Offset(dx, dy);
-            this.buttonRect = rect;
+            this.InteractionRect = rect;
         }
         virtual public (string, Component, IO?)? HitTest(SKPoint world)
         {
@@ -85,24 +85,20 @@ namespace ORS_ER.components
                 return (dx * dx + dy * dy) <= r2;
             }
 
-            // 1) IO nodes are stored in world-space (While rotates them in CreateRect),
-            // so hit-test them in world-space (no transforms).
             foreach (var io in Inputs)
-                if (HitPoint(io.Value.node, world, hitRadius2))
+                if (HitPoint(io.Value.Node, world, hitRadius2))
                 {
                     this.Selected = false;
                     return ("input", this, io.Value);
                 }
 
             foreach (var io in Outputs)
-                if (HitPoint(io.Value.node, world, hitRadius2))
+                if (HitPoint(io.Value.Node, world, hitRadius2))
                 {
                     this.Selected = false;
                     return ("output", this, io.Value);
                 }
 
-            // 2) For rotated components (While), map mouse into the component's local (unrotated) space
-            // before using Rect.Contains / buttonRect.Contains.
             var local = world;
             if (this is While || this is If)
             {
@@ -110,7 +106,7 @@ namespace ORS_ER.components
                 local = inv.MapPoint(world);
             }
 
-            if (this.buttonRect.Contains(local))
+            if (this.InteractionRect.Contains(local))
             {
                 this.IsBroken = false;
                 this.Selected = true;
@@ -118,12 +114,15 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(BinaryInput))
                 {
                     this.Value = ("bool", !this.Value.Item2);
+                    return ("button", this, null);
                 }
-                else if (this.GetType() == typeof(BinaryOutput) || this.GetType() == typeof(Gate) || this.GetType() == typeof(Adder) || this.GetType()==typeof(SubCircuitComponent))
-                {
 
+                if (this.GetType() == typeof(BinaryOutput) || this.GetType() == typeof(Gate) || this.GetType() == typeof(Adder) || this.GetType() == typeof(SubCircuitComponent))
+                {
+                    return ("button", this, null);
                 }
-                else if (this.Name.Contains("Operator"))
+
+                if (this.Name.Contains("Operator"))
                 {
                     var dlg = new LogicWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
@@ -132,8 +131,10 @@ namespace ORS_ER.components
                         this.Value = dlg.Value;
                         Debug.WriteLine($"LogicWindow returned: {this.Value.Item2}");
                     }
+                    return ("button", this, null);
                 }
-                else if (this.Name.Contains("Input"))
+
+                if (this.Name.Contains("Input"))
                 {
                     var dlg = new InputWindow(this.Code, this.Value, this.Name);
                     if (dlg.ShowDialog() == true)
@@ -141,8 +142,10 @@ namespace ORS_ER.components
                         this.Code = dlg.Code;
                         this.Value = dlg.Value;
                     }
+                    return ("button", this, null);
                 }
-                else if (this.Name.Contains("Print"))
+
+                if (this.Name.Contains("Print"))
                 {
                     var dlg = new PrintWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
@@ -150,8 +153,10 @@ namespace ORS_ER.components
                         this.Code = dlg.Code;
                         this.Value = dlg.Value;
                     }
+                    return ("button", this, null);
                 }
-                else if (this.Name.Contains("If"))
+
+                if (this.Name.Contains("If"))
                 {
                     var dlg = new IfWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
@@ -159,15 +164,14 @@ namespace ORS_ER.components
                         this.Code = dlg.Code;
                         this.Value = dlg.Value;
                     }
+                    return ("button", this, null);
                 }
-                else
+
+                var fallbackDialog = new IfWindow(this.Code, this.Value);
+                if (fallbackDialog.ShowDialog() == true)
                 {
-                    var dlg = new IfWindow(this.Code, this.Value);
-                    if (dlg.ShowDialog() == true)
-                    {
-                        this.Code = dlg.Code;
-                        this.Value = dlg.Value;
-                    }
+                    this.Code = fallbackDialog.Code;
+                    this.Value = fallbackDialog.Value;
                 }
 
                 return ("button", this, null);

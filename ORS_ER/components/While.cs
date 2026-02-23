@@ -51,65 +51,65 @@ namespace ORS_ER.components
                 canvas.DrawRect(this.Rect, Paints.BrokenBlock);
                 canvas.DrawRect(this.Rect, Paints.BrokenBlockStroke);
             }
-            else if (this.Selected)
+            if (!this.IsBroken && this.Selected)
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
-            else
+            if (!this.IsBroken && !this.Selected)
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonStroke);
             canvas.Restore();
 
-            font.Size = 20;
+            Font.Size = 20;
             var input1 = Inputs.Values.First();
             var input2 = Inputs.Values.Last();
-            canvas.DrawCircle(input1.node, 8, Paints.IOPaint);
-            canvas.DrawCircle(input2.node, 8, Paints.IOPaint);
+            canvas.DrawCircle(input1.Node, 8, Paints.IOPaint);
+            canvas.DrawCircle(input2.Node, 8, Paints.IOPaint);
 
-            var textXX = input1.node.X - (font.MeasureText("↑", Paints.TextPaint) / 2);
-            var textYY = input1.node.Y - 10;
-            canvas.DrawText("↑", textXX, textYY, font, Paints.TextPaint);
+            var textXX = input1.Node.X - (Font.MeasureText("↑", Paints.TextPaint) / 2);
+            var textYY = input1.Node.Y - 10;
+            canvas.DrawText("↑", textXX, textYY, Font, Paints.TextPaint);
 
             string[] labels = { "F", "T" };
             var output1 = Outputs.Values.First();
             var output2 = Outputs.Values.Last();
-            canvas.DrawCircle(output1.node, 8, Paints.IOPaint);
-            canvas.DrawCircle(output2.node, 8, Paints.IOPaint);
+            canvas.DrawCircle(output1.Node, 8, Paints.IOPaint);
+            canvas.DrawCircle(output2.Node, 8, Paints.IOPaint);
 
-            textXX = output1.node.X + 10;
-            textYY = output1.node.Y + font.Size / 3;
-            canvas.DrawText(labels[0], textXX, textYY, font, Paints.TextPaint);
+            textXX = output1.Node.X + 10;
+            textYY = output1.Node.Y + Font.Size / 3;
+            canvas.DrawText(labels[0], textXX, textYY, Font, Paints.TextPaint);
 
-            textXX = output2.node.X - 20;
-            textYY = output2.node.Y + font.Size / 3;
-            canvas.DrawText(labels[1], textXX, textYY, font, Paints.TextPaint);
+            textXX = output2.Node.X - 20;
+            textYY = output2.Node.Y + Font.Size / 3;
+            canvas.DrawText(labels[1], textXX, textYY, Font, Paints.TextPaint);
 
-            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
-            var textY = buttonRect.MidY + font.Size / 4;
+            var textX = InteractionRect.MidX - (Font.MeasureText(this.Code) / 2);
+            var textY = InteractionRect.MidY + Font.Size / 4;
             if (this.Code == "")
             {
-                textX = buttonRect.MidX - (font.MeasureText("WHILE") / 2);
-                canvas.DrawText("WHILE", textX, textY, font, Paints.ButtonTextPaint);
+                textX = InteractionRect.MidX - (Font.MeasureText("WHILE") / 2);
+                canvas.DrawText("WHILE", textX, textY, Font, Paints.ButtonTextPaint);
             }
-            else
+            if (this.Code != "")
             {
                 string[] parts = this.Code.Split(' ');
                 string displayCode = "WHILE " + parts[1] + parts[2] + parts[3];
 
-                while (buttonRect.Width < (font.MeasureText(displayCode) + 5))
+                while (InteractionRect.Width < (Font.MeasureText(displayCode) + 5))
                 {
-                    font.Size--;
+                    Font.Size--;
                 }
 
-                textX = buttonRect.MidX - (font.MeasureText(displayCode) / 2);
-                canvas.DrawText(displayCode, textX, textY, font, Paints.ButtonTextPaint);
+                textX = InteractionRect.MidX - (Font.MeasureText(displayCode) / 2);
+                canvas.DrawText(displayCode, textX, textY, Font, Paints.ButtonTextPaint);
             }
         }
 
         public override void CreateRect(int x, int y)
         {
             this.Rect = new SkiaSharp.SKRect(x - 75, y - 75, x + 75, y + 75);
-            this.buttonRect = new SKRect(
+            this.InteractionRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 6,
                 this.Rect.Top + (int)this.Rect.Height / 6,
                 this.Rect.Right - (int)this.Rect.Width / 6,
@@ -117,11 +117,11 @@ namespace ORS_ER.components
 
             SKMatrix matrix = SKMatrix.CreateRotationDegrees(45, Rect.MidX, Rect.MidY);
 
-            Outputs.First().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Bottom));
-            Outputs.Last().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Top));
+            Outputs.First().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Bottom));
+            Outputs.Last().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Top));
 
-            Inputs.First().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Bottom));
-            Inputs.Last().Value.node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Top));
+            Inputs.First().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Bottom));
+            Inputs.Last().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Top));
         }
         public override void GenerateCode()
         {
@@ -137,13 +137,9 @@ namespace ORS_ER.components
 
             string key = "";
             if (this.IsInsideIf != "")
-            {
                 key = this.IsInsideIf.Split('_')[0];
-            }
-            else if (this.IsInsideWhile != "")
-            {
+            if (key == "" && this.IsInsideWhile != "")
                 key = this.IsInsideWhile.Split('_')[0];
-            }
 
             variable1 = ValueRegistry.GetLocalValue(key, var1);
             variable2 = ValueRegistry.GetLocalValue(key, var2);
@@ -154,14 +150,12 @@ namespace ORS_ER.components
                 {
                     variable1 = doubleResult;
                 }
-                else if (bool.TryParse(var1, out bool boolResult))
+                if (variable1 is not double && bool.TryParse(var1, out bool boolResult))
                 {
                     variable1 = boolResult;
                 }
-                else
-                {
+                if (variable1 is not double && variable1 is not bool)
                     variable1 = var1.ToString();
-                }
             }
             if (variable2 is not RegistryEntry)
             {
@@ -169,14 +163,12 @@ namespace ORS_ER.components
                 {
                     variable2 = doubleResult;
                 }
-                else if (bool.TryParse(var2, out bool boolResult))
+                if (variable2 is not double && bool.TryParse(var2, out bool boolResult))
                 {
                     variable2 = boolResult;
                 }
-                else
-                {
+                if (variable2 is not double && variable2 is not bool)
                     variable2 = var2.ToString();
-                }
             }
 
 
@@ -215,7 +207,7 @@ namespace ORS_ER.components
             {
                 Outputs.Values.FirstOrDefault(o => o.IfTrue == "False")?.IfTrue = "";
             }
-            else
+            if (!this.Value.Item2)
             {
                 Outputs.Values.FirstOrDefault(o => o.IfTrue == "True")?.IfTrue = "";
             }

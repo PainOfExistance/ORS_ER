@@ -45,47 +45,47 @@ namespace ORS_ER.components
 
             if (_outputPins.Count <= 1)
                 Value = ("bool", false);
-            else
+            if (_outputPins.Count > 1)
                 Value = ("bool", new bool[_outputPins.Count]);
         }
 
         public override void Paint(SKCanvas canvas)
         {
             canvas.DrawRect(Rect, Paints.ComponentFill);
-            font.Size = 16;
+            Font.Size = 16;
 
             if (Selected)
                 canvas.DrawRect(Rect, Paints.SelectedStroke);
-            else
+            if (!Selected)
                 canvas.DrawRect(Rect, Paints.ComponentStroke);
 
             foreach (var input in Inputs)
-                canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
 
             var outputValues = GetOutputValues();
             var index = 0;
             foreach (var output in Outputs)
             {
                 var active = index < outputValues.Length && outputValues[index];
-                canvas.DrawCircle(output.Value.node, 8, active ? Paints.IOPaintActive : Paints.IOPaint);
+                canvas.DrawCircle(output.Value.Node, 8, active ? Paints.IOPaintActive : Paints.IOPaint);
                 index++;
             }
 
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonStroke);
 
-            float textX = Rect.MidX - (font.MeasureText(this.Name) / 2);
-            float textY = Rect.MidY + font.Size / 3;
-            canvas.DrawText(this.Name, textX, textY, font, Paints.ButtonTextPaint);
+            float textX = Rect.MidX - (Font.MeasureText(this.Name) / 2);
+            float textY = Rect.MidY + Font.Size / 3;
+            canvas.DrawText(this.Name, textX, textY, Font, Paints.ButtonTextPaint);
         }
 
         public override void CreateRect(int x, int y)
         {
-            var width = font.MeasureText(this.Name) + 40;
+            var width = Font.MeasureText(this.Name) + 40;
             var height = 90f;
 
             Rect = new SKRect(x - width / 2, y - height / 2, x + width / 2, y + height / 2);
-            buttonRect = new SKRect(
+            InteractionRect = new SKRect(
                 Rect.Left + 10,
                 Rect.Top + 10,
                 Rect.Right - 10,
@@ -94,12 +94,12 @@ namespace ORS_ER.components
             var delta = Rect.Width / (Outputs.Count + 1);
             var keys = Outputs.Keys.ToArray();
             for (var i = 0; i < Outputs.Count; i++)
-                Outputs[keys[i]].node = new SKPoint(Rect.Left + delta * (i + 1), Rect.Bottom);
+                Outputs[keys[i]].Node = new SKPoint(Rect.Left + delta * (i + 1), Rect.Bottom);
 
             delta = Rect.Width / (Inputs.Count + 1);
             keys = Inputs.Keys.ToArray();
             for (var i = 0; i < Inputs.Count; i++)
-                Inputs[keys[i]].node = new SKPoint(Rect.Left + delta * (i + 1), Rect.Top);
+                Inputs[keys[i]].Node = new SKPoint(Rect.Left + delta * (i + 1), Rect.Top);
         }
 
         public override void RunInternalSimulation(List<bool> vals)
@@ -117,13 +117,13 @@ namespace ORS_ER.components
                 component.Value = ("bool", inputValue);
             }
 
-            Parser.ParseCircuitAsync(_internalComponents, _internalConnections);
+            Parser.RunCircuitSimulation(_internalComponents, _internalConnections);
 
             if (_outputPins.Count == 1)
             {
                 Value = ("bool", ReadOutputValue(_outputPins[0]));
             }
-            else
+            if (_outputPins.Count > 1)
             {
                 var results = new bool[_outputPins.Count];
                 for (var i = 0; i < _outputPins.Count; i++)
@@ -183,8 +183,8 @@ namespace ORS_ER.components
                 component.Inputs.Clear();
                 var io = new IO();
                 io.SetId(pin.IoId);
-                io.inputConnectionIds = connections.Values
-                    .Where(conn => conn.toComponentId == pin.ComponentId && conn.toId == pin.IoId)
+                io.InputConnectionIds = connections.Values
+                    .Where(conn => conn.ToComponentId == pin.ComponentId && conn.ToId == pin.IoId)
                     .Select(conn => conn.GetId())
                     .ToList();
                 component.Inputs.Add(io.GetId(), io);

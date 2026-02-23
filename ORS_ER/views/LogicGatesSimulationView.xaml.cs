@@ -18,10 +18,6 @@ namespace ORS_ER.views;
 
 public partial class LogicGatesSimulationView : UserControl
 {
-    private TextWriter? _previousOut;
-    private TextWriter? _previousError;
-    private bool _consoleRedirected;
-
     private SKPoint _panOffset = new(0, 0);
     private float _zoom = 1.0f;
     private bool _isPanning;
@@ -49,9 +45,6 @@ public partial class LogicGatesSimulationView : UserControl
         new Adder("Full Adder", "Full addition.", "Adders")
     };
 
-
-    private string _paletteQuery = string.Empty;
-    private string _paletteCategory = "All";
 
     public Dictionary<string, Component> PaintItems { get; } = new();
 
@@ -117,7 +110,7 @@ public partial class LogicGatesSimulationView : UserControl
         if (conn is null)
             return;
 
-        PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+        PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
         Connections.Remove(_connectingConnectionId);
         _isConnecting = false;
         _connectingConnectionId = "";
@@ -134,11 +127,11 @@ public partial class LogicGatesSimulationView : UserControl
 
         foreach (var conn in Connections)
         {
-            if (!conn.Value.selected)
+            if (!conn.Value.IsSelected)
                 continue;
 
-            PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].outputConnectionIds.Remove(conn.Key);
-            PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionIds.Remove(conn.Key);
+            PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromId].OutputConnectionIds.Remove(conn.Key);
+            PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToId].InputConnectionIds.Remove(conn.Key);
             Connections.Remove(conn.Key);
             Debug.WriteLine("Deleted Connection");
             skiaElement.InvalidateVisual();
@@ -155,30 +148,30 @@ public partial class LogicGatesSimulationView : UserControl
 
             foreach (var input in item.Value.Inputs.Values)
             {
-                foreach (var id in input.inputConnectionIds.ToArray())
+                foreach (var id in input.InputConnectionIds.ToArray())
                 {
                     if (!Connections.TryGetValue(id, out var conn))
                         continue;
 
-                    PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(id);
+                    PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(id);
                     Connections.Remove(id);
                     Debug.WriteLine("Deleted Connection");
                 }
-                input.inputConnectionIds.Clear();
+                input.InputConnectionIds.Clear();
             }
 
             foreach (var output in item.Value.Outputs.Values)
             {
-                foreach (var id in output.outputConnectionIds.ToArray())
+                foreach (var id in output.OutputConnectionIds.ToArray())
                 {
                     if (!Connections.TryGetValue(id, out var conn))
                         continue;
 
-                    PaintItems[conn.toComponentId].Inputs[conn.toId].inputConnectionIds.Remove(id);
+                    PaintItems[conn.ToComponentId].Inputs[conn.ToId].InputConnectionIds.Remove(id);
                     Connections.Remove(id);
                     Debug.WriteLine("Deleted Connection");
                 }
-                output.outputConnectionIds.Clear();
+                output.OutputConnectionIds.Clear();
             }
 
             PaintItems.Remove(item.Key);
@@ -203,14 +196,14 @@ public partial class LogicGatesSimulationView : UserControl
 
         foreach (var connection in Connections.Values)
         {
-            var fromComponent = PaintItems[connection.fromComponentId];
-            var fromNode = fromComponent.Outputs[connection.fromId].node;
+            var fromComponent = PaintItems[connection.FromComponentId];
+            var fromNode = fromComponent.Outputs[connection.FromId].Node;
 
             var toPoint = connection.GetId() == _connectingConnectionId
                 ? _mouseWorld
-                : PaintItems[connection.toComponentId].Inputs[connection.toId].node;
+                : PaintItems[connection.ToComponentId].Inputs[connection.ToId].Node;
 
-            canvas.DrawLine(fromNode, toPoint, connection.selected ? Paints.SelectedLineStroke : Paints.LineStroke);
+            canvas.DrawLine(fromNode, toPoint, connection.IsSelected ? Paints.SelectedLineStroke : Paints.LineStroke);
         }
 
         foreach (var item in PaintItems)
@@ -258,44 +251,46 @@ public partial class LogicGatesSimulationView : UserControl
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
             canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            return;
         }
-        else if(type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
+        if (type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
             canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            return;
         }
-        else if (type.Contains("SubCircuit", StringComparison.OrdinalIgnoreCase))
+        if (type.Contains("SubCircuit", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.18f) };
             var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "C";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
             canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            return;
         }
-        else if (type.Contains("Input", StringComparison.OrdinalIgnoreCase))
+        if (type.Contains("Input", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = "In";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
             canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            return;
         }
-        else if (type.Contains("Output", StringComparison.OrdinalIgnoreCase))
+        if (type.Contains("Output", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = "Out";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
             canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            return;
         }
-        else
-        {
-            var fallback = SKRect.Create(rect.Left + rect.Width * 0.25f, rect.Top + rect.Height * 0.25f, rect.Width * 0.5f, rect.Height * 0.5f);
-            canvas.DrawRect(fallback, stroke);
-        }
+        var fallback = SKRect.Create(rect.Left + rect.Width * 0.25f, rect.Top + rect.Height * 0.25f, rect.Width * 0.5f, rect.Height * 0.5f);
+        canvas.DrawRect(fallback, stroke);
     }
 
     private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
@@ -303,7 +298,7 @@ public partial class LogicGatesSimulationView : UserControl
     public void CancelConnection()
     {
         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
         Connections.Remove(_connectingConnectionId);
         _isConnecting = false;
         _connectingConnectionId = "";
@@ -328,35 +323,38 @@ public partial class LogicGatesSimulationView : UserControl
                         _connectingConnectionId = newConnection.GetId();
                         Connections.Add(_connectingConnectionId, newConnection);
 
-                        item.Outputs[candidate.Value.Item3.GetId()].outputConnectionIds.Add(_connectingConnectionId);
+                        item.Outputs[candidate.Value.Item3.GetId()].OutputConnectionIds.Add(_connectingConnectionId);
+                        hit = candidate;
+                        return hit;
                     }
-                    else
+                    if (_isConnecting)
                     {
                         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-                            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
                         Connections.Remove(_connectingConnectionId);
                         _isConnecting = false;
                         _connectingConnectionId = "";
+                        hit = candidate;
+                        return hit;
                     }
-                    hit = candidate;
                 }
-                else if (candidate.Value.Item1 == "input")
+                if (candidate.Value.Item1 == "input")
                 {
                     try
                     {
-                        if (_isConnecting && Connections[_connectingConnectionId].fromComponentId != candidate.Value.Item2.GetId() && candidate.Value.Item3.inputConnectionIds.Count == 0)
+                        if (_isConnecting && Connections[_connectingConnectionId].FromComponentId != candidate.Value.Item2.GetId() && candidate.Value.Item3.InputConnectionIds.Count == 0)
                         {
-                            Connections[_connectingConnectionId].toId = candidate.Value.Item3.GetId();
-                            Connections[_connectingConnectionId].toComponentId = candidate.Value.Item2.GetId();
-                            item.Inputs[candidate.Value.Item3.GetId()].inputConnectionIds.Add(_connectingConnectionId);
-                            Connections[_connectingConnectionId].selected = false;
+                            Connections[_connectingConnectionId].ToId = candidate.Value.Item3.GetId();
+                            Connections[_connectingConnectionId].ToComponentId = candidate.Value.Item2.GetId();
+                            item.Inputs[candidate.Value.Item3.GetId()].InputConnectionIds.Add(_connectingConnectionId);
+                            Connections[_connectingConnectionId].IsSelected = false;
                             _isConnecting = false;
                             _connectingConnectionId = "";
                             Parser.RunCircuitSimulation(PaintItems, Connections);
                             Parser.RunCircuitSimulation(PaintItems, Connections);
                         }
-                        else if (_isConnecting)
+                        if (_isConnecting)
                         {
                             CancelConnection();
                         }
@@ -369,21 +367,21 @@ public partial class LogicGatesSimulationView : UserControl
 
                     hit = candidate;
                 }
-                else if (candidate.Value.Item1 == "rect")
+                if (candidate.Value.Item1 == "rect")
                 {
                     item.Selected = true;
                     hit = candidate;
                     if (_isConnecting)
                     {
                         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-                            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
                         Connections.Remove(_connectingConnectionId);
                         _isConnecting = false;
                         _connectingConnectionId = "";
                     }
                 }
-                else if (candidate.Value.Item1 == "button")
+                if (candidate.Value.Item1 == "button")
                 {
                     hit = candidate;
                 }
@@ -405,13 +403,13 @@ public partial class LogicGatesSimulationView : UserControl
 
         foreach (var conn in Connections)
         {
-            if (conn.Value.toId == "" || (hit != null))
+            if (conn.Value.ToId == "" || (hit != null))
             {
-                conn.Value.selected = false;
+                conn.Value.IsSelected = false;
                 continue;
             }
-            var fromNode = PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].node;
-            var toNode = PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].node;
+            var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromId].Node;
+            var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToId].Node;
             var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
             if (isSelected)
             {
@@ -430,7 +428,7 @@ public partial class LogicGatesSimulationView : UserControl
             e.Handled = true;
             return;
         }
-        else if (LayersListView.SelectedItem != null)
+        if (LayersListView.SelectedItem != null)
         {
             int index = LayersListView.SelectedIndex;
             var selected = Items[index];
@@ -442,7 +440,7 @@ public partial class LogicGatesSimulationView : UserControl
             e.Handled = true;
             return;
         }
-        else if (hit != null && hit.Value.Item1 == "button")
+        if (hit != null && hit.Value.Item1 == "button")
         {
             Parser.RunCircuitSimulation(PaintItems, Connections);
             Parser.RunCircuitSimulation(PaintItems, Connections);
@@ -544,7 +542,7 @@ public partial class LogicGatesSimulationView : UserControl
         {
             var conn = Connections.GetValueOrDefault(_connectingConnectionId);
             if (conn is not null)
-                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
             Connections.Remove(_connectingConnectionId);
             _isConnecting = false;
@@ -561,7 +559,7 @@ public partial class LogicGatesSimulationView : UserControl
 		{
 			var conn = Connections.GetValueOrDefault(_connectingConnectionId);
 			if (conn is not null)
-				PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+				PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
 			Connections.Remove(_connectingConnectionId);
 			_isConnecting = false;

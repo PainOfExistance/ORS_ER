@@ -113,8 +113,10 @@ namespace ORS_ER
                 Run.IsEnabled = true;
                 SaveComponent.IsEnabled = false;
                 LoadComponent.IsEnabled = false;
+                return;
             }
-            else if (SimulationHost.Content is LogicGatesSimulationView lg)
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
             {
                 lg.FocusCanvas();
                 Run.IsEnabled = false;
@@ -160,9 +162,18 @@ namespace ORS_ER
         private void New_Click(object sender, RoutedEventArgs e)
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
+            {
                 fc.NewDiagram();
-            else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                e.Handled = true;
+                return;
+            }
+
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+            {
                 lg.NewDiagram();
+                e.Handled = true;
+                return;
+            }
 
             e.Handled = true;
         }
@@ -170,9 +181,18 @@ namespace ORS_ER
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
+            {
                 fc.SaveDiagram();
-            else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                e.Handled = true;
+                return;
+            }
+
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+            {
                 lg.SaveDiagram();
+                e.Handled = true;
+                return;
+            }
 
             e.Handled = true;
         }
@@ -180,9 +200,18 @@ namespace ORS_ER
         private void Load_Click(object sender, RoutedEventArgs e)
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
+            {
                 fc.LoadDiagram();
-            else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+                e.Handled = true;
+                return;
+            }
+
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+            {
                 lg.LoadDiagram();
+                e.Handled = true;
+                return;
+            }
 
             e.Handled = true;
         }
@@ -190,19 +219,20 @@ namespace ORS_ER
 		private void ExportPng_Click(object sender, RoutedEventArgs e)
 		{
 			if (GetSelectedSimulation() is FlowchartSimulationView fc)
+			{
 				fc.SaveCanvasAsPng();
-			else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+				e.Handled = true;
+				return;
+			}
+
+			if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+			{
 				lg.SaveCanvasAsPng();
+				e.Handled = true;
+				return;
+			}
 
 			e.Handled = true;
 		}
     }
 }
-/*
-•	Selection box + multi-select (Shift/Ctrl) and group move.
-•	Copy/Paste/Duplicate of components and subgraphs.
-•	Connection validation (type compatibility, cycle prevention).
-•	Zoom-to-fit and reset view actions.
-•	Export canvas to PNG/SVG.
-•	Inline error highlights on invalid connections or runtime errors.
-*/

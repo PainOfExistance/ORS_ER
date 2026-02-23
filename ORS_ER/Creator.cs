@@ -115,7 +115,6 @@ namespace ORS_ER
             [JsonPropertyName("ifTrue")]
             public string? IfTrue { get; set; }
 
-            // NEW (multi) format only
             [JsonPropertyName("inputIds")]
             public List<string>? InputIds { get; set; }
 
@@ -277,13 +276,13 @@ namespace ORS_ER
                         newIO.IfTrue = input.IfTrue ?? "";
                         if (input.InputIds != null || input.OutputIds != null)
                         {
-                            newIO.inputConnectionIds = input.InputIds ?? [];
-                            newIO.outputConnectionIds = input.OutputIds ?? [];
+                            newIO.InputConnectionIds = input.InputIds ?? [];
+                            newIO.OutputConnectionIds = input.OutputIds ?? [];
                         }
                         else
                         {
                             if (!string.IsNullOrWhiteSpace(input.Value))
-                                newIO.inputConnectionIds = [input.Value];
+                                newIO.InputConnectionIds = [input.Value];
                         }
 
                         var ioKey = string.IsNullOrWhiteSpace(input.Id) ? newIO.GetId() : input.Id;
@@ -298,13 +297,13 @@ namespace ORS_ER
                         newIO.IfTrue = output.IfTrue ?? "";
                         if (output.InputIds != null || output.OutputIds != null)
                         {
-                            newIO.inputConnectionIds = output.InputIds ?? [];
-                            newIO.outputConnectionIds = output.OutputIds ?? [];
+                            newIO.InputConnectionIds = output.InputIds ?? [];
+                            newIO.OutputConnectionIds = output.OutputIds ?? [];
                         }
                         else
                         {
                             if (!string.IsNullOrWhiteSpace(output.Value))
-                                newIO.outputConnectionIds = [output.Value];
+                                newIO.OutputConnectionIds = [output.Value];
                         }
 
                         var ioKey = string.IsNullOrWhiteSpace(output.Id) ? newIO.GetId() : output.Id;
@@ -355,12 +354,12 @@ namespace ORS_ER
                     newIO.IfTrue = input.IfTrue ?? "";
                     if (input.InputIds != null || input.OutputIds != null)
                     {
-                        newIO.inputConnectionIds = input.InputIds ?? [];
-                        newIO.outputConnectionIds = input.OutputIds ?? [];
+                        newIO.InputConnectionIds = input.InputIds ?? [];
+                        newIO.OutputConnectionIds = input.OutputIds ?? [];
                     }
                     else if (!string.IsNullOrWhiteSpace(input.Value))
                     {
-                        newIO.inputConnectionIds = [input.Value];
+                        newIO.InputConnectionIds = [input.Value];
                     }
 
                     newComponent.Inputs.Add(newIO.GetId(), newIO);
@@ -374,12 +373,12 @@ namespace ORS_ER
                     newIO.IfTrue = output.IfTrue ?? "";
                     if (output.InputIds != null || output.OutputIds != null)
                     {
-                        newIO.inputConnectionIds = output.InputIds ?? [];
-                        newIO.outputConnectionIds = output.OutputIds ?? [];
+                        newIO.InputConnectionIds = output.InputIds ?? [];
+                        newIO.OutputConnectionIds = output.OutputIds ?? [];
                     }
                     else if (!string.IsNullOrWhiteSpace(output.Value))
                     {
-                        newIO.outputConnectionIds = [output.Value];
+                        newIO.OutputConnectionIds = [output.Value];
                     }
 
                     newComponent.Outputs.Add(newIO.GetId(), newIO);
@@ -533,10 +532,10 @@ namespace ORS_ER
                 diagram.Connections.Add(new ConnectionData
                 {
                     Id = connection.GetId(),
-                    FromId = connection.fromId,
-                    ToId = connection.toId,
-                    FromComponentId = connection.fromComponentId,
-                    ToComponentId = connection.toComponentId
+                    FromId = connection.FromId,
+                    ToId = connection.ToId,
+                    FromComponentId = connection.FromComponentId,
+                    ToComponentId = connection.ToComponentId
                 });
             }
 
@@ -595,62 +594,62 @@ namespace ORS_ER
             switch (Name)
             {
                 case "String Input":
-                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Numerical Input":
-                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Print":
-                    return createPrint(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreatePrint(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Input":
-                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Operator Block":
-                    return createOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "If":
-                    return createIf(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateIf(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "While":
-                    return createWhile(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateWhile(Name, Description, Category, mouseWorldX, mouseWorldY);
                 default:
-                    return createInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                    return CreateInput(Name, Description, Category, mouseWorldX, mouseWorldY);
             }
         }
 
-        public static Component createInput(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        public static Component CreateInput(string name, string description, string category, int mouseWorldX, int mouseWorldY)
         {
-            Input input = new Input(Name, Description, Category);
+            var input = new Input(name, description, category);
             input.Selected = true;
             input.CreateRect(mouseWorldX, mouseWorldY);
             return input;
         }
 
-        private static Component createPrint(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        private static Component CreatePrint(string name, string description, string category, int mouseWorldX, int mouseWorldY)
         {
-            Print input = new Print(Name, Description, Category);
-            input.Selected = true;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
+            var printComponent = new Print(name, description, category);
+            printComponent.Selected = true;
+            printComponent.CreateRect(mouseWorldX, mouseWorldY);
+            return printComponent;
         }
 
-        private static Component createOperator(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        private static Component CreateOperator(string name, string description, string category, int mouseWorldX, int mouseWorldY)
         {
-            Operator input = new Operator(Name, Description, Category);
-            input.Selected = true;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
+            var operatorComponent = new Operator(name, description, category);
+            operatorComponent.Selected = true;
+            operatorComponent.CreateRect(mouseWorldX, mouseWorldY);
+            return operatorComponent;
         }
 
-        private static Component createIf(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        private static Component CreateIf(string name, string description, string category, int mouseWorldX, int mouseWorldY)
         {
-            If input = new If(Name, Description, Category);
-            input.Selected = true;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
+            var ifComponent = new If(name, description, category);
+            ifComponent.Selected = true;
+            ifComponent.CreateRect(mouseWorldX, mouseWorldY);
+            return ifComponent;
         }
 
-        private static Component createWhile(string Name, string Description, string Category, int mouseWorldX, int mouseWorldY)
+        private static Component CreateWhile(string name, string description, string category, int mouseWorldX, int mouseWorldY)
         {
-            While input = new While(Name, Description, Category);
-            input.Selected = true;
-            input.CreateRect(mouseWorldX, mouseWorldY);
-            return input;
+            var whileComponent = new While(name, description, category);
+            whileComponent.Selected = true;
+            whileComponent.CreateRect(mouseWorldX, mouseWorldY);
+            return whileComponent;
         }
 
 
@@ -667,30 +666,30 @@ namespace ORS_ER
             switch (Name)
             {
                 case "Binary Input":
-                    BinaryInput component = new BinaryInput(Name, Description, Category);
-                    component.Selected = true;
-                    component.CreateRect(mouseWorldX, mouseWorldY);
-                    return component;
+                    var binaryInput = new BinaryInput(Name, Description, Category);
+                    binaryInput.Selected = true;
+                    binaryInput.CreateRect(mouseWorldX, mouseWorldY);
+                    return binaryInput;
                 case "Binary Output":
-                    BinaryOutput component2 = new BinaryOutput(Name, Description, Category);
-                    component2.Selected = true;
-                    component2.CreateRect(mouseWorldX, mouseWorldY);
-                    return component2;
+                    var binaryOutput = new BinaryOutput(Name, Description, Category);
+                    binaryOutput.Selected = true;
+                    binaryOutput.CreateRect(mouseWorldX, mouseWorldY);
+                    return binaryOutput;
                 case "Half Adder":
-                    Adder adder = new Adder(Name, Description, Category);
-                    adder.Selected = true;
-                    adder.CreateRect(mouseWorldX, mouseWorldY);
-                    return adder;
+                    var halfAdder = new Adder(Name, Description, Category);
+                    halfAdder.Selected = true;
+                    halfAdder.CreateRect(mouseWorldX, mouseWorldY);
+                    return halfAdder;
                 case "Full Adder":
-                    Adder fullAdder = new Adder(Name, Description, Category);
+                    var fullAdder = new Adder(Name, Description, Category);
                     fullAdder.Selected = true;
                     fullAdder.CreateRect(mouseWorldX, mouseWorldY);
                     return fullAdder;
                 default:
-                    Gate meow = new Gate(Name, Description, Category);
-                    meow.Selected = true;
-                    meow.CreateRect(mouseWorldX, mouseWorldY);
-                    return meow;
+                    var gateComponent = new Gate(Name, Description, Category);
+                    gateComponent.Selected = true;
+                    gateComponent.CreateRect(mouseWorldX, mouseWorldY);
+                    return gateComponent;
             }
         }
     }

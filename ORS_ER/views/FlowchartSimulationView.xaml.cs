@@ -120,7 +120,7 @@ public partial class FlowchartSimulationView : UserControl
         if (conn is null)
             return;
 
-        PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+        PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
         Connections.Remove(_connectingConnectionId);
         _isConnecting = false;
         _connectingConnectionId = "";
@@ -137,22 +137,22 @@ public partial class FlowchartSimulationView : UserControl
 
         foreach (var conn in Connections)
         {
-            if (!conn.Value.selected)
+            if (!conn.Value.IsSelected)
                 continue;
 
-            if (PaintItems[conn.Value.toComponentId].IsInsideIf != "")
+            if (PaintItems[conn.Value.ToComponentId].IsInsideIf != "")
             {
-                toRemove.Add(conn.Value.toComponentId);
-                ClearNestedConnectionScopes(PaintItems[conn.Value.toComponentId].IsInsideIf, toRemove);
+                toRemove.Add(conn.Value.ToComponentId);
+                ClearNestedConnectionScopes(PaintItems[conn.Value.ToComponentId].IsInsideIf, toRemove);
             }
-            else if (PaintItems[conn.Value.toComponentId].IsInsideWhile != "")
+            if (PaintItems[conn.Value.ToComponentId].IsInsideWhile != "")
             {
-                toRemove.Add(conn.Value.toComponentId);
-                ClearNestedConnectionScopes(PaintItems[conn.Value.toComponentId].IsInsideWhile, toRemove);
+                toRemove.Add(conn.Value.ToComponentId);
+                ClearNestedConnectionScopes(PaintItems[conn.Value.ToComponentId].IsInsideWhile, toRemove);
             }
 
-            PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].outputConnectionIds.Remove(conn.Key);
-            PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].inputConnectionIds.Remove(conn.Key);
+            PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromId].OutputConnectionIds.Remove(conn.Key);
+            PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToId].InputConnectionIds.Remove(conn.Key);
             Connections.Remove(conn.Key);
             Debug.WriteLine("Deleted Connection");
             skiaElement.InvalidateVisual();
@@ -167,31 +167,31 @@ public partial class FlowchartSimulationView : UserControl
 
             foreach (var input in item.Value.Inputs.Values)
             {
-                foreach (var id in input.inputConnectionIds.ToArray())
+                foreach (var id in input.InputConnectionIds.ToArray())
                 {
                     if (!Connections.TryGetValue(id, out var conn))
                         continue;
 
-                    PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(id);
+                    PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(id);
                     Connections.Remove(id);
                     Debug.WriteLine("Deleted Connection");
                 }
-                input.inputConnectionIds.Clear();
+                input.InputConnectionIds.Clear();
             }
 
             foreach (var output in item.Value.Outputs.Values)
             {
-                foreach (var id in output.outputConnectionIds.ToArray())
+                foreach (var id in output.OutputConnectionIds.ToArray())
                 {
                     if (!Connections.TryGetValue(id, out var conn))
                         continue;
 
-                    toRemove.Add(conn.toComponentId);
-                    PaintItems[conn.toComponentId].Inputs[conn.toId].inputConnectionIds.Remove(id);
+                    toRemove.Add(conn.ToComponentId);
+                    PaintItems[conn.ToComponentId].Inputs[conn.ToId].InputConnectionIds.Remove(id);
                     Connections.Remove(id);
                     Debug.WriteLine("Deleted Connection");
                 }
-                output.outputConnectionIds.Clear();
+                output.OutputConnectionIds.Clear();
             }
 
             ClearNestedConnectionScopes(item.Value.IsInsideIf, toRemove);
@@ -217,9 +217,9 @@ public partial class FlowchartSimulationView : UserControl
                 PaintItems[current].IsInsideIf = "";
                 foreach (string outputKey in PaintItems[current].Outputs.Keys)
                 {
-                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].outputConnectionIds.Count; i++)
+                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
                     {
-                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].outputConnectionIds[i]].toComponentId);
+                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
                     }
                 }
             }
@@ -229,9 +229,9 @@ public partial class FlowchartSimulationView : UserControl
                 PaintItems[current].IsInsideWhile = "";
                 foreach (string outputKey in PaintItems[current].Outputs.Keys)
                 {
-                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].outputConnectionIds.Count; i++)
+                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
                     {
-                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].outputConnectionIds[i]].toComponentId);
+                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
                     }
                 }
             }
@@ -258,13 +258,13 @@ public partial class FlowchartSimulationView : UserControl
 
             foreach (var conn in Connections.Values)
             {
-                if (string.IsNullOrWhiteSpace(conn.toComponentId))
+                if (string.IsNullOrWhiteSpace(conn.ToComponentId))
                     continue;
 
-                if (!string.Equals(conn.fromComponentId, current, StringComparison.Ordinal))
+                if (!string.Equals(conn.FromComponentId, current, StringComparison.Ordinal))
                     continue;
 
-                var next = conn.toComponentId;
+                var next = conn.ToComponentId;
                 if (string.Equals(next, toComponentId, StringComparison.Ordinal))
                     return true;
 
@@ -285,14 +285,14 @@ public partial class FlowchartSimulationView : UserControl
 
         foreach (var connection in Connections.Values)
         {
-            var fromComponent = PaintItems[connection.fromComponentId];
-            var fromNode = fromComponent.Outputs[connection.fromId].node;
+            var fromComponent = PaintItems[connection.FromComponentId];
+            var fromNode = fromComponent.Outputs[connection.FromId].Node;
 
             var toPoint = connection.GetId() == _connectingConnectionId
                 ? _mouseWorld
-                : PaintItems[connection.toComponentId].Inputs[connection.toId].node;
+                : PaintItems[connection.ToComponentId].Inputs[connection.ToId].Node;
 
-            canvas.DrawLine(fromNode, toPoint, connection.selected ? Paints.SelectedLineStroke : Paints.LineStroke);
+            canvas.DrawLine(fromNode, toPoint, connection.IsSelected ? Paints.SelectedLineStroke : Paints.LineStroke);
         }
 
         foreach (var item in PaintItems)
@@ -329,8 +329,6 @@ public partial class FlowchartSimulationView : UserControl
         canvas.Save();
         canvas.ClipRoundRect(clip, SKClipOperation.Intersect, true);
 
-        // Use the actual component paint (for consistent shapes + colors).
-        // Create a temporary instance positioned around the origin.
         var clone = Creator.Create(c.Name, c.Description, c.Category, 0, 0);
 
         var content = SKRect.Create(pad, pad, width - (pad * 2), height - (pad * 2));
@@ -346,7 +344,7 @@ public partial class FlowchartSimulationView : UserControl
     public void CancelConnection()
     {
         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
         Connections.Remove(_connectingConnectionId);
         _isConnecting = false;
         _connectingConnectionId = "";
@@ -371,12 +369,12 @@ public partial class FlowchartSimulationView : UserControl
                         _connectingConnectionId = newConnection.GetId();
                         Connections.Add(_connectingConnectionId, newConnection);
 
-                        item.Outputs[candidate.Value.Item3.GetId()].outputConnectionIds.Add(_connectingConnectionId);
+                        item.Outputs[candidate.Value.Item3.GetId()].OutputConnectionIds.Add(_connectingConnectionId);
                     }
                     else
                     {
                         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-                            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
                         Connections.Remove(_connectingConnectionId);
                         _isConnecting = false;
@@ -392,7 +390,7 @@ public partial class FlowchartSimulationView : UserControl
 
                         if (_isConnecting && Connections.TryGetValue(_connectingConnectionId, out var inProgress))
                         {
-                            var fromComponentId = inProgress.fromComponentId;
+                            var fromComponentId = inProgress.FromComponentId;
                             var toComponentId = candidate.Value.Item2.GetId();
 
                             if (WouldCreateSkipConnection(fromComponentId, toComponentId))
@@ -405,9 +403,9 @@ public partial class FlowchartSimulationView : UserControl
 
                         if (item is While && item.Inputs.First().Value.GetId() == candidate.Value.Item3.GetId())
                         {
-                            if (!PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideWhile.Contains(item.GetId()) ||
-                                candidate.Value.Item3.inputConnectionIds.Count > 0 ||
-                                PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].outputConnectionIds.Count > 1)
+                            if (!PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Contains(item.GetId()) ||
+                                candidate.Value.Item3.InputConnectionIds.Count > 0 ||
+                                PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].OutputConnectionIds.Count > 1)
                             {
                                 CancelConnection();
                                 hit = candidate;
@@ -415,16 +413,16 @@ public partial class FlowchartSimulationView : UserControl
                             }
                         }
                         else if (item.IsInsideIf != "" &&
-                                 PaintItems[Connections[_connectingConnectionId].fromComponentId] is If &&
-                                 PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].outputConnectionIds.Count == 1 &&
-                                 candidate.Value.Item3.inputConnectionIds.Count == 1)
+                                 PaintItems[Connections[_connectingConnectionId].FromComponentId] is If &&
+                                 PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].OutputConnectionIds.Count == 1 &&
+                                 candidate.Value.Item3.InputConnectionIds.Count == 1)
                         {
                             clearId = true;
                         }
                         else if (item.IsInsideIf != "" &&
-                                 item.IsInsideIf.Contains(PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideIf.Split("_")[0]) &&
-                                 PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideIf.Split("_")[1] != item.IsInsideIf.Split("_")[1] &&
-                                 PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].outputConnectionIds.Count == 1)
+                                 item.IsInsideIf.Contains(PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0]) &&
+                                 PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[1] != item.IsInsideIf.Split("_")[1] &&
+                                 PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].OutputConnectionIds.Count == 1)
                         {
                             Debug.WriteLine("Protected");
                             clearId = true;
@@ -435,60 +433,60 @@ public partial class FlowchartSimulationView : UserControl
                             hit = candidate;
                             return hit;
                         }
-                        else if ((PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideIf != "" || PaintItems[Connections[_connectingConnectionId].fromComponentId] is If) &&
-                                 PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].outputConnectionIds.Count > 1)
+                        else if ((PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf != "" || PaintItems[Connections[_connectingConnectionId].FromComponentId] is If) &&
+                                 PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].OutputConnectionIds.Count > 1)
                         {
                             CancelConnection();
                             hit = candidate;
                             return hit;
                         }
-                        else if ((PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideWhile != "" || PaintItems[Connections[_connectingConnectionId].fromComponentId] is While) &&
-                                 PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].outputConnectionIds.Count > 1)
+                        else if ((PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile != "" || PaintItems[Connections[_connectingConnectionId].FromComponentId] is While) &&
+                                 PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].OutputConnectionIds.Count > 1)
                         {
                             CancelConnection();
                             hit = candidate;
                             return hit;
                         }
-                        else if ((item.IsInsideIf != "" || item.IsInsideWhile != "") && item.Inputs[Connections[_connectingConnectionId].toId].inputConnectionIds.Count > 0)
+                        else if ((item.IsInsideIf != "" || item.IsInsideWhile != "") && item.Inputs[Connections[_connectingConnectionId].ToId].InputConnectionIds.Count > 0)
                         {
                             CancelConnection();
                             hit = candidate;
                             return hit;
                         }
 
-                        if (_isConnecting && Connections[_connectingConnectionId].fromComponentId != candidate.Value.Item2.GetId())
+                        if (_isConnecting && Connections[_connectingConnectionId].FromComponentId != candidate.Value.Item2.GetId())
                         {
-                            if (PaintItems[Connections[_connectingConnectionId].fromComponentId] is If && !clearId)
+                            if (PaintItems[Connections[_connectingConnectionId].FromComponentId] is If && !clearId)
                             {
-                                item.IsInsideIf = Connections[_connectingConnectionId].fromComponentId + "_" + PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].IfTrue;
+                                item.IsInsideIf = Connections[_connectingConnectionId].FromComponentId + "_" + PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].IfTrue;
                             }
-                            else if (PaintItems[Connections[_connectingConnectionId].fromComponentId] is While && PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].IfTrue != "False")
+                            else if (PaintItems[Connections[_connectingConnectionId].FromComponentId] is While && PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].IfTrue != "False")
                             {
-                                item.IsInsideWhile = Connections[_connectingConnectionId].fromComponentId + "_" + PaintItems[Connections[_connectingConnectionId].fromComponentId].Outputs[Connections[_connectingConnectionId].fromId].IfTrue;
+                                item.IsInsideWhile = Connections[_connectingConnectionId].FromComponentId + "_" + PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromId].IfTrue;
                             }
                             else
                             {
                                 if (clearId)
                                 {
-                                    if (PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideIf.Split("_")[0] != "")
+                                    if (PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0] != "")
                                     {
-                                        item.IsInsideIf = PaintItems[PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
+                                        item.IsInsideIf = PaintItems[PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
                                     }
-                                    else if (PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideWhile.Split("_")[0] != "")
+                                    else if (PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Split("_")[0] != "")
                                     {
-                                        item.IsInsideWhile = PaintItems[PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
+                                        item.IsInsideWhile = PaintItems[PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
                                     }
                                 }
-                                else if (!(item is While && PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideWhile.Contains(item.GetId())))
+                                else if (!(item is While && PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Contains(item.GetId())))
                                 {
-                                    item.IsInsideIf = PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideIf;
-                                    item.IsInsideWhile = PaintItems[Connections[_connectingConnectionId].fromComponentId].IsInsideWhile;
+                                    item.IsInsideIf = PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf;
+                                    item.IsInsideWhile = PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile;
                                 }
                             }
-                            Connections[_connectingConnectionId].toId = candidate.Value.Item3.GetId();
-                            Connections[_connectingConnectionId].toComponentId = candidate.Value.Item2.GetId();
-                            item.Inputs[candidate.Value.Item3.GetId()].inputConnectionIds.Add(_connectingConnectionId);
-                            Connections[_connectingConnectionId].selected = false;
+                            Connections[_connectingConnectionId].ToId = candidate.Value.Item3.GetId();
+                            Connections[_connectingConnectionId].ToComponentId = candidate.Value.Item2.GetId();
+                            item.Inputs[candidate.Value.Item3.GetId()].InputConnectionIds.Add(_connectingConnectionId);
+                            Connections[_connectingConnectionId].IsSelected = false;
                             _isConnecting = false;
                             _connectingConnectionId = "";
                         }
@@ -512,7 +510,7 @@ public partial class FlowchartSimulationView : UserControl
                     if (_isConnecting)
                     {
                         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-                            PaintItems[prev.fromComponentId].Outputs[prev.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
                         Connections.Remove(_connectingConnectionId);
                         _isConnecting = false;
@@ -541,13 +539,13 @@ public partial class FlowchartSimulationView : UserControl
 
         foreach (var conn in Connections)
         {
-            if (conn.Value.toId == "" || (hit != null))
+            if (conn.Value.ToId == "" || (hit != null))
             {
-                conn.Value.selected = false;
+                conn.Value.IsSelected = false;
                 continue;
             }
-            var fromNode = PaintItems[conn.Value.fromComponentId].Outputs[conn.Value.fromId].node;
-            var toNode = PaintItems[conn.Value.toComponentId].Inputs[conn.Value.toId].node;
+            var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromId].Node;
+            var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToId].Node;
             var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
             if (isSelected)
             {
@@ -566,7 +564,8 @@ public partial class FlowchartSimulationView : UserControl
             e.Handled = true;
             return;
         }
-        else if (LayersListView.SelectedItem != null)
+
+        if (LayersListView.SelectedItem != null)
         {
             int index = LayersListView.SelectedIndex;
             var selected = Items[index];
@@ -578,7 +577,8 @@ public partial class FlowchartSimulationView : UserControl
             e.Handled = true;
             return;
         }
-        else if (hit != null && hit.Value.Item1 == "button")
+
+        if (hit != null && hit.Value.Item1 == "button")
         {
             skiaElement.InvalidateVisual();
             e.Handled = true;
@@ -608,8 +608,11 @@ public partial class FlowchartSimulationView : UserControl
             var deltaScreen = mouse - _panStartMouse;
             _panOffset = _panStartOffset + deltaScreen;
             skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
         }
-        else if (_isMoving)
+
+        if (_isMoving)
         {
             skiaElement.Cursor = Cursors.SizeAll;
             foreach (var item in PaintItems)
@@ -618,10 +621,15 @@ public partial class FlowchartSimulationView : UserControl
                     item.Value.OffsetRect((int)_mouseWorld.X, (int)_mouseWorld.Y);
             }
             skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
         }
-        else if (_isConnecting)
+
+        if (_isConnecting)
         {
             skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
         }
 
         e.Handled = true;
@@ -694,7 +702,7 @@ public partial class FlowchartSimulationView : UserControl
         {
             var conn = Connections.GetValueOrDefault(_connectingConnectionId);
             if (conn is not null)
-                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
             Connections.Remove(_connectingConnectionId);
             _isConnecting = false;
@@ -712,7 +720,7 @@ public partial class FlowchartSimulationView : UserControl
 		{
 			var conn = Connections.GetValueOrDefault(_connectingConnectionId);
 			if (conn is not null)
-				PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+				PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
 			Connections.Remove(_connectingConnectionId);
 			_isConnecting = false;
@@ -729,7 +737,7 @@ public partial class FlowchartSimulationView : UserControl
         {
             var conn = Connections.GetValueOrDefault(_connectingConnectionId);
             if (conn is not null)
-                PaintItems[conn.fromComponentId].Outputs[conn.fromId].outputConnectionIds.Remove(_connectingConnectionId);
+                PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
 
             Connections.Remove(_connectingConnectionId);
             _isConnecting = false;

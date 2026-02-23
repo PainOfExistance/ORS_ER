@@ -45,17 +45,17 @@ internal static class CanvasExport
 		var paints = ComponentPaints.Create(ComponentPaintScheme.Input);
 		foreach (var connection in connections.Values)
 		{
-			if (connection.toId == "")
+			if (connection.ToId == "")
 				continue;
 
-			if (!paintItems.TryGetValue(connection.fromComponentId, out var fromComponent))
+			if (!paintItems.TryGetValue(connection.FromComponentId, out var fromComponent))
 				continue;
-			if (!paintItems.TryGetValue(connection.toComponentId, out var toComponent))
+			if (!paintItems.TryGetValue(connection.ToComponentId, out var toComponent))
 				continue;
 
-			var fromNode = fromComponent.Outputs[connection.fromId].node;
-			var toNode = toComponent.Inputs[connection.toId].node;
-			canvas.DrawLine(fromNode, toNode, connection.selected ? paints.SelectedLineStroke : paints.LineStroke);
+			var fromNode = fromComponent.Outputs[connection.FromId].Node;
+			var toNode = toComponent.Inputs[connection.ToId].Node;
+			canvas.DrawLine(fromNode, toNode, connection.IsSelected ? paints.SelectedLineStroke : paints.LineStroke);
 		}
 
 		foreach (var item in paintItems.Values)
@@ -91,16 +91,16 @@ internal static class CanvasExport
 
 		foreach (var conn in connections.Values)
 		{
-			if (conn.toId == "")
+			if (conn.ToId == "")
 				continue;
 
-			if (!paintItems.TryGetValue(conn.fromComponentId, out var fromComponent))
+			if (!paintItems.TryGetValue(conn.FromComponentId, out var fromComponent))
 				continue;
-			if (!paintItems.TryGetValue(conn.toComponentId, out var toComponent))
+			if (!paintItems.TryGetValue(conn.ToComponentId, out var toComponent))
 				continue;
 
-			var fromNode = fromComponent.Outputs[conn.fromId].node;
-			var toNode = toComponent.Inputs[conn.toId].node;
+			var fromNode = fromComponent.Outputs[conn.FromId].Node;
+			var toNode = toComponent.Inputs[conn.ToId].Node;
 			var lr = SKRect.Create(
 				Math.Min(fromNode.X, toNode.X),
 				Math.Min(fromNode.Y, toNode.Y),
@@ -132,9 +132,9 @@ internal static class CanvasExport
 		var maxY = float.NegativeInfinity;
 
 		foreach (var io in c.Inputs.Values)
-			Include(io.node);
+			Include(io.Node);
 		foreach (var io in c.Outputs.Values)
-			Include(io.node);
+			Include(io.Node);
 
 		void Include(SKPoint p)
 		{

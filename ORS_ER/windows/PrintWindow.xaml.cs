@@ -12,9 +12,6 @@ using System.Windows.Shapes;
 
 namespace ORS_ER.windows
 {
-    /// <summary>
-    /// Interaction logic for PrintWindow.xaml
-    /// </summary>
     public partial class PrintWindow : Window
     {
         public (string, dynamic) Value = ("", null);
@@ -33,11 +30,11 @@ namespace ORS_ER.windows
             if (VariableComboBox.Text?.Trim() == "")
             {
                 this.Code = "";
+                DialogResult = true;
+                return;
             }
-            else
-            {
-                this.Code = $"Console.WriteLine({this.Value.Item1});";
-            }
+
+            this.Code = $"Console.WriteLine({this.Value.Item1});";
 
             DialogResult = true;
         }

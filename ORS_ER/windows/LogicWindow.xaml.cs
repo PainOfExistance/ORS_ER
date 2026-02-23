@@ -5,9 +5,6 @@ using System.Windows;
 
 namespace ORS_ER.windows
 {
-    /// <summary>
-    /// Interaction logic for LogicWindow.xaml
-    /// </summary>
     public partial class LogicWindow : Window
     {
         public (string, dynamic) Value = ("", null);
@@ -31,13 +28,6 @@ namespace ORS_ER.windows
                 "<=",
                 ">",
                 ">=",
-                /*"AND",
-                "OR",
-                "NOT",
-                "XOR",
-                "NOR",
-                "XNOR",
-                "NAND"*/
                 };
 
             var parts = Code.Split(" ").ToList();
@@ -98,11 +88,10 @@ namespace ORS_ER.windows
             {
                 Variable1.IsEnabled = false;
                 Variable1.Text = "";
+                return;
             }
-            else
-            {
-                Variable1.IsEnabled = true;
-            }
+
+            Variable1.IsEnabled = true;
         }
     }
 }

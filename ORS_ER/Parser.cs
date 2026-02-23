@@ -6,9 +6,8 @@ namespace ORS_ER
     internal class Parser
     {
         public static void RunCircuitSimulation(
-    Dictionary<string, Component> paintItems,
-    Dictionary<string, Connection> connections
- )
+            Dictionary<string, Component> paintItems,
+            Dictionary<string, Connection> connections)
         {
             var queuedNodes = new Queue<Component>(
                 paintItems
@@ -25,26 +24,26 @@ namespace ORS_ER
                 List<bool> inputValues = new();
                 foreach (var inputs in currentNode.Inputs.Values)
                 {
-                    bool vallueToAdd = false;
+                    bool valueToAdd = false;
                     try
                     {
-                        dynamic inputValue = paintItems[connections[inputs.inputConnectionIds.First()].fromComponentId].Value.Item2;
+                        dynamic inputValue = paintItems[connections[inputs.InputConnectionIds.First()].FromComponentId].Value.Item2;
                         if (inputValue is bool)
                         {
-                            vallueToAdd = inputValue;
+                            valueToAdd = inputValue;
                         }
-                        else
+                        if (inputValue is not bool)
                         {
-                            var fromId = connections[inputs.inputConnectionIds.First()].fromId;
-                            var index = paintItems[connections[inputs.inputConnectionIds.First()].fromComponentId].Outputs[fromId].IfTrue;
-                            vallueToAdd = inputValue[int.Parse(index)];
+                            var fromId = connections[inputs.InputConnectionIds.First()].FromId;
+                            var index = paintItems[connections[inputs.InputConnectionIds.First()].FromComponentId].Outputs[fromId].IfTrue;
+                            valueToAdd = inputValue[int.Parse(index)];
                         }
                     }
                     catch (Exception ex)
                     {
-                        vallueToAdd = false;
+                        valueToAdd = false;
                     }
-                    inputValues.Add(vallueToAdd);
+                    inputValues.Add(valueToAdd);
                 }
 
                 try
@@ -58,12 +57,12 @@ namespace ORS_ER
                 }
 
                 var outputConnections = connections.Values
-                    .Where(c => c.fromComponentId == currentNode.GetId())
+                    .Where(c => c.FromComponentId == currentNode.GetId())
                     .ToList();
 
                 foreach (var conn in outputConnections)
                 {
-                    var nextNode = paintItems[conn.toComponentId];
+                    var nextNode = paintItems[conn.ToComponentId];
                     queuedNodes.Enqueue(nextNode);
 
                 }
@@ -85,7 +84,7 @@ namespace ORS_ER
         {
             var queuedNodes = new Queue<Component>(
                 paintItems
-                    .Where(kv => kv.Value.Inputs.First().Value.inputConnectionIds.Count() == 0 && (kv.Value.GetType() == typeof(Input) || kv.Value.GetType() == typeof(Operator)))
+                    .Where(kv => kv.Value.Inputs.First().Value.InputConnectionIds.Count() == 0 && (kv.Value.GetType() == typeof(Input) || kv.Value.GetType() == typeof(Operator)))
                     .Select(kv => kv.Value));
             var nodeIdHashed = new HashSet<string>(queuedNodes.Select(node => node.GetId()));
 
@@ -132,18 +131,18 @@ namespace ORS_ER
                 }
 
                 var outputConnections = connections.Values
-                    .Where(c => c.fromComponentId == currentNode.GetId())
+                    .Where(c => c.FromComponentId == currentNode.GetId())
                     .ToList();
 
                 if (currentNode is If or While)
                 {
-                    outputConnections = connections.Values.Where(c => c.fromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.fromId && kv.IfTrue != "").ToList().Count() > 0).ToList();
+                    outputConnections = connections.Values.Where(c => c.FromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.FromId && kv.IfTrue != "").ToList().Count() > 0).ToList();
                 }
 
                 foreach (var conn in outputConnections)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var nextNode = paintItems[conn.toComponentId];
+                    var nextNode = paintItems[conn.ToComponentId];
                     if (nodeIdHashed.Add(nextNode.GetId()))
                         queuedNodes.Enqueue(nextNode);
                 }

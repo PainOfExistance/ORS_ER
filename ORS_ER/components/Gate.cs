@@ -17,15 +17,16 @@ namespace ORS_ER.components
         public Gate(Component component) : base(component)
         {
             this.Code = component.Name.Split(" ")[0];
-            base.font = new SKFont();
+            Font = new SKFont();
             this.Value = ("bool", false);
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
             Inputs.Add(newNode1.GetId(), newNode1);
-            if (this.Code != "NOT")
+            var isNotGate = this.Code == "NOT";
+            if (!isNotGate)
                 Inputs.Add(newNode2.GetId(), newNode2);
-            else
+            if (isNotGate)
                 this.Value = ("bool", true);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
@@ -33,15 +34,16 @@ namespace ORS_ER.components
         public Gate(string name, string description, string category) : base(name, description, category)
         {
             this.Code = name.Split(" ")[0];
-            base.font = new SKFont();
+            Font = new SKFont();
             this.Value = ("bool", false);
             IO newNode1 = new IO();
             IO newNode2 = new IO();
             IO newNode3 = new IO();
             Inputs.Add(newNode1.GetId(), newNode1);
-            if (this.Code != "NOT")
+            var isNotGate = this.Code == "NOT";
+            if (!isNotGate)
                 Inputs.Add(newNode2.GetId(), newNode2);
-            else
+            if (isNotGate)
                 this.Value = ("bool", true);
             Outputs.Add(newNode3.GetId(), newNode3);
         }
@@ -49,38 +51,38 @@ namespace ORS_ER.components
         public override void Paint(SKCanvas canvas)
         {
             canvas.DrawRect(this.Rect, Paints.ComponentFill);
-            font.Size = 20;
+            Font.Size = 20;
 
             if (this.Selected)
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
-            else
+            if (!this.Selected)
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
             foreach (var input in this.Inputs)
             {
-                canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
             }
 
             foreach (var output in this.Outputs)
             {
                 if (this.Value.Item2)
-                    canvas.DrawCircle(output.Value.node, 8, Paints.IOPaintActive);
-                else
-                    canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
+                    canvas.DrawCircle(output.Value.Node, 8, Paints.IOPaintActive);
+                if (!this.Value.Item2)
+                    canvas.DrawCircle(output.Value.Node, 8, Paints.IOPaint);
             }
 
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonStroke);
 
-            float textX = Rect.MidX - (font.MeasureText(this.Code) / 2);
-            float textY = Rect.MidY + font.Size / 3;
-            canvas.DrawText(this.Code, textX, textY, font, Paints.ButtonTextPaint);
+            float textX = Rect.MidX - (Font.MeasureText(this.Code) / 2);
+            float textY = Rect.MidY + Font.Size / 3;
+            canvas.DrawText(this.Code, textX, textY, Font, Paints.ButtonTextPaint);
         }
 
         public override void CreateRect(int x, int y)
         {
             this.Rect = new SKRect(x - 45, y - 45, x + 45, y + 45);
-            this.buttonRect = new SKRect(
+            this.InteractionRect = new SKRect(
                 this.Rect.Left + 10,
                 this.Rect.Top + 10,
                 this.Rect.Right - 10,
@@ -90,14 +92,14 @@ namespace ORS_ER.components
             string[] keys = Outputs.Keys.ToArray();
             for (int i = 0; i < Outputs.Count; i++)
             {
-                Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+                Outputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
 
             delta = Rect.Width / (Inputs.Count + 1);
             keys = Inputs.Keys.ToArray();
             for (int i = 0; i < Inputs.Count; i++)
             {
-                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+                Inputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
         }
 

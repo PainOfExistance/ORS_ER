@@ -14,7 +14,7 @@ namespace ORS_ER.components
 
         public Print(Component component) : base(component)
         {
-            base.font = new SKFont();
+            Font = new SKFont();
             IO newNode = new IO();
             IO newNode1 = new IO();
             Outputs.Add(newNode.GetId(), newNode);
@@ -23,7 +23,7 @@ namespace ORS_ER.components
 
         public Print(string name, string description, string category) : base(name, description, category)
         {
-            base.font = new SKFont();
+            Font = new SKFont();
             IO newNode = new IO();
             IO newNode1 = new IO();
             Outputs.Add(newNode.GetId(), newNode);
@@ -33,57 +33,57 @@ namespace ORS_ER.components
         public override void Paint(SKCanvas canvas)
         {
             canvas.DrawRect(this.Rect, Paints.ComponentFill);
-            font.Size = 20;
+            Font.Size = 20;
 
             if (this.IsBroken)
             {
                 canvas.DrawRect(this.Rect, Paints.BrokenBlock);
                 canvas.DrawRect(this.Rect, Paints.BrokenBlockStroke);
             }
-            else if (this.Selected)
+            if (!this.IsBroken && this.Selected)
                 canvas.DrawRect(this.Rect, Paints.SelectedStroke);
-            else
+            if (!this.IsBroken && !this.Selected)
                 canvas.DrawRect(this.Rect, Paints.ComponentStroke);
 
             foreach (var output in Outputs)
             {
-                canvas.DrawCircle(output.Value.node, 8, Paints.IOPaint);
+                canvas.DrawCircle(output.Value.Node, 8, Paints.IOPaint);
             }
 
             foreach (var input in Inputs)
             {
-                canvas.DrawCircle(input.Value.node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
             }
 
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonFill);
-            canvas.DrawRoundRect(buttonRect, 6, 6, Paints.ButtonStroke);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);
+            canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonStroke);
 
-            var textX = buttonRect.MidX - (font.MeasureText(this.Code) / 2);
-            var textY = buttonRect.MidY + font.Size / 4;
+            var textX = InteractionRect.MidX - (Font.MeasureText(this.Code) / 2);
+            var textY = InteractionRect.MidY + Font.Size / 4;
             if (this.Code == "")
             {
-                textX = buttonRect.MidX - (font.MeasureText("+") / 2);
-                canvas.DrawText("+", textX, textY, font, Paints.ButtonTextPaint);
+                textX = InteractionRect.MidX - (Font.MeasureText("+") / 2);
+                canvas.DrawText("+", textX, textY, Font, Paints.ButtonTextPaint);
             }
-            else
+            if (this.Code != "")
             {
                 string[] parts = this.Code.Split('(');
                 string displayCode = parts[1].Split(')')[0];
 
-                while (buttonRect.Width < (font.MeasureText(displayCode) + 5))
+                while (InteractionRect.Width < (Font.MeasureText(displayCode) + 5))
                 {
-                    font.Size--;
+                    Font.Size--;
                 }
 
-                textX = buttonRect.MidX - (font.MeasureText(displayCode) / 2);
-                canvas.DrawText(displayCode, textX, textY, font, Paints.ButtonTextPaint);
+                textX = InteractionRect.MidX - (Font.MeasureText(displayCode) / 2);
+                canvas.DrawText(displayCode, textX, textY, Font, Paints.ButtonTextPaint);
             }
         }
 
         public override void CreateRect(int x, int y)
         {
             this.Rect = new SkiaSharp.SKRect(x - 100, y - 50, x + 100, y + 50);
-            this.buttonRect = new SKRect(
+            this.InteractionRect = new SKRect(
                 this.Rect.Left + (int)this.Rect.Width / 8,
                 this.Rect.Top + (int)this.Rect.Height / 4,
                 this.Rect.Right - (int)this.Rect.Width / 8,
@@ -93,14 +93,14 @@ namespace ORS_ER.components
             string[] keys = Outputs.Keys.ToArray();
             for (int i = 0; i < Outputs.Count; i++)
             {
-                Outputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+                Outputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
             }
 
             delta = Rect.Width / (Inputs.Count + 1);
             keys = Inputs.Keys.ToArray();
             for (int i = 0; i < Inputs.Count; i++)
             {
-                Inputs[keys[i]].node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+                Inputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
             }
         }
 
@@ -111,7 +111,7 @@ namespace ORS_ER.components
             {
                 key = this.IsInsideIf.Split('_')[0];
             }
-            else if (this.IsInsideWhile != "")
+            if (key == "" && this.IsInsideWhile != "")
             {
                 key = this.IsInsideWhile.Split('_')[0];
             }
