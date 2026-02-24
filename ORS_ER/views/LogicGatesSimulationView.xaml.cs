@@ -161,12 +161,15 @@ public partial class LogicGatesSimulationView : UserControl
 
     private static void DrawPalettePreview(SKCanvas canvas, int width, int height, Component component)
     {
+        // so we get scheme of the component. Scheme is either Gate, Input or Operator.
         var isGate = component is Gate;
         var scheme = isGate ? ComponentPaintScheme.Gate : ComponentPaintScheme.Input;
         isGate = component is (Adder or SubCircuitComponent);
         scheme = isGate ? ComponentPaintScheme.Operator : scheme;
-        
+
+        // Original rects just smaller.
         var paints = ComponentPaints.Create(scheme);
+        SKFont Font = new SKFont();
 
         using var stroke = paints.SelectedLineStroke;
         using var fill = paints.ComponentFill;
@@ -178,57 +181,15 @@ public partial class LogicGatesSimulationView : UserControl
         canvas.DrawRoundRect(roundedRect, stroke);
 
         var centerX = rect.MidX;
-        var centerY = rect.MidY;
+        var centerY = rect.MidY + Font.Size / 4;
 
-        var componentTypeName = component.GetType().Name;
+        while (rect.Width < (Font.MeasureText(component.Name) + 1))
+        {
+            Font.Size--;
+        }
 
-        if (componentTypeName.Contains("Gate", StringComparison.OrdinalIgnoreCase))
-        {
-            using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
-            var label = component.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
-            var bounds = new SKRect();
-            text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
-            return;
-        }
-        if (componentTypeName.Contains("Adder", StringComparison.OrdinalIgnoreCase))
-        {
-            using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
-            var label = component.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
-            var bounds = new SKRect();
-            text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
-            return;
-        }
-        if (componentTypeName.Contains("SubCircuit", StringComparison.OrdinalIgnoreCase))
-        {
-            using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.18f) };
-            var label = component.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "C";
-            var bounds = new SKRect();
-            text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
-            return;
-        }
-        if (componentTypeName.Contains("Input", StringComparison.OrdinalIgnoreCase))
-        {
-            using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
-            var label = "In";
-            var bounds = new SKRect();
-            text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
-            return;
-        }
-        if (componentTypeName.Contains("Output", StringComparison.OrdinalIgnoreCase))
-        {
-            using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
-            var label = "Out";
-            var bounds = new SKRect();
-            text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
-            return;
-        }
-        var fallback = SKRect.Create(rect.Left + rect.Width * 0.25f, rect.Top + rect.Height * 0.25f, rect.Width * 0.5f, rect.Height * 0.5f);
-        canvas.DrawRect(fallback, stroke);
+        centerX = rect.MidX - (Font.MeasureText(component.Name) / 2);
+        canvas.DrawText(component.Name, centerX, centerY, Font, Paints.ButtonTextPaint);
     }
 
     private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
@@ -240,6 +201,7 @@ public partial class LogicGatesSimulationView : UserControl
 
     private void RunSimulation()
     {
+        // Run twice to ensure propagated values stabilize across the circuit.
         Parser.RunCircuitSimulation(PaintItems, Connections);
         Parser.RunCircuitSimulation(PaintItems, Connections);
     }
@@ -360,6 +322,7 @@ public partial class LogicGatesSimulationView : UserControl
             {
                 if (candidateResult.Value.Item1 == HitTarget.Output)
                 {
+                    // Hitting output starts connecting.
                     if (!_isConnecting)
                     {
                         _isConnecting = true;
@@ -382,6 +345,7 @@ public partial class LogicGatesSimulationView : UserControl
                 {
                     try
                     {
+                        // Hitting input causes connect if its connecting.
                         if (_isConnecting && Connections[_connectingConnectionId].FromComponentId != candidateResult.Value.Item2.GetId() && candidateResult.Value.Item3.InputConnectionIds.Count == 0)
                         {
                             Connections[_connectingConnectionId].ToIOId = candidateResult.Value.Item3.GetId();
@@ -407,6 +371,7 @@ public partial class LogicGatesSimulationView : UserControl
                 }
                 if (candidateResult.Value.Item1 == HitTarget.Rect)
                 {
+                    // Hitting rect selects the component.
                     item.Selected = true;
                     hitResult = candidateResult;
                     if (_isConnecting)
@@ -416,6 +381,7 @@ public partial class LogicGatesSimulationView : UserControl
                 }
                 if (candidateResult.Value.Item1 == HitTarget.Button)
                 {
+                    // Interaction/button funky stuff.
                     if (_isConnecting)
                     {
                         CancelPendingConnection(false, false);
@@ -438,6 +404,7 @@ public partial class LogicGatesSimulationView : UserControl
         var mouseWorld = ScreenToWorld(mouseScreen);
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
+        // Check if we hit connection or we deselect it.
         foreach (var connectionEntry in Connections)
         {
             if (connectionEntry.Value.ToIOId == "" || (hit != null))
@@ -459,6 +426,7 @@ public partial class LogicGatesSimulationView : UserControl
 
         if (hit != null && hit.Value.Item1 == HitTarget.Rect)
         {
+            //Rect moving.
             _isMoving = true;
             LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
@@ -467,8 +435,9 @@ public partial class LogicGatesSimulationView : UserControl
         }
         if (LayersListView.SelectedItem != null)
         {
-        int selectedIndex = LayersListView.SelectedIndex;
-        var selected = Items[selectedIndex];
+            // Adding item
+            int selectedIndex = LayersListView.SelectedIndex;
+            var selected = Items[selectedIndex];
             var newComponent = Creator.CreateLG(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
 
             PaintItems.Add(newComponent.GetId(), newComponent);
@@ -579,12 +548,12 @@ public partial class LogicGatesSimulationView : UserControl
         Creator.Save(PaintItems, Connections, "LogicGates");
     }
 
-	public void SaveCanvasAsPng()
-	{
-		CancelPendingConnection(true, false);
+    public void SaveCanvasAsPng()
+    {
+        CancelPendingConnection(true, false);
 
-		CanvasExport.SaveAsPng(PaintItems, Connections);
-	}
+        CanvasExport.SaveAsPng(PaintItems, Connections);
+    }
 
     public void LoadDiagram()
     {

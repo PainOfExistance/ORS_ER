@@ -16,6 +16,7 @@ namespace ORS_ER.components
         private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Operator);
         public Adder(Component component) : base(component)
         {
+            //IfTrue has number in it due to it being tied to where output locates for value propagation
             this.Code = component.Name.Split(" ")[0];
             Font = new SKFont();
             this.Value = ("bool", new bool[2] { false, false });
@@ -38,6 +39,7 @@ namespace ORS_ER.components
 
         public Adder(string name, string description, string category) : base(name, description, category)
         {
+            //IfTrue has number in it due to it being tied to where output locates for value propagation
             this.Code = name.Split(" ")[0];
             Font = new SKFont();
             this.Value = ("bool", new bool[2] { false, false });
@@ -117,6 +119,7 @@ namespace ORS_ER.components
         {
             if (this.Name.Contains("Full"))
             {
+                // Full adder: sum and carry from three inputs.
                 bool xor1 = vals[1] ^ vals[2];
                 bool and1 = vals[1] && vals[2];
                 bool and2 = vals[0] && xor1;
@@ -126,6 +129,7 @@ namespace ORS_ER.components
             }
             if (!this.Name.Contains("Full"))
             {
+                // Half adder: sum and carry from two inputs.
                 bool XorVal = vals[0] ^ vals[1];
                 bool AndVal = vals[0] && vals[1];
                 this.Value = ("bool", new bool[2] { AndVal, XorVal });

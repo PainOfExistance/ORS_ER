@@ -106,7 +106,6 @@ public partial class FlowchartSimulationView : UserControl
         if (sender is not SKElement el)
             return;
 
-        el.PaintSurface -= PalettePreview_OnPaintSurface;
         el.PaintSurface += PalettePreview_OnPaintSurface;
         el.InvalidateVisual();
     }
@@ -138,11 +137,12 @@ public partial class FlowchartSimulationView : UserControl
 
     public void ClearNestedConnectionScopes(string scopeId, List<string> toVisit)
     {
+        // Traverse outgoing connections and clear nested If/While scope flags.
         for (; toVisit.Count > 0;)
         {
             string current = toVisit.First();
             toVisit.RemoveAt(0);
-            if (PaintItems[current].IsInsideIf == scopeId)
+            if (PaintItems[current].IsInsideIf.Contains(scopeId) && PaintItems[current].IsInsideIf != "")
             {
                 PaintItems[current].IsInsideIf = "";
                 foreach (string outputKey in PaintItems[current].Outputs.Keys)
@@ -154,7 +154,7 @@ public partial class FlowchartSimulationView : UserControl
                 }
             }
 
-            if (PaintItems[current].IsInsideWhile == scopeId)
+            if (PaintItems[current].IsInsideWhile.Contains(scopeId) && PaintItems[current].IsInsideWhile != "")
             {
                 PaintItems[current].IsInsideWhile = "";
                 foreach (string outputKey in PaintItems[current].Outputs.Keys)
@@ -180,6 +180,7 @@ public partial class FlowchartSimulationView : UserControl
         var stack = new Stack<string>();
         stack.Push(fromComponentId);
 
+        // Depth-first search to detect whether a connection would create a skip/cycle.
         while (stack.Count > 0)
         {
             var current = stack.Pop();
@@ -213,6 +214,7 @@ public partial class FlowchartSimulationView : UserControl
         canvas.Scale(_zoom);
         canvas.Translate(_panOffset);
 
+        // Draw connections first, then components on top.
         foreach (var connection in Connections.Values)
         {
             var fromComponent = PaintItems[connection.FromComponentId];
@@ -323,8 +325,9 @@ public partial class FlowchartSimulationView : UserControl
         }
     }
 
-    private void RemoveOutputConnections(Component component, List<string> toRemove)
+    private void RemoveOutputConnections(Component component)
     {
+        List<string> toRemove = new List<string>();
         foreach (var output in component.Outputs.Values)
         {
             foreach (var id in output.OutputConnectionIds.ToArray())
@@ -345,9 +348,22 @@ public partial class FlowchartSimulationView : UserControl
     {
         var toRemove = new List<string>();
         RemoveInputConnections(component);
-        RemoveOutputConnections(component, toRemove);
+
+        if (component.GetType() == typeof(While))
+        {
+            component.IsInsideWhile = component.GetId();
+        }
+        else if (component.GetType() == typeof(If))
+        {
+            component.IsInsideIf = component.GetId();
+        }
+
+        toRemove.Add(componentId);
         ClearNestedConnectionScopes(component.IsInsideIf, toRemove);
+
+        toRemove.Add(componentId);
         ClearNestedConnectionScopes(component.IsInsideWhile, toRemove);
+        RemoveOutputConnections(component);
         PaintItems.Remove(componentId);
     }
 
@@ -459,6 +475,14 @@ public partial class FlowchartSimulationView : UserControl
                                 return hitResult;
                             }
                         }
+                        else if (item is While && PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Contains(candidateResult.Value.Item2.GetId()) && candidateResult.Value.Item3.IfTrue == "Start")
+                        {
+
+                            CancelConnection();
+                            hitResult = candidateResult;
+                            return hitResult;
+
+                        }
                         else if (item.IsInsideIf != "" &&
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId] is If &&
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count == 1 &&
@@ -471,7 +495,6 @@ public partial class FlowchartSimulationView : UserControl
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[1] != item.IsInsideIf.Split("_")[1] &&
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count == 1)
                         {
-                            Debug.WriteLine("Protected");
                             clearId = true;
                         }
                         else if (item.IsInsideIf != "" || item.IsInsideWhile != "")
@@ -495,6 +518,19 @@ public partial class FlowchartSimulationView : UserControl
                             return hitResult;
                         }
                         else if ((item.IsInsideIf != "" || item.IsInsideWhile != "") && item.Inputs[Connections[_connectingConnectionId].ToIOId].InputConnectionIds.Count > 0)
+                        {
+                            CancelConnection();
+                            hitResult = candidateResult;
+                            return hitResult;
+                        }
+                        else if ((PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile != "" || PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf != "") && candidateResult.Value.Item3.InputConnectionIds.Count() > 0)
+                        {
+                            CancelConnection();
+                            hitResult = candidateResult;
+                            return hitResult;
+                        }
+
+                        if (candidateResult.Value.Item3.InputConnectionIds.Count() == 1 && !clearId)
                         {
                             CancelConnection();
                             hitResult = candidateResult;
@@ -745,12 +781,12 @@ public partial class FlowchartSimulationView : UserControl
         Creator.Save(PaintItems, Connections, "Flowchart");
     }
 
-	public void SaveCanvasAsPng()
-	{
-		CancelPendingConnection(true, false);
+    public void SaveCanvasAsPng()
+    {
+        CancelPendingConnection(true, false);
 
-		CanvasExport.SaveAsPng(PaintItems, Connections);
-	}
+        CanvasExport.SaveAsPng(PaintItems, Connections);
+    }
 
     public void LoadDiagram()
     {

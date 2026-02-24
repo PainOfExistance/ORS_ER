@@ -218,6 +218,7 @@ namespace ORS_ER
 
                 if (!string.Equals(rawData.DiagramType, expectedDiagramType, StringComparison.OrdinalIgnoreCase))
                 {
+                    // Prevent loading a diagram into a mismatched editor type.
                     Debug.WriteLine("Diagram type mismatch when loading file.");
                     return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
                 }
@@ -243,6 +244,7 @@ namespace ORS_ER
 
                     if (component.Value is JsonElement ve)
                     {
+                        // Restore the dynamic value payload from JSON element types.
                         try
                         {
                             if (ve.ValueKind == JsonValueKind.Object)

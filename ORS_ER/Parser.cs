@@ -9,6 +9,7 @@ namespace ORS_ER
             Dictionary<string, Component> paintItems,
             Dictionary<string, Connection> connections)
         {
+            // Start from components with no inputs to propagate values forward.
             var queuedNodes = new Queue<Component>(
                 paintItems
                     .Where(kv => kv.Value.Inputs.Count() == 0)
@@ -24,6 +25,7 @@ namespace ORS_ER
                 List<bool> inputValues = new();
                 foreach (var inputs in currentNode.Inputs.Values)
                 {
+                    // Resolve upstream outputs (bool or indexed array) into flat input values.
                     bool valueToAdd = false;
                     try
                     {
@@ -48,6 +50,7 @@ namespace ORS_ER
 
                 try
                 {
+                    // Evaluate the component with resolved inputs.
                     currentNode.RunInternalSimulation(inputValues);
                 }
                 catch (Exception ex)
@@ -82,6 +85,7 @@ namespace ORS_ER
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken)
         {
+            // Seed with flowchart entry nodes (inputs/operators) that have no incoming connections.
             var queuedNodes = new Queue<Component>(
                 paintItems
                     .Where(kv => kv.Value.Inputs.First().Value.InputConnectionIds.Count() == 0 && (kv.Value.GetType() == typeof(Input) || kv.Value.GetType() == typeof(Operator)))
@@ -97,6 +101,7 @@ namespace ORS_ER
 
                 try
                 {
+                    // Generate code for the current block and mark errors on the block itself.
                     currentNode.GenerateCode();
                 }
                 catch (DivideByZeroException ex)
@@ -136,6 +141,7 @@ namespace ORS_ER
 
                 if (currentNode is If or While)
                 {
+                    // Only follow the conditional output path when traversing If/While blocks.
                     outputConnections = connections.Values.Where(c => c.FromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.FromIOId && kv.IfTrue != "").ToList().Count() > 0).ToList();
                 }
 

@@ -133,6 +133,7 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
+            // Register the input value in the nearest scope.
             RegistryId key = RegistryId.Global;
             if (this.IsInsideIf != "")
             {

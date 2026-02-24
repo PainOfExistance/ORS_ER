@@ -97,6 +97,7 @@ namespace ORS_ER.connections
             }
             else
             {
+                // Update in the current scope if present; otherwise walk parent scopes to replace.
                 if (_localRegistry.TryGetValue(registryId.Value, out var registry))
                 {
                     var entries = registry.Item2;
@@ -133,6 +134,7 @@ namespace ORS_ER.connections
                     }
                 }
 
+                // Fall back to updating the global registry if no local scope contains the key.
                 for (int i = 0; i < _globalRegistry.Count; i++)
                 {
                     if (_globalRegistry[i].Key.Equals(key))
@@ -149,6 +151,7 @@ namespace ORS_ER.connections
 
         public static RegistryEntry? GetLocalValue(RegistryId registryId, RegistryKey key)
         {
+            // Lookup order: current scope -> parent scopes -> global registry.
             if (_localRegistry.TryGetValue(registryId.Value, out var registry))
             {
                 foreach (var entry in registry.Item2)

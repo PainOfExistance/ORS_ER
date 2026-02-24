@@ -108,6 +108,7 @@ namespace ORS_ER.components
             if (_internalComponents is null || _internalConnections is null)
                 return;
 
+            // Feed incoming values into the internal input pins.
             for (var i = 0; i < _inputPins.Count; i++)
             {
                 if (!_internalComponents.TryGetValue(_inputPins[i].ComponentId ?? string.Empty, out var component))
@@ -119,6 +120,7 @@ namespace ORS_ER.components
 
             Parser.RunCircuitSimulation(_internalComponents, _internalConnections);
 
+            // Read internal output pins back into this component's value.
             if (_outputPins.Count == 1)
             {
                 Value = ("bool", ReadOutputValue(_outputPins[0]));
@@ -137,6 +139,7 @@ namespace ORS_ER.components
             if (_internalComponents is not null && _internalConnections is not null)
                 return;
 
+            // Lazily build the embedded circuit once per component instance.
             if (_data.Diagram is null)
             {
                 _internalComponents = new Dictionary<string, Component>();
@@ -152,6 +155,7 @@ namespace ORS_ER.components
 
         private void AddPinComponents(Dictionary<string, Component> components, Dictionary<string, Connection> connections)
         {
+            // Create proxy components for exposed input/output pins in the subcircuit.
             foreach (var pin in _inputPins)
             {
                 if (string.IsNullOrWhiteSpace(pin.ComponentId) || string.IsNullOrWhiteSpace(pin.IoId))
@@ -206,6 +210,7 @@ namespace ORS_ER.components
 
         private bool[] GetOutputValues()
         {
+            // Normalize the stored value into a boolean array for rendering.
             if (Value.Item2 is bool b)
                 return [b];
 

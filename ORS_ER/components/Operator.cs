@@ -114,6 +114,7 @@ namespace ORS_ER.components
             string rightOperandName = "";
             string operation = this.Value.Item2;
 
+            // Resolve operands from the generated code parts.
             leftOperandName = codeParts[3];
             if (this.Value.Item2 != "NOT")
                 rightOperandName = codeParts[5];
@@ -124,6 +125,7 @@ namespace ORS_ER.components
             if (key == "" && this.IsInsideWhile != "")
                 key = this.IsInsideWhile.Split('_')[0];
 
+            // Pull values from the nearest scope; fall back to literal parsing.
             dynamic operand1 = ValueRegistry.GetLocalValue(key, leftOperandName);
             dynamic operand2 = ValueRegistry.GetLocalValue(key, rightOperandName);
 
@@ -157,6 +159,7 @@ namespace ORS_ER.components
             operand1 = operand1 is RegistryEntry entry1 ? entry1.Value : operand1;
             operand2 = operand2 is RegistryEntry entry2 ? entry2.Value : operand2;
 
+            // Apply the operator to compute and store the intermediate result.
             switch (operation)
             {
                 case "AND":

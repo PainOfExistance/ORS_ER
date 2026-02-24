@@ -14,6 +14,8 @@ namespace ORS_ER.components
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
+            newNode1.IfTrue = "Repeat";
+            newNode2.IfTrue = "Start";
             Inputs.Add(newNode1.GetId(), newNode1);
             Inputs.Add(newNode2.GetId(), newNode2);
 
@@ -29,6 +31,8 @@ namespace ORS_ER.components
         {
             IO newNode1 = new IO();
             IO newNode2 = new IO();
+            newNode1.IfTrue = "Repeat";
+            newNode2.IfTrue = "Start";
             Inputs.Add(newNode1.GetId(), newNode1);
             Inputs.Add(newNode2.GetId(), newNode2);
 
@@ -89,7 +93,7 @@ namespace ORS_ER.components
             if (this.Code == "")
             {
                 textX = InteractionRect.MidX - (Font.MeasureText("WHILE") / 2);
-                canvas.DrawText("WHILE", textX, textY, Font, Paints.ButtonTextPaint);
+                canvas.DrawText(this.IsInsideWhile, textX, textY, Font, Paints.ButtonTextPaint);
             }
             if (this.Code != "")
             {
@@ -117,6 +121,7 @@ namespace ORS_ER.components
 
             SKMatrix matrix = SKMatrix.CreateRotationDegrees(45, Rect.MidX, Rect.MidY);
 
+            // Map IO nodes onto the rotated square.
             Outputs.First().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Bottom));
             Outputs.Last().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Top));
 
@@ -133,6 +138,7 @@ namespace ORS_ER.components
             dynamic? leftOperandValue = "";
             dynamic? rightOperandValue = "";
 
+            // Create a new local registry for this while block with a parent scope.
             ValueRegistry.AddLocalRegistry(
                 new RegistryId(this.GetId()),
                 new RegistryId(this.IsInsideIf != "" ? this.IsInsideIf.Split('_')[0] : this.IsInsideWhile.Split('_')[0]));
@@ -177,6 +183,7 @@ namespace ORS_ER.components
             leftOperandValue = leftOperandValue is RegistryEntry entry1 ? entry1.Value : leftOperandValue;
             rightOperandValue = rightOperandValue is RegistryEntry entry2 ? entry2.Value : rightOperandValue;
 
+            // Evaluate the loop condition to select the true/false branch.
             switch (comparisonOperator)
             {
                 case "==":
@@ -205,6 +212,7 @@ namespace ORS_ER.components
             this.Outputs.Last().Value.IfTrue = "True";
             this.Outputs.First().Value.IfTrue = "False";
 
+            // Clear the inactive branch so traversal follows the condition.
             if (this.Value.Item2)
             {
                 Outputs.Values.FirstOrDefault(o => o.IfTrue == "False")?.IfTrue = "";

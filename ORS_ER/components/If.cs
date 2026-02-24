@@ -103,6 +103,7 @@ namespace ORS_ER.components
 
             SKMatrix matrix = SKMatrix.CreateRotationDegrees(45, Rect.MidX, Rect.MidY);
 
+            // Map IO nodes onto the rotated square.
             Outputs.First().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Left, this.Rect.Bottom));
             Outputs.Last().Value.Node = matrix.MapPoint(new SKPoint(this.Rect.Right, this.Rect.Top));
 
@@ -119,6 +120,7 @@ namespace ORS_ER.components
             dynamic? variable1 = "";
             dynamic? variable2 = "";
 
+            // Create a new local registry for this if block with a parent scope.
             ValueRegistry.AddLocalRegistry(this.GetId(), this.IsInsideIf != "" ? this.IsInsideIf.Split('_')[0] : this.IsInsideWhile.Split('_')[0]);
 
             string key = "";
@@ -161,6 +163,7 @@ namespace ORS_ER.components
             variable1 = variable1 is RegistryEntry entry1 ? entry1.Value : variable1;
             variable2 = variable2 is RegistryEntry entry2 ? entry2.Value : variable2;
 
+            // Evaluate the condition to pick the true/false branch.
             switch (op)
             {
                 case "==":
@@ -189,6 +192,7 @@ namespace ORS_ER.components
             this.Outputs.Last().Value.IfTrue = "True";
             this.Outputs.First().Value.IfTrue = "False";
 
+            // Clear the inactive branch so traversal follows the condition.
             if (this.Value.Item2)
             {
                 Outputs.Values.FirstOrDefault(o => o.IfTrue == "False")?.IfTrue = "";

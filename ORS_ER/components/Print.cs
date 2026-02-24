@@ -63,7 +63,7 @@ namespace ORS_ER.components
             if (this.Code == "")
             {
                 textX = InteractionRect.MidX - (Font.MeasureText("+") / 2);
-                canvas.DrawText("+", textX, textY, Font, Paints.ButtonTextPaint);
+                canvas.DrawText(this.IsInsideWhile, textX, textY, Font, Paints.ButtonTextPaint);
             }
             if (this.Code != "")
             {
@@ -106,6 +106,7 @@ namespace ORS_ER.components
 
         public override void GenerateCode()
         {
+            // Resolve the variable from the nearest scope and emit its value.
             RegistryId key = RegistryId.Global;
             if (this.IsInsideIf != "")
             {

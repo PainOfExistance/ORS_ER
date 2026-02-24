@@ -107,6 +107,7 @@ namespace ORS_ER.components
         {
             bool val1 = vals.First();
             bool val2 = vals.Last();
+            // Evaluate the logic gate with one or two inputs depending on type.
             switch (this.Code)
             {
                 case "AND":

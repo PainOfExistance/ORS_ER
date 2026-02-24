@@ -110,6 +110,7 @@ namespace ORS_ER.components
             var local = world;
             if (this is While || this is If)
             {
+                // Rotate the hit-test point back for diamond-shaped blocks.
                 var inv = SKMatrix.CreateRotationDegrees(45, Rect.MidX, Rect.MidY);
                 local = inv.MapPoint(world);
             }
@@ -121,6 +122,7 @@ namespace ORS_ER.components
 
                 if (this.GetType() == typeof(BinaryInput))
                 {
+                    // Toggle the boolean input on click.
                     this.Value = ("bool", !this.Value.Item2);
                     return (HitTarget.Button, this, null);
                 }
@@ -130,8 +132,9 @@ namespace ORS_ER.components
                     return (HitTarget.Button, this, null);
                 }
 
-                if (this.Name.Contains("Operator"))
+                if (this.GetType() == typeof(Operator))
                 {
+                    // Operator dialogs allow editing the embedded expression/value.
                     var dlg = new LogicWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
@@ -142,8 +145,9 @@ namespace ORS_ER.components
                     return (HitTarget.Button, this, null);
                 }
 
-                if (this.Name.Contains("Input"))
+                if (this.GetType() == typeof(Input))
                 {
+                    // Input dialog configures the variable/value.
                     var dlg = new InputWindow(this.Code, this.Value, this.Name);
                     if (dlg.ShowDialog() == true)
                     {
@@ -153,8 +157,9 @@ namespace ORS_ER.components
                     return (HitTarget.Button, this, null);
                 }
 
-                if (this.Name.Contains("Print"))
+                if (this.GetType() == typeof(Print))
                 {
+                    // Print dialog configures output formatting.
                     var dlg = new PrintWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
@@ -164,8 +169,9 @@ namespace ORS_ER.components
                     return (HitTarget.Button, this, null);
                 }
 
-                if (this.Name.Contains("If"))
+                if (this.GetType() == typeof(If) || this.GetType() == typeof(While))
                 {
+                    // If/While dialog configures the condition.
                     var dlg = new IfWindow(this.Code, this.Value);
                     if (dlg.ShowDialog() == true)
                     {
@@ -204,6 +210,7 @@ namespace ORS_ER.components
             string valueJson;
             try
             {
+                // Serialize dynamic value payloads into a compact JSON representation.
                 var nameJson = JsonSerializer.Serialize(Value.Item1 ?? "");
                 var valueObject = Value.Item2;
                 var valuePart = valueObject switch

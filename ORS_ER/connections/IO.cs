@@ -37,6 +37,7 @@ namespace ORS_ER.connections
 
         private static string JsonStringList(IEnumerable<string> connectionIds)
         {
+            // Serialize non-empty connection IDs as a JSON array.
             var builder = new StringBuilder("[");
             bool first = true;
             foreach (var id in connectionIds.Where(connectionId => !string.IsNullOrWhiteSpace(connectionId)))
