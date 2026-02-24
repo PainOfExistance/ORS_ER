@@ -25,28 +25,28 @@ namespace ORS_ER.connections
             _id = id;
         }
 
-        private static string JsonString(string? s)
+        private static string JsonString(string? inputValue)
         {
-            s ??= "";
-            return s.Replace("\\", "\\\\")
+            inputValue ??= "";
+            return inputValue.Replace("\\", "\\\\")
                     .Replace("\"", "\\\"")
                     .Replace("\r", "\\r")
                     .Replace("\n", "\\n")
                     .Replace("\t", "\\t");
         }
 
-        private static string JsonStringList(IEnumerable<string> ids)
+        private static string JsonStringList(IEnumerable<string> connectionIds)
         {
-            var b = new StringBuilder("[");
+            var builder = new StringBuilder("[");
             bool first = true;
-            foreach (var id in ids.Where(x => !string.IsNullOrWhiteSpace(x)))
+            foreach (var id in connectionIds.Where(connectionId => !string.IsNullOrWhiteSpace(connectionId)))
             {
-                if (!first) b.Append(',');
+                if (!first) builder.Append(',');
                 first = false;
-                b.Append('"').Append(JsonString(id)).Append('"');
+                builder.Append('"').Append(JsonString(id)).Append('"');
             }
-            b.Append(']');
-            return b.ToString();
+            builder.Append(']');
+            return builder.ToString();
         }
 
         public string ToJson()

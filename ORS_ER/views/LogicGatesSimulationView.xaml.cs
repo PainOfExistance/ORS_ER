@@ -99,23 +99,9 @@ public partial class LogicGatesSimulationView : UserControl
 
     public void ClearPaletteSelection() => LayersListView.SelectedItem = null;
 
-    public void Invalidate() => skiaElement.InvalidateVisual();
-
     private void FlowchartSimulationView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (!_isConnecting)
-            return;
-
-        var conn = Connections.GetValueOrDefault(_connectingConnectionId);
-        if (conn is null)
-            return;
-
-        PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
-        Connections.Remove(_connectingConnectionId);
-        _isConnecting = false;
-        _connectingConnectionId = "";
-        Debug.WriteLine("Cancelled Connection");
-        skiaElement.InvalidateVisual();
+        CancelPendingConnection(true, true);
     }
 
     private void FlowchartSimulationView_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -123,63 +109,15 @@ public partial class LogicGatesSimulationView : UserControl
         if (e.Key != Key.Delete)
             return;
 
-        List<string> toRemove = new();
-
-        foreach (var conn in Connections)
+        if (TryDeleteSelectedConnection())
         {
-            if (!conn.Value.IsSelected)
-                continue;
-
-            PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromId].OutputConnectionIds.Remove(conn.Key);
-            PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToId].InputConnectionIds.Remove(conn.Key);
-            Connections.Remove(conn.Key);
-            Debug.WriteLine("Deleted Connection");
-            skiaElement.InvalidateVisual();
-            e.Handled = true;
-            Parser.RunCircuitSimulation(PaintItems, Connections);
-            Parser.RunCircuitSimulation(PaintItems, Connections);
+            CompleteDelete(e);
             return;
         }
 
-        foreach (var item in PaintItems)
+        if (TryDeleteSelectedComponent())
         {
-            if (!item.Value.Selected)
-                continue;
-
-            foreach (var input in item.Value.Inputs.Values)
-            {
-                foreach (var id in input.InputConnectionIds.ToArray())
-                {
-                    if (!Connections.TryGetValue(id, out var conn))
-                        continue;
-
-                    PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(id);
-                    Connections.Remove(id);
-                    Debug.WriteLine("Deleted Connection");
-                }
-                input.InputConnectionIds.Clear();
-            }
-
-            foreach (var output in item.Value.Outputs.Values)
-            {
-                foreach (var id in output.OutputConnectionIds.ToArray())
-                {
-                    if (!Connections.TryGetValue(id, out var conn))
-                        continue;
-
-                    PaintItems[conn.ToComponentId].Inputs[conn.ToId].InputConnectionIds.Remove(id);
-                    Connections.Remove(id);
-                    Debug.WriteLine("Deleted Connection");
-                }
-                output.OutputConnectionIds.Clear();
-            }
-
-            PaintItems.Remove(item.Key);
-            Debug.WriteLine("Deleted Component");
-            Parser.RunCircuitSimulation(PaintItems, Connections);
-            Parser.RunCircuitSimulation(PaintItems, Connections);
-            skiaElement.InvalidateVisual();
-            e.Handled = true;
+            CompleteDelete(e);
             return;
         }
 
@@ -197,11 +135,11 @@ public partial class LogicGatesSimulationView : UserControl
         foreach (var connection in Connections.Values)
         {
             var fromComponent = PaintItems[connection.FromComponentId];
-            var fromNode = fromComponent.Outputs[connection.FromId].Node;
+            var fromNode = fromComponent.Outputs[connection.FromIOId].Node;
 
             var toPoint = connection.GetId() == _connectingConnectionId
                 ? _mouseWorld
-                : PaintItems[connection.ToComponentId].Inputs[connection.ToId].Node;
+                : PaintItems[connection.ToComponentId].Inputs[connection.ToIOId].Node;
 
             canvas.DrawLine(fromNode, toPoint, connection.IsSelected ? Paints.SelectedLineStroke : Paints.LineStroke);
         }
@@ -215,17 +153,17 @@ public partial class LogicGatesSimulationView : UserControl
         var canvas = e.Surface.Canvas;
         canvas.Clear(new SKColor(0xF2, 0xF2, 0xF2));
 
-        if (sender is not SKElement element || element.Tag is not Component c)
+        if (sender is not SKElement element || element.Tag is not Component component)
             return;
 
-        DrawPalettePreview(canvas, e.Info.Width, e.Info.Height, c);
+        DrawPalettePreview(canvas, e.Info.Width, e.Info.Height, component);
     }
 
-    private static void DrawPalettePreview(SKCanvas canvas, int width, int height, Component c)
+    private static void DrawPalettePreview(SKCanvas canvas, int width, int height, Component component)
     {
-        var isGate = c is Gate;
+        var isGate = component is Gate;
         var scheme = isGate ? ComponentPaintScheme.Gate : ComponentPaintScheme.Input;
-        isGate = c is (Adder or SubCircuitComponent);
+        isGate = component is (Adder or SubCircuitComponent);
         scheme = isGate ? ComponentPaintScheme.Operator : scheme;
         
         var paints = ComponentPaints.Create(scheme);
@@ -233,60 +171,60 @@ public partial class LogicGatesSimulationView : UserControl
         using var stroke = paints.SelectedLineStroke;
         using var fill = paints.ComponentFill;
 
-        float pad = 6;
-        var rect = new SKRect(pad, pad, width - pad, height - pad);
-        var rrect = new SKRoundRect(rect, 6, 6);
-        canvas.DrawRoundRect(rrect, fill);
-        canvas.DrawRoundRect(rrect, stroke);
+        float padding = 6;
+        var rect = new SKRect(padding, padding, width - padding, height - padding);
+        var roundedRect = new SKRoundRect(rect, 6, 6);
+        canvas.DrawRoundRect(roundedRect, fill);
+        canvas.DrawRoundRect(roundedRect, stroke);
 
-        var cx = rect.MidX;
-        var cy = rect.MidY;
+        var centerX = rect.MidX;
+        var centerY = rect.MidY;
 
-        var type = c.GetType().Name;
+        var componentTypeName = component.GetType().Name;
 
-        if (type.Contains("Gate", StringComparison.OrdinalIgnoreCase))
+        if (componentTypeName.Contains("Gate", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
-            var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
+            var label = component.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
             return;
         }
-        if (type.Contains("Adder", StringComparison.OrdinalIgnoreCase))
+        if (componentTypeName.Contains("Adder", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
-            var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
+            var label = component.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "G";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
             return;
         }
-        if (type.Contains("SubCircuit", StringComparison.OrdinalIgnoreCase))
+        if (componentTypeName.Contains("SubCircuit", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.ButtonTextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.18f) };
-            var label = c.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "C";
+            var label = component.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "C";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
             return;
         }
-        if (type.Contains("Input", StringComparison.OrdinalIgnoreCase))
+        if (componentTypeName.Contains("Input", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = "In";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
             return;
         }
-        if (type.Contains("Output", StringComparison.OrdinalIgnoreCase))
+        if (componentTypeName.Contains("Output", StringComparison.OrdinalIgnoreCase))
         {
             using var text = new SKPaint { IsAntialias = true, Color = paints.TextPaint.Color, TextSize = Math.Max(10, rect.Height * 0.22f) };
             var label = "Out";
             var bounds = new SKRect();
             text.MeasureText(label, ref bounds);
-            canvas.DrawText(label, cx - bounds.MidX, cy - bounds.MidY, text);
+            canvas.DrawText(label, centerX - bounds.MidX, centerY - bounds.MidY, text);
             return;
         }
         var fallback = SKRect.Create(rect.Left + rect.Width * 0.25f, rect.Top + rect.Height * 0.25f, rect.Width * 0.5f, rect.Height * 0.5f);
@@ -297,62 +235,162 @@ public partial class LogicGatesSimulationView : UserControl
 
     public void CancelConnection()
     {
+        CancelPendingConnection(false, false);
+    }
+
+    private void RunSimulation()
+    {
+        Parser.RunCircuitSimulation(PaintItems, Connections);
+        Parser.RunCircuitSimulation(PaintItems, Connections);
+    }
+
+    private void CancelPendingConnection(bool invalidateCanvas, bool log)
+    {
+        if (!_isConnecting)
+            return;
+
         if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
+            PaintItems[prev.FromComponentId].Outputs[prev.FromIOId].OutputConnectionIds.Remove(_connectingConnectionId);
+
         Connections.Remove(_connectingConnectionId);
         _isConnecting = false;
         _connectingConnectionId = "";
+        if (log)
+            Debug.WriteLine("Cancelled Connection");
+        if (invalidateCanvas)
+            skiaElement.InvalidateVisual();
     }
 
-    private (string, Component, IO)? HitTest(SKPoint world)
+    private void RemoveConnection(string connectionId, Connection connection)
     {
-        (string, Component, IO)? hit = null;
-        (string, Component, IO)? candidate = null;
+        if (PaintItems.TryGetValue(connection.FromComponentId, out var fromComponent))
+            fromComponent.Outputs[connection.FromIOId].OutputConnectionIds.Remove(connectionId);
+
+        if (!string.IsNullOrWhiteSpace(connection.ToComponentId)
+            && !string.IsNullOrWhiteSpace(connection.ToIOId)
+            && PaintItems.TryGetValue(connection.ToComponentId, out var toComponent))
+            toComponent.Inputs[connection.ToIOId].InputConnectionIds.Remove(connectionId);
+
+        Connections.Remove(connectionId);
+    }
+
+    private void RemoveInputConnections(IO input)
+    {
+        foreach (var id in input.InputConnectionIds.ToArray())
+        {
+            if (!Connections.TryGetValue(id, out var conn))
+                continue;
+
+            RemoveConnection(id, conn);
+        }
+
+        input.InputConnectionIds.Clear();
+    }
+
+    private void RemoveOutputConnections(IO output)
+    {
+        foreach (var id in output.OutputConnectionIds.ToArray())
+        {
+            if (!Connections.TryGetValue(id, out var conn))
+                continue;
+
+            RemoveConnection(id, conn);
+        }
+
+        output.OutputConnectionIds.Clear();
+    }
+
+    private void RemoveComponent(string componentId, Component component)
+    {
+        foreach (var input in component.Inputs.Values)
+            RemoveInputConnections(input);
+
+        foreach (var output in component.Outputs.Values)
+            RemoveOutputConnections(output);
+
+        PaintItems.Remove(componentId);
+    }
+
+    private bool TryDeleteSelectedConnection()
+    {
+        foreach (var connectionEntry in Connections.ToArray())
+        {
+            if (!connectionEntry.Value.IsSelected)
+                continue;
+
+            RemoveConnection(connectionEntry.Key, connectionEntry.Value);
+            Debug.WriteLine("Deleted Connection");
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryDeleteSelectedComponent()
+    {
+        foreach (var itemEntry in PaintItems.ToArray())
+        {
+            if (!itemEntry.Value.Selected)
+                continue;
+
+            RemoveComponent(itemEntry.Key, itemEntry.Value);
+            Debug.WriteLine("Deleted Component");
+            return true;
+        }
+
+        return false;
+    }
+
+    private void CompleteDelete(KeyEventArgs e)
+    {
+        RunSimulation();
+        skiaElement.InvalidateVisual();
+        e.Handled = true;
+    }
+
+    private (HitTarget, Component, IO)? HitTest(SKPoint world)
+    {
+        (HitTarget, Component, IO)? hitResult = null;
+        (HitTarget, Component, IO)? candidateResult = null;
         foreach (Component item in PaintItems.Values)
         {
             item.Selected = false;
-            candidate = item.HitTest(world);
-            if (candidate != null)
+            candidateResult = item.HitTest(world);
+            if (candidateResult != null)
             {
-                if (candidate.Value.Item1 == "output")
+                if (candidateResult.Value.Item1 == HitTarget.Output)
                 {
                     if (!_isConnecting)
                     {
                         _isConnecting = true;
-                        Connection newConnection = new Connection(candidate.Value.Item3.GetId(), "", candidate.Value.Item2.GetId(), "");
+                        Connection newConnection = new Connection(candidateResult.Value.Item3.GetId(), "", candidateResult.Value.Item2.GetId(), "");
                         _connectingConnectionId = newConnection.GetId();
                         Connections.Add(_connectingConnectionId, newConnection);
 
-                        item.Outputs[candidate.Value.Item3.GetId()].OutputConnectionIds.Add(_connectingConnectionId);
-                        hit = candidate;
-                        return hit;
+                        item.Outputs[candidateResult.Value.Item3.GetId()].OutputConnectionIds.Add(_connectingConnectionId);
+                        hitResult = candidateResult;
+                        return hitResult;
                     }
                     if (_isConnecting)
                     {
-                        if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-                            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
-
-                        Connections.Remove(_connectingConnectionId);
-                        _isConnecting = false;
-                        _connectingConnectionId = "";
-                        hit = candidate;
-                        return hit;
+                        CancelPendingConnection(false, false);
+                        hitResult = candidateResult;
+                        return hitResult;
                     }
                 }
-                if (candidate.Value.Item1 == "input")
+                if (candidateResult.Value.Item1 == HitTarget.Input)
                 {
                     try
                     {
-                        if (_isConnecting && Connections[_connectingConnectionId].FromComponentId != candidate.Value.Item2.GetId() && candidate.Value.Item3.InputConnectionIds.Count == 0)
+                        if (_isConnecting && Connections[_connectingConnectionId].FromComponentId != candidateResult.Value.Item2.GetId() && candidateResult.Value.Item3.InputConnectionIds.Count == 0)
                         {
-                            Connections[_connectingConnectionId].ToId = candidate.Value.Item3.GetId();
-                            Connections[_connectingConnectionId].ToComponentId = candidate.Value.Item2.GetId();
-                            item.Inputs[candidate.Value.Item3.GetId()].InputConnectionIds.Add(_connectingConnectionId);
+                            Connections[_connectingConnectionId].ToIOId = candidateResult.Value.Item3.GetId();
+                            Connections[_connectingConnectionId].ToComponentId = candidateResult.Value.Item2.GetId();
+                            item.Inputs[candidateResult.Value.Item3.GetId()].InputConnectionIds.Add(_connectingConnectionId);
                             Connections[_connectingConnectionId].IsSelected = false;
                             _isConnecting = false;
                             _connectingConnectionId = "";
-                            Parser.RunCircuitSimulation(PaintItems, Connections);
-                            Parser.RunCircuitSimulation(PaintItems, Connections);
+                            RunSimulation();
                         }
                         if (_isConnecting)
                         {
@@ -365,29 +403,28 @@ public partial class LogicGatesSimulationView : UserControl
                         CancelConnection();
                     }
 
-                    hit = candidate;
+                    hitResult = candidateResult;
                 }
-                if (candidate.Value.Item1 == "rect")
+                if (candidateResult.Value.Item1 == HitTarget.Rect)
                 {
                     item.Selected = true;
-                    hit = candidate;
+                    hitResult = candidateResult;
                     if (_isConnecting)
                     {
-                        if (Connections.TryGetValue(_connectingConnectionId, out var prev))
-                            PaintItems[prev.FromComponentId].Outputs[prev.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
-
-                        Connections.Remove(_connectingConnectionId);
-                        _isConnecting = false;
-                        _connectingConnectionId = "";
+                        CancelPendingConnection(false, false);
                     }
                 }
-                if (candidate.Value.Item1 == "button")
+                if (candidateResult.Value.Item1 == HitTarget.Button)
                 {
-                    hit = candidate;
+                    if (_isConnecting)
+                    {
+                        CancelPendingConnection(false, false);
+                    }
+                    hitResult = candidateResult;
                 }
             }
         }
-        return hit;
+        return hitResult;
     }
 
     private void SkiaElement_OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -396,21 +433,21 @@ public partial class LogicGatesSimulationView : UserControl
             return;
 
         skiaElement.Focus();
-        var p = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
+        var mousePosition = e.GetPosition(skiaElement);
+        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
         var mouseWorld = ScreenToWorld(mouseScreen);
-        (string, Component, IO)? hit = HitTest(mouseWorld);
+        (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
-        foreach (var conn in Connections)
+        foreach (var connectionEntry in Connections)
         {
-            if (conn.Value.ToId == "" || (hit != null))
+            if (connectionEntry.Value.ToIOId == "" || (hit != null))
             {
-                conn.Value.IsSelected = false;
+                connectionEntry.Value.IsSelected = false;
                 continue;
             }
-            var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromId].Node;
-            var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToId].Node;
-            var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
+            var fromNode = PaintItems[connectionEntry.Value.FromComponentId].Outputs[connectionEntry.Value.FromIOId].Node;
+            var toNode = PaintItems[connectionEntry.Value.ToComponentId].Inputs[connectionEntry.Value.ToIOId].Node;
+            var isSelected = connectionEntry.Value.HitTest(mouseWorld, fromNode, toNode, 5);
             if (isSelected)
             {
                 skiaElement.InvalidateVisual();
@@ -420,7 +457,7 @@ public partial class LogicGatesSimulationView : UserControl
             }
         }
 
-        if (hit != null && hit.Value.Item1 == "rect")
+        if (hit != null && hit.Value.Item1 == HitTarget.Rect)
         {
             _isMoving = true;
             LayersListView.SelectedItem = null;
@@ -430,8 +467,8 @@ public partial class LogicGatesSimulationView : UserControl
         }
         if (LayersListView.SelectedItem != null)
         {
-            int index = LayersListView.SelectedIndex;
-            var selected = Items[index];
+        int selectedIndex = LayersListView.SelectedIndex;
+        var selected = Items[selectedIndex];
             var newComponent = Creator.CreateLG(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
 
             PaintItems.Add(newComponent.GetId(), newComponent);
@@ -440,10 +477,9 @@ public partial class LogicGatesSimulationView : UserControl
             e.Handled = true;
             return;
         }
-        if (hit != null && hit.Value.Item1 == "button")
+        if (hit != null && hit.Value.Item1 == HitTarget.Button)
         {
-            Parser.RunCircuitSimulation(PaintItems, Connections);
-            Parser.RunCircuitSimulation(PaintItems, Connections);
+            RunSimulation();
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
@@ -462,13 +498,13 @@ public partial class LogicGatesSimulationView : UserControl
 
     private void SkiaElement_OnMouseMove(object sender, MouseEventArgs e)
     {
-        var p = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
+        var mousePosition = e.GetPosition(skiaElement);
+        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
         _mouseWorld = ScreenToWorld(mouseScreen);
 
         if (_isPanning)
         {
-            var mouse = new SKPoint((float)p.X, (float)p.Y);
+            var mouse = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
             var deltaScreen = mouse - _panStartMouse;
             _panOffset = _panStartOffset + deltaScreen;
             skiaElement.InvalidateVisual();
@@ -506,8 +542,8 @@ public partial class LogicGatesSimulationView : UserControl
 
     private void SkiaElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        var p = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)p.X, (float)p.Y);
+        var mousePosition = e.GetPosition(skiaElement);
+        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
 
         var zoomFactor = e.Delta > 0 ? ZoomStep : 1f / ZoomStep;
         var newZoom = Math.Clamp(_zoom * zoomFactor, MinZoom, MaxZoom);
@@ -538,34 +574,14 @@ public partial class LogicGatesSimulationView : UserControl
 
     public void SaveDiagram()
     {
-        if (_isConnecting)
-        {
-            var conn = Connections.GetValueOrDefault(_connectingConnectionId);
-            if (conn is not null)
-                PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
-
-            Connections.Remove(_connectingConnectionId);
-            _isConnecting = false;
-            _connectingConnectionId = "";
-            skiaElement.InvalidateVisual();
-        }
+        CancelPendingConnection(true, false);
 
         Creator.Save(PaintItems, Connections, "LogicGates");
     }
 
 	public void SaveCanvasAsPng()
 	{
-		if (_isConnecting)
-		{
-			var conn = Connections.GetValueOrDefault(_connectingConnectionId);
-			if (conn is not null)
-				PaintItems[conn.FromComponentId].Outputs[conn.FromId].OutputConnectionIds.Remove(_connectingConnectionId);
-
-			Connections.Remove(_connectingConnectionId);
-			_isConnecting = false;
-			_connectingConnectionId = "";
-			skiaElement.InvalidateVisual();
-		}
+		CancelPendingConnection(true, false);
 
 		CanvasExport.SaveAsPng(PaintItems, Connections);
 	}

@@ -118,32 +118,40 @@ namespace ORS_ER.components
 
             var delta = Rect.Width / (Outputs.Count + 1);
             string[] keys = Outputs.Keys.ToArray();
-            for (int i = 0; i < Outputs.Count; i++)
+            for (int outputIndex = 0; outputIndex < Outputs.Count; outputIndex++)
             {
-                Outputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+                Outputs[keys[outputIndex]].Node = new SKPoint(this.Rect.Left + delta * (outputIndex + 1), this.Rect.Bottom);
             }
 
             delta = Rect.Width / (Inputs.Count + 1);
             keys = Inputs.Keys.ToArray();
-            for (int i = 0; i < Inputs.Count; i++)
+            for (int inputIndex = 0; inputIndex < Inputs.Count; inputIndex++)
             {
-                Inputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+                Inputs[keys[inputIndex]].Node = new SKPoint(this.Rect.Left + delta * (inputIndex + 1), this.Rect.Top);
             }
         }
 
         public override void GenerateCode()
         {
-            string key = "";
+            RegistryId key = RegistryId.Global;
             if (this.IsInsideIf != "")
             {
                 key = this.IsInsideIf.Split('_')[0];
             }
-            if (key == "" && this.IsInsideWhile != "")
+            if (key.IsGlobal && this.IsInsideWhile != "")
             {
                 key = this.IsInsideWhile.Split('_')[0];
             }
 
-            ValueRegistry.RegisterLocalValue(key, this.Value.Item1, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = this.Value.Item1, Value = this.Value.Item2 });
+            var entry = new ValueRegistry.RegistryEntry
+            {
+                ScopeId = key,
+                BlockId = new RegistryId(this.GetId()),
+                Key = new RegistryKey(this.Value.Item1),
+                Value = this.Value.Item2
+            };
+
+            ValueRegistry.RegisterLocalValue(key, entry.Key, entry);
         }
     }
 }

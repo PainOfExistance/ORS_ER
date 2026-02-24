@@ -22,6 +22,7 @@ namespace ORS_ER.components
             _outputPins = data.Outputs ?? [];
             Code = Name;
             InitializeIo();
+            EnsureInternalGraph();
         }
 
         private void InitializeIo()
@@ -104,7 +105,6 @@ namespace ORS_ER.components
 
         public override void RunInternalSimulation(List<bool> vals)
         {
-            EnsureInternalGraph();
             if (_internalComponents is null || _internalConnections is null)
                 return;
 
@@ -184,7 +184,7 @@ namespace ORS_ER.components
                 var io = new IO();
                 io.SetId(pin.IoId);
                 io.InputConnectionIds = connections.Values
-                    .Where(conn => conn.ToComponentId == pin.ComponentId && conn.ToId == pin.IoId)
+                    .Where(conn => conn.ToComponentId == pin.ComponentId && conn.ToIOId == pin.IoId)
                     .Select(conn => conn.GetId())
                     .ToList();
                 component.Inputs.Add(io.GetId(), io);

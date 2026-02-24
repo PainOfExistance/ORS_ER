@@ -93,30 +93,30 @@ namespace ORS_ER.components
 
             var delta = Rect.Width / (Outputs.Count + 1);
             string[] keys = Outputs.Keys.ToArray();
-            for (int i = 0; i < Outputs.Count; i++)
+            for (int outputIndex = 0; outputIndex < Outputs.Count; outputIndex++)
             {
-                Outputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Bottom);
+                Outputs[keys[outputIndex]].Node = new SKPoint(this.Rect.Left + delta * (outputIndex + 1), this.Rect.Bottom);
             }
 
             delta = Rect.Width / (Inputs.Count + 1);
             keys = Inputs.Keys.ToArray();
-            for (int i = 0; i < Inputs.Count; i++)
+            for (int inputIndex = 0; inputIndex < Inputs.Count; inputIndex++)
             {
-                Inputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+                Inputs[keys[inputIndex]].Node = new SKPoint(this.Rect.Left + delta * (inputIndex + 1), this.Rect.Top);
             }
         }
 
         public override void GenerateCode()
         {
-            string[] parts = this.Code.Split(' ');
+            string[] codeParts = this.Code.Split(' ');
             string variableName = this.Value.Item1;
-            string variable1 = "";
-            string variable2 = "";
+            string leftOperandName = "";
+            string rightOperandName = "";
             string operation = this.Value.Item2;
 
-            variable1 = parts[3];
+            leftOperandName = codeParts[3];
             if (this.Value.Item2 != "NOT")
-                variable2 = parts[5];
+                rightOperandName = codeParts[5];
 
             string key = "";
             if (this.IsInsideIf != "")
@@ -124,34 +124,34 @@ namespace ORS_ER.components
             if (key == "" && this.IsInsideWhile != "")
                 key = this.IsInsideWhile.Split('_')[0];
 
-            dynamic operand1 = ValueRegistry.GetLocalValue(key, variable1);
-            dynamic operand2 = ValueRegistry.GetLocalValue(key, variable2);
+            dynamic operand1 = ValueRegistry.GetLocalValue(key, leftOperandName);
+            dynamic operand2 = ValueRegistry.GetLocalValue(key, rightOperandName);
 
             if (operand1 is not RegistryEntry)
             {
-                if (double.TryParse(variable1, out double doubleResult))
+                if (double.TryParse(leftOperandName, out double doubleResult))
                 {
                     operand1 = doubleResult;
                 }
-                if (operand1 is not double && bool.TryParse(variable1, out bool boolResult))
+                if (operand1 is not double && bool.TryParse(leftOperandName, out bool boolResult))
                 {
                     operand1 = boolResult;
                 }
                 if (operand1 is not double && operand1 is not bool)
-                    operand1 = variable1.ToString();
+                    operand1 = leftOperandName.ToString();
             }
             if (operand2 is not RegistryEntry)
             {
-                if (double.TryParse(variable2, out double doubleResult))
+                if (double.TryParse(rightOperandName, out double doubleResult))
                 {
                     operand2 = doubleResult;
                 }
-                if (operand2 is not double && bool.TryParse(variable2, out bool boolResult))
+                if (operand2 is not double && bool.TryParse(rightOperandName, out bool boolResult))
                 {
                     operand2 = boolResult;
                 }
                 if (operand2 is not double && operand2 is not bool)
-                    operand2 = variable2.ToString();
+                    operand2 = rightOperandName.ToString();
             }
 
             operand1 = operand1 is RegistryEntry entry1 ? entry1.Value : operand1;

@@ -177,17 +177,17 @@ namespace ORS_ER
 
             try
             {
-                SaveFileDialog SD = new SaveFileDialog();
-                SD.Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*";
-                SD.FileName = "diagram";
-                SD.Title = "Save As";
-                SD.ShowDialog();
-                if (SD.FileName != "")
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*";
+                saveFileDialog.FileName = "diagram";
+                saveFileDialog.Title = "Save As";
+                saveFileDialog.ShowDialog();
+                if (saveFileDialog.FileName != "")
                 {
-                    SD.FileName = SD.FileName.EndsWith(".json") ? SD.FileName : SD.FileName + ".json";
-                    File.WriteAllText(SD.FileName, saveData);
+                    saveFileDialog.FileName = saveFileDialog.FileName.EndsWith(".json") ? saveFileDialog.FileName : saveFileDialog.FileName + ".json";
+                    File.WriteAllText(saveFileDialog.FileName, saveData);
                 }
-                Debug.WriteLine("Saved file " + SD.FileName);
+                Debug.WriteLine("Saved file " + saveFileDialog.FileName);
             }
             catch (Exception ex)
             {
@@ -226,7 +226,16 @@ namespace ORS_ER
 
                 foreach (var component in rawData.Components)
                 {
-                    Component newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
+                    Component newComponent;
+                    if (string.Equals("LogicGates", expectedDiagramType, StringComparison.OrdinalIgnoreCase))
+                    {
+                        newComponent = CreateLG(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
+                    }
+                    else
+                    {
+                        newComponent = Create(component.Name, component.Description, component.Category, (int)component.X, (int)component.Y);
+                    }
+
                     newComponent.SetId(component.Id);
                     newComponent.Code = component.Code ?? "";
                     newComponent.IsInsideIf = component.IsInsideIf ?? "";
@@ -532,8 +541,8 @@ namespace ORS_ER
                 diagram.Connections.Add(new ConnectionData
                 {
                     Id = connection.GetId(),
-                    FromId = connection.FromId,
-                    ToId = connection.ToId,
+                    FromId = connection.FromIOId,
+                    ToId = connection.ToIOId,
                     FromComponentId = connection.FromComponentId,
                     ToComponentId = connection.ToComponentId
                 });

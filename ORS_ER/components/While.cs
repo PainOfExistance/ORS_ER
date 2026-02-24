@@ -125,78 +125,80 @@ namespace ORS_ER.components
         }
         public override void GenerateCode()
         {
-            string[] parts = this.Code.Split(' ');
-            string var1 = parts[1];
-            string var2 = parts[3];
-            string op = parts[2];
+            string[] codeParts = this.Code.Split(' ');
+            string leftOperandName = codeParts[1];
+            string rightOperandName = codeParts[3];
+            string comparisonOperator = codeParts[2];
 
-            dynamic? variable1 = "";
-            dynamic? variable2 = "";
+            dynamic? leftOperandValue = "";
+            dynamic? rightOperandValue = "";
 
-            ValueRegistry.AddLocalRegistry(this.GetId(), this.IsInsideIf != "" ? this.IsInsideIf.Split('_')[0] : this.IsInsideWhile.Split('_')[0]);
+            ValueRegistry.AddLocalRegistry(
+                new RegistryId(this.GetId()),
+                new RegistryId(this.IsInsideIf != "" ? this.IsInsideIf.Split('_')[0] : this.IsInsideWhile.Split('_')[0]));
 
-            string key = "";
+            RegistryId key = RegistryId.Global;
             if (this.IsInsideIf != "")
                 key = this.IsInsideIf.Split('_')[0];
-            if (key == "" && this.IsInsideWhile != "")
+            if (key.IsGlobal && this.IsInsideWhile != "")
                 key = this.IsInsideWhile.Split('_')[0];
 
-            variable1 = ValueRegistry.GetLocalValue(key, var1);
-            variable2 = ValueRegistry.GetLocalValue(key, var2);
+            leftOperandValue = ValueRegistry.GetLocalValue(key, new RegistryKey(leftOperandName));
+            rightOperandValue = ValueRegistry.GetLocalValue(key, new RegistryKey(rightOperandName));
 
-            if (variable1 is not RegistryEntry)
+            if (leftOperandValue is not RegistryEntry)
             {
-                if (double.TryParse(var1, out double doubleResult))
+                if (double.TryParse(leftOperandName, out double doubleResult))
                 {
-                    variable1 = doubleResult;
+                    leftOperandValue = doubleResult;
                 }
-                if (variable1 is not double && bool.TryParse(var1, out bool boolResult))
+                if (leftOperandValue is not double && bool.TryParse(leftOperandName, out bool boolResult))
                 {
-                    variable1 = boolResult;
+                    leftOperandValue = boolResult;
                 }
-                if (variable1 is not double && variable1 is not bool)
-                    variable1 = var1.ToString();
+                if (leftOperandValue is not double && leftOperandValue is not bool)
+                    leftOperandValue = leftOperandName.ToString();
             }
-            if (variable2 is not RegistryEntry)
+            if (rightOperandValue is not RegistryEntry)
             {
-                if (double.TryParse(var2, out double doubleResult))
+                if (double.TryParse(rightOperandName, out double doubleResult))
                 {
-                    variable2 = doubleResult;
+                    rightOperandValue = doubleResult;
                 }
-                if (variable2 is not double && bool.TryParse(var2, out bool boolResult))
+                if (rightOperandValue is not double && bool.TryParse(rightOperandName, out bool boolResult))
                 {
-                    variable2 = boolResult;
+                    rightOperandValue = boolResult;
                 }
-                if (variable2 is not double && variable2 is not bool)
-                    variable2 = var2.ToString();
+                if (rightOperandValue is not double && rightOperandValue is not bool)
+                    rightOperandValue = rightOperandName.ToString();
             }
 
 
-            variable1 = variable1 is RegistryEntry entry1 ? entry1.Value : variable1;
-            variable2 = variable2 is RegistryEntry entry2 ? entry2.Value : variable2;
+            leftOperandValue = leftOperandValue is RegistryEntry entry1 ? entry1.Value : leftOperandValue;
+            rightOperandValue = rightOperandValue is RegistryEntry entry2 ? entry2.Value : rightOperandValue;
 
-            switch (op)
+            switch (comparisonOperator)
             {
                 case "==":
-                    this.Value = (this.Value.Item1, variable1 == variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue == rightOperandValue);
                     break;
                 case "!=":
-                    this.Value = (this.Value.Item1, variable1 != variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue != rightOperandValue);
                     break;
                 case "<":
-                    this.Value = (this.Value.Item1, variable1 < variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue < rightOperandValue);
                     break;
                 case "<=":
-                    this.Value = (this.Value.Item1, variable1 <= variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue <= rightOperandValue);
                     break;
                 case ">":
-                    this.Value = (this.Value.Item1, variable1 > variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue > rightOperandValue);
                     break;
                 case ">=":
-                    this.Value = (this.Value.Item1, variable1 >= variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue >= rightOperandValue);
                     break;
                 default:
-                    this.Value = (this.Value.Item1, variable1 == variable2);
+                    this.Value = (this.Value.Item1, leftOperandValue == rightOperandValue);
                     break;
             }
 

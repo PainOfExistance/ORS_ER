@@ -34,7 +34,7 @@ namespace ORS_ER
                         }
                         if (inputValue is not bool)
                         {
-                            var fromId = connections[inputs.InputConnectionIds.First()].FromId;
+                            var fromId = connections[inputs.InputConnectionIds.First()].FromIOId;
                             var index = paintItems[connections[inputs.InputConnectionIds.First()].FromComponentId].Outputs[fromId].IfTrue;
                             valueToAdd = inputValue[int.Parse(index)];
                         }
@@ -136,7 +136,7 @@ namespace ORS_ER
 
                 if (currentNode is If or While)
                 {
-                    outputConnections = connections.Values.Where(c => c.FromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.FromId && kv.IfTrue != "").ToList().Count() > 0).ToList();
+                    outputConnections = connections.Values.Where(c => c.FromComponentId == currentNode.GetId() && currentNode.Outputs.Values.Where(kv => kv.GetId() == c.FromIOId && kv.IfTrue != "").ToList().Count() > 0).ToList();
                 }
 
                 foreach (var conn in outputConnections)

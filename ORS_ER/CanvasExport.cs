@@ -45,7 +45,7 @@ internal static class CanvasExport
 		var paints = ComponentPaints.Create(ComponentPaintScheme.Input);
 		foreach (var connection in connections.Values)
 		{
-			if (connection.ToId == "")
+			if (connection.ToIOId == "")
 				continue;
 
 			if (!paintItems.TryGetValue(connection.FromComponentId, out var fromComponent))
@@ -53,8 +53,8 @@ internal static class CanvasExport
 			if (!paintItems.TryGetValue(connection.ToComponentId, out var toComponent))
 				continue;
 
-			var fromNode = fromComponent.Outputs[connection.FromId].Node;
-			var toNode = toComponent.Inputs[connection.ToId].Node;
+			var fromNode = fromComponent.Outputs[connection.FromIOId].Node;
+			var toNode = toComponent.Inputs[connection.ToIOId].Node;
 			canvas.DrawLine(fromNode, toNode, connection.IsSelected ? paints.SelectedLineStroke : paints.LineStroke);
 		}
 
@@ -91,7 +91,7 @@ internal static class CanvasExport
 
 		foreach (var conn in connections.Values)
 		{
-			if (conn.ToId == "")
+			if (conn.ToIOId == "")
 				continue;
 
 			if (!paintItems.TryGetValue(conn.FromComponentId, out var fromComponent))
@@ -99,8 +99,8 @@ internal static class CanvasExport
 			if (!paintItems.TryGetValue(conn.ToComponentId, out var toComponent))
 				continue;
 
-			var fromNode = fromComponent.Outputs[conn.FromId].Node;
-			var toNode = toComponent.Inputs[conn.ToId].Node;
+			var fromNode = fromComponent.Outputs[conn.FromIOId].Node;
+			var toNode = toComponent.Inputs[conn.ToIOId].Node;
 			var lr = SKRect.Create(
 				Math.Min(fromNode.X, toNode.X),
 				Math.Min(fromNode.Y, toNode.Y),

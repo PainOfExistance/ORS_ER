@@ -70,9 +70,9 @@ namespace ORS_ER.components
 
             var delta = Rect.Width / (Inputs.Count + 1);
             string[] keys = Inputs.Keys.ToArray();
-            for (int i = 0; i < Inputs.Count; i++)
+            for (int inputIndex = 0; inputIndex < Inputs.Count; inputIndex++)
             {
-                Inputs[keys[i]].Node = new SKPoint(this.Rect.Left + delta * (i + 1), this.Rect.Top);
+                Inputs[keys[inputIndex]].Node = new SKPoint(this.Rect.Left + delta * (inputIndex + 1), this.Rect.Top);
             }
         }
 

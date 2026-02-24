@@ -6,40 +6,40 @@ namespace ORS_ER.connections
     public class Connection
     {
         private string _id = Guid.NewGuid().ToString();
-        public string FromId { get; set; }
-        public string ToId { get; set; }
+        public string FromIOId { get; set; }
+        public string ToIOId { get; set; }
         public string FromComponentId { get; set; }
         public string ToComponentId { get; set; }
         public bool IsSelected { get; set; } = false;
         public Connection(string fromId, string toId, string fromComponentId, string toComponentId)
         {
-            FromId = fromId;
-            ToId = toId;
+            FromIOId = fromId;
+            ToIOId = toId;
             FromComponentId = fromComponentId;
             ToComponentId = toComponentId;
         }
 
-        public bool HitTest(SKPoint p, SKPoint a, SKPoint b, float tolerance)
+        public bool HitTest(SKPoint testPoint, SKPoint lineStart, SKPoint lineEnd, float tolerance)
         {
-            var minX = MathF.Min(a.X, b.X) - tolerance;
-            var maxX = MathF.Max(a.X, b.X) + tolerance;
-            var minY = MathF.Min(a.Y, b.Y) - tolerance;
-            var maxY = MathF.Max(a.Y, b.Y) + tolerance;
-            if (p.X < minX || p.X > maxX || p.Y < minY || p.Y > maxY)
+            var minX = MathF.Min(lineStart.X, lineEnd.X) - tolerance;
+            var maxX = MathF.Max(lineStart.X, lineEnd.X) + tolerance;
+            var minY = MathF.Min(lineStart.Y, lineEnd.Y) - tolerance;
+            var maxY = MathF.Max(lineStart.Y, lineEnd.Y) + tolerance;
+            if (testPoint.X < minX || testPoint.X > maxX || testPoint.Y < minY || testPoint.Y > maxY)
                 IsSelected = false;
 
-            var ab = b - a;
-            var ap = p - a;
+            var lineVector = lineEnd - lineStart;
+            var pointVector = testPoint - lineStart;
 
-            var abLenSq = ab.X * ab.X + ab.Y * ab.Y;
-            if (abLenSq <= float.Epsilon)
-                IsSelected = (p - a).Length <= tolerance;
+            var lineLengthSquared = lineVector.X * lineVector.X + lineVector.Y * lineVector.Y;
+            if (lineLengthSquared <= float.Epsilon)
+                IsSelected = (testPoint - lineStart).Length <= tolerance;
 
-            var t = (ap.X * ab.X + ap.Y * ab.Y) / abLenSq;
-            t = Math.Clamp(t, 0f, 1f);
+            var projection = (pointVector.X * lineVector.X + pointVector.Y * lineVector.Y) / lineLengthSquared;
+            projection = Math.Clamp(projection, 0f, 1f);
 
-            var closest = new SKPoint(a.X + ab.X * t, a.Y + ab.Y * t);
-            IsSelected = (p - closest).Length <= tolerance;
+            var closestPoint = new SKPoint(lineStart.X + lineVector.X * projection, lineStart.Y + lineVector.Y * projection);
+            IsSelected = (testPoint - closestPoint).Length <= tolerance;
             return IsSelected;
         }
         public string GetId()
@@ -54,8 +54,8 @@ namespace ORS_ER.connections
         {
             return $"{{ \n" +
                 $"\"id\": \"{_id}\",\n" +
-                $"\"fromId\": \"{FromId}\",\n" +
-                $"\"toId\": \"{ToId}\",\n" +
+                $"\"fromId\": \"{FromIOId}\",\n" +
+                $"\"toId\": \"{ToIOId}\",\n" +
                 $"\"fromComponentId\": \"{FromComponentId}\",\n" +
                 $"\"toComponentId\": \"{ToComponentId}\"\n" +
                 $"}}\n";

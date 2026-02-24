@@ -10,6 +10,14 @@ using System.Windows;
 
 namespace ORS_ER.components
 {
+    public enum HitTarget
+    {
+        Input,
+        Output,
+        Rect,
+        Button
+    }
+
     abstract public class Component(string name, string description, string category)
     {
         private string _id = Guid.NewGuid().ToString();
@@ -55,48 +63,48 @@ namespace ORS_ER.components
             Rect = rect;
 
             var node = new SKPoint();
-            foreach (var i in Inputs.Keys)
+            foreach (var inputId in Inputs.Keys)
             {
-                node = Inputs[i].Node;
+                node = Inputs[inputId].Node;
                 node.Offset(dx, dy);
-                Inputs[i].Node = node;
+                Inputs[inputId].Node = node;
             }
 
-            foreach (var i in Outputs.Keys)
+            foreach (var outputId in Outputs.Keys)
             {
-                node = Outputs[i].Node;
+                node = Outputs[outputId].Node;
                 node.Offset(dx, dy);
-                Outputs[i].Node = node;
+                Outputs[outputId].Node = node;
             }
 
             rect = this.InteractionRect;
             rect.Offset(dx, dy);
             this.InteractionRect = rect;
         }
-        virtual public (string, Component, IO?)? HitTest(SKPoint world)
+        virtual public (HitTarget, Component, IO?)? HitTest(SKPoint world)
         {
             const float hitRadius = 8f;
             var hitRadius2 = hitRadius * hitRadius;
 
-            static bool HitPoint(SKPoint a, SKPoint b, float r2)
+            static bool HitPoint(SKPoint nodePoint, SKPoint targetPoint, float radiusSquared)
             {
-                var dx = a.X - b.X;
-                var dy = a.Y - b.Y;
-                return (dx * dx + dy * dy) <= r2;
+                var dx = nodePoint.X - targetPoint.X;
+                var dy = nodePoint.Y - targetPoint.Y;
+                return (dx * dx + dy * dy) <= radiusSquared;
             }
 
             foreach (var io in Inputs)
                 if (HitPoint(io.Value.Node, world, hitRadius2))
                 {
                     this.Selected = false;
-                    return ("input", this, io.Value);
+                    return (HitTarget.Input, this, io.Value);
                 }
 
             foreach (var io in Outputs)
                 if (HitPoint(io.Value.Node, world, hitRadius2))
                 {
                     this.Selected = false;
-                    return ("output", this, io.Value);
+                    return (HitTarget.Output, this, io.Value);
                 }
 
             var local = world;
@@ -114,12 +122,12 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(BinaryInput))
                 {
                     this.Value = ("bool", !this.Value.Item2);
-                    return ("button", this, null);
+                    return (HitTarget.Button, this, null);
                 }
 
                 if (this.GetType() == typeof(BinaryOutput) || this.GetType() == typeof(Gate) || this.GetType() == typeof(Adder) || this.GetType() == typeof(SubCircuitComponent))
                 {
-                    return ("button", this, null);
+                    return (HitTarget.Button, this, null);
                 }
 
                 if (this.Name.Contains("Operator"))
@@ -131,7 +139,7 @@ namespace ORS_ER.components
                         this.Value = dlg.Value;
                         Debug.WriteLine($"LogicWindow returned: {this.Value.Item2}");
                     }
-                    return ("button", this, null);
+                    return (HitTarget.Button, this, null);
                 }
 
                 if (this.Name.Contains("Input"))
@@ -142,7 +150,7 @@ namespace ORS_ER.components
                         this.Code = dlg.Code;
                         this.Value = dlg.Value;
                     }
-                    return ("button", this, null);
+                    return (HitTarget.Button, this, null);
                 }
 
                 if (this.Name.Contains("Print"))
@@ -153,7 +161,7 @@ namespace ORS_ER.components
                         this.Code = dlg.Code;
                         this.Value = dlg.Value;
                     }
-                    return ("button", this, null);
+                    return (HitTarget.Button, this, null);
                 }
 
                 if (this.Name.Contains("If"))
@@ -164,24 +172,15 @@ namespace ORS_ER.components
                         this.Code = dlg.Code;
                         this.Value = dlg.Value;
                     }
-                    return ("button", this, null);
+                    return (HitTarget.Button, this, null);
                 }
-
-                var fallbackDialog = new IfWindow(this.Code, this.Value);
-                if (fallbackDialog.ShowDialog() == true)
-                {
-                    this.Code = fallbackDialog.Code;
-                    this.Value = fallbackDialog.Value;
-                }
-
-                return ("button", this, null);
             }
 
             if (Rect.Contains(local))
             {
                 this.IsBroken = false;
                 this.Selected = true;
-                return ("rect", this, null);
+                return (HitTarget.Rect, this, null);
             }
 
             this.Selected = false;
@@ -206,16 +205,16 @@ namespace ORS_ER.components
             try
             {
                 var nameJson = JsonSerializer.Serialize(Value.Item1 ?? "");
-                var v = Value.Item2;
-                var valuePart = v switch
+                var valueObject = Value.Item2;
+                var valuePart = valueObject switch
                 {
                     null => "null",
                     string s => JsonSerializer.Serialize(s),
                     bool b => b ? "true" : "false",
                     byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal =>
-                        Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture) ?? "0",
+                        Convert.ToString(valueObject, System.Globalization.CultureInfo.InvariantCulture) ?? "0",
                     JsonElement je => je.GetRawText(),
-                    _ => JsonSerializer.Serialize(v.ToString() ?? "")
+                    _ => JsonSerializer.Serialize(valueObject.ToString() ?? "")
                 };
 
                 valueJson = $"{{\"name\":{nameJson},\"value\":{valuePart}}}";
