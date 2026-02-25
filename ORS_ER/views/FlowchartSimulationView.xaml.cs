@@ -168,42 +168,37 @@ public partial class FlowchartSimulationView : UserControl
         }
     }
 
-    private bool WouldCreateSkipConnection(string fromComponentId, string toComponentId)
+    private void PropagateIsInsideFlags(Component component)
     {
-        if (string.IsNullOrWhiteSpace(fromComponentId) || string.IsNullOrWhiteSpace(toComponentId))
-            return false;
-
-        if (fromComponentId == toComponentId)
-            return true;
-
-        var visited = new HashSet<string>(StringComparer.Ordinal);
-        var stack = new Stack<string>();
-        stack.Push(fromComponentId);
-
-        // Depth-first search to detect whether a connection would create a skip/cycle.
-        while (stack.Count > 0)
+        // Traverse outgoing connections and propagate If/While scope flags.
+        var toVisit = new List<string> { component.GetId() };
+        string prevIsInsideIf = component.IsInsideIf;
+        string prevIsInsideWhile = component.IsInsideWhile;
+        for (; toVisit.Count > 0;)
         {
-            var current = stack.Pop();
-            if (!visited.Add(current))
-                continue;
-
-            foreach (var conn in Connections.Values)
+            string current = toVisit.First();
+            toVisit.RemoveAt(0);
+            if (PaintItems[current].Inputs.First().Value.InputConnectionIds.Count() == 2 || component.GetType() == typeof(If) || component.GetType() == typeof(While))
             {
-                if (string.IsNullOrWhiteSpace(conn.ToComponentId))
-                    continue;
+                break;
+            }
+            else if (prevIsInsideIf != "")
+            {
+                PaintItems[current].IsInsideIf = prevIsInsideIf;
+            }
+            else if (prevIsInsideWhile != "")
+            {
+                PaintItems[current].IsInsideWhile = prevIsInsideWhile;
+            }
 
-                if (!string.Equals(conn.FromComponentId, current, StringComparison.Ordinal))
-                    continue;
-
-                var next = conn.ToComponentId;
-                if (string.Equals(next, toComponentId, StringComparison.Ordinal))
-                    return true;
-
-                stack.Push(next);
+            foreach (string outputKey in PaintItems[current].Outputs.Keys)
+            {
+                for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
+                {
+                    toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                }
             }
         }
-
-        return false;
     }
 
     private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -451,21 +446,9 @@ public partial class FlowchartSimulationView : UserControl
                     {
                         bool clearId = false;
 
-                        if (_isConnecting && Connections.TryGetValue(_connectingConnectionId, out var inProgress))
-                        {
-                            var fromComponentId = inProgress.FromComponentId;
-                            var toComponentId = candidateResult.Value.Item2.GetId();
-
-                            if (WouldCreateSkipConnection(fromComponentId, toComponentId))
-                            {
-                                CancelConnection();
-                                hitResult = candidateResult;
-                                return hitResult;
-                            }
-                        }
-
                         if (item is While && item.Inputs.First().Value.GetId() == candidateResult.Value.Item3.GetId())
                         {
+                            // while loop back only if inside repeat branch of while or if the while has multiple connections to the input (indicating it's a nested loop)
                             if (!PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Contains(item.GetId()) ||
                                 candidateResult.Value.Item3.InputConnectionIds.Count > 0 ||
                                 PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count > 1)
@@ -477,7 +460,7 @@ public partial class FlowchartSimulationView : UserControl
                         }
                         else if (item is While && PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Contains(candidateResult.Value.Item2.GetId()) && candidateResult.Value.Item3.IfTrue == "Start")
                         {
-
+                            //allow only connections from inside the loop to the start of the loop body to allow nested loops
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
@@ -488,6 +471,7 @@ public partial class FlowchartSimulationView : UserControl
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count == 1 &&
                                   candidateResult.Value.Item3.InputConnectionIds.Count == 1)
                         {
+                            //skip connection from T/F to outside of it block connection needed
                             clearId = true;
                         }
                         else if (item.IsInsideIf != "" &&
@@ -495,10 +479,12 @@ public partial class FlowchartSimulationView : UserControl
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[1] != item.IsInsideIf.Split("_")[1] &&
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count == 1)
                         {
+                            //if termination allowed
                             clearId = true;
                         }
                         else if (item.IsInsideIf != "" || item.IsInsideWhile != "")
                         {
+                            //outside connection forbiden
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
@@ -506,6 +492,7 @@ public partial class FlowchartSimulationView : UserControl
                         else if ((PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf != "" || PaintItems[Connections[_connectingConnectionId].FromComponentId] is If) &&
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count > 1)
                         {
+                            //if outside branching forbiden
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
@@ -513,18 +500,21 @@ public partial class FlowchartSimulationView : UserControl
                         else if ((PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile != "" || PaintItems[Connections[_connectingConnectionId].FromComponentId] is While) &&
                                  PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].OutputConnectionIds.Count > 1)
                         {
+                            //while outside branching forbiden
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
                         }
                         else if ((item.IsInsideIf != "" || item.IsInsideWhile != "") && item.Inputs[Connections[_connectingConnectionId].ToIOId].InputConnectionIds.Count > 0)
                         {
+                            //incesting in if forbiden
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
                         }
                         else if ((PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile != "" || PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf != "") && candidateResult.Value.Item3.InputConnectionIds.Count() > 0)
                         {
+                            //cancel if/while branching to already branched input to avoid incest
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
@@ -532,6 +522,7 @@ public partial class FlowchartSimulationView : UserControl
 
                         if (candidateResult.Value.Item3.InputConnectionIds.Count() == 1 && !clearId)
                         {
+                            //forbid multiconnections to inputs
                             CancelConnection();
                             hitResult = candidateResult;
                             return hitResult;
@@ -551,21 +542,41 @@ public partial class FlowchartSimulationView : UserControl
                             {
                                 if (clearId)
                                 {
+                                    //propagate IsInside when ending while/if
                                     if (PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0] != "")
                                     {
-                                        item.IsInsideIf = PaintItems[PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
+                                        if (PaintItems[Connections[_connectingConnectionId].FromComponentId] is If ||
+                                            PaintItems[Connections[_connectingConnectionId].FromComponentId] is While)
+                                        {
+                                            item.IsInsideIf = PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0];
+                                        }
+                                        else
+                                        {
+                                            item.IsInsideIf = PaintItems[PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf.Split("_")[0]].IsInsideIf;
+                                        }
                                     }
                                     else if (PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Split("_")[0] != "")
                                     {
-                                        item.IsInsideWhile = PaintItems[PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
+                                        if (PaintItems[Connections[_connectingConnectionId].FromComponentId] is If ||
+                                            PaintItems[Connections[_connectingConnectionId].FromComponentId] is While)
+                                        {
+                                            item.IsInsideWhile = PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Split("_")[0];
+                                        }
+                                        else
+                                        {
+                                            item.IsInsideWhile = PaintItems[PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Split("_")[0]].IsInsideWhile;
+                                        }
                                     }
                                 }
                                 else if (!(item is While && PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile.Contains(item.GetId())))
                                 {
+                                    //set IsInside when connecting 
                                     item.IsInsideIf = PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideIf;
                                     item.IsInsideWhile = PaintItems[Connections[_connectingConnectionId].FromComponentId].IsInsideWhile;
                                 }
                             }
+
+                            PropagateIsInsideFlags(item);
                             Connections[_connectingConnectionId].ToIOId = candidateResult.Value.Item3.GetId();
                             Connections[_connectingConnectionId].ToComponentId = candidateResult.Value.Item2.GetId();
                             item.Inputs[candidateResult.Value.Item3.GetId()].InputConnectionIds.Add(_connectingConnectionId);
