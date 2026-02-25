@@ -1,15 +1,16 @@
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using ORS_ER.components;
 using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace ORS_ER.views;
 
@@ -815,5 +816,75 @@ public partial class FlowchartSimulationView : UserControl
             Connections.Add(conn.Key, conn.Value);
 
         skiaElement.InvalidateVisual();
+    }
+    public void StressTest()
+    {
+        try
+        {
+            PaintItems.Clear();
+            Connections.Clear();
+
+            List<Component> tmpComponents = new List<Component>();
+            List<Connection> tmpConnections = new List<Connection>();
+            Random rng = new Random();
+            for (int i = 0; i < 500; i++)
+            {
+                var newComponent1 = new Input("Numerical Input", "Numerical input.", "Inputs");
+                newComponent1.CreateRect((int)rng.NextInt64(0, 5000), (int)rng.NextInt64(0, 5000));
+                newComponent1.Value = ("A" + i.ToString(), i);
+                newComponent1.Code = $"dynamic A{i} = {i} ;";
+
+                var newComponent2 = new Operator("Operator Block", "Performs numerical or bolean or string operations.", "Logic");
+                newComponent2.CreateRect((int)rng.NextInt64(0, 5000), (int)rng.NextInt64(0, 5000));
+                newComponent2.Value = ("A" + i.ToString(), "+");
+                newComponent2.Code = $"dynamic A{i} = A{i} + {i} ;";
+
+                var newComponent3 = new Print("Print", "Prints to console.", "Outputs");
+                newComponent3.CreateRect((int)rng.NextInt64(0, 5000), (int)rng.NextInt64(0, 5000));
+                newComponent3.Value = ("A" + i.ToString(), "");
+                newComponent3.Code = $"Console.WriteLine(A + {i.ToString()});";
+
+                tmpComponents.Add(newComponent1);
+                tmpComponents.Add(newComponent2);
+                tmpComponents.Add(newComponent3);
+            }
+
+            for (int i = 0; i < tmpComponents.Count() - 1; i++)
+            {
+                var conn = new Connection(tmpComponents[i].Outputs.Values.First().GetId(), tmpComponents[i + 1].Inputs.Values.First().GetId(), tmpComponents[i].GetId(), tmpComponents[i + 1].GetId());
+                tmpComponents[i].Outputs.Values.First().OutputConnectionIds.Add(conn.GetId());
+                tmpComponents[i + 1].Inputs.Values.First().InputConnectionIds.Add(conn.GetId());
+                tmpConnections.Add(conn);
+            }
+
+            foreach (var item in tmpComponents)
+            {
+                PaintItems.Add(item.GetId(), item);
+            }
+
+            foreach (var conn in tmpConnections)
+            {
+                Connections.Add(conn.GetId(), conn);
+            }
+
+            skiaElement.InvalidateVisual();
+
+            ValueRegistry.ClearAllRegistries();
+            ConsoleOutput.Text = "------Console Output------";
+
+            foreach (var item in PaintItems.Values)
+                item.Reset();
+
+            CancellationToken cancellationToken = new CancellationToken();
+            Parser.ParseFlowchartAsync(PaintItems, Connections, cancellationToken);
+            skiaElement.InvalidateVisual();
+
+            /*PaintItems.Clear();
+            Connections.Clear();*/
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+        }
     }
 }

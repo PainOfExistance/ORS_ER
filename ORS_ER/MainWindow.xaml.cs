@@ -234,5 +234,24 @@ namespace ORS_ER
 
 			e.Handled = true;
 		}
+
+        private void StressZest_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSelectedSimulation() is FlowchartSimulationView fc)
+            {
+                fc.StressTest();
+                e.Handled = true;
+                return;
+            }
+
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+            {
+                lg.StressTest();
+                e.Handled = true;
+                return;
+            }
+
+            e.Handled = true;
+        }
     }
 }

@@ -93,7 +93,7 @@ namespace ORS_ER.components
             if (this.Code == "")
             {
                 textX = InteractionRect.MidX - (Font.MeasureText("WHILE") / 2);
-                canvas.DrawText(this.IsInsideWhile, textX, textY, Font, Paints.ButtonTextPaint);
+                canvas.DrawText("WHILE", textX, textY, Font, Paints.ButtonTextPaint);
             }
             if (this.Code != "")
             {

@@ -570,4 +570,9 @@ public partial class LogicGatesSimulationView : UserControl
 
         skiaElement.InvalidateVisual();
     }
+
+    public void StressTest()
+    {
+
+    }
 }

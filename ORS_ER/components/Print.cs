@@ -62,8 +62,12 @@ namespace ORS_ER.components
             var textY = InteractionRect.MidY + Font.Size / 4;
             if (this.Code == "")
             {
-                textX = InteractionRect.MidX - (Font.MeasureText("+") / 2);
-                canvas.DrawText(this.IsInsideWhile, textX, textY, Font, Paints.ButtonTextPaint);
+                while (InteractionRect.Width < (Font.MeasureText("Select variable to print") + 5))
+                {
+                    Font.Size--;
+                }
+                textX = InteractionRect.MidX - (Font.MeasureText("Select variable to print") / 2);
+                canvas.DrawText("Select variable to print", textX, textY, Font, Paints.ButtonTextPaint);
             }
             if (this.Code != "")
             {
