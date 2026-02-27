@@ -627,6 +627,7 @@ public partial class FlowchartSimulationView : UserControl
         var mouseWorld = ScreenToWorld(mouseScreen);
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
+        // Check if we hit connection or we deselect it.
         foreach (var conn in Connections)
         {
             if (conn.Value.ToIOId == "" || (hit != null))
@@ -636,7 +637,7 @@ public partial class FlowchartSimulationView : UserControl
             }
             var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromIOId].Node;
             var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToIOId].Node;
-            var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode, 5);
+            var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode);
             if (isSelected)
             {
                 skiaElement.InvalidateVisual();
@@ -648,6 +649,7 @@ public partial class FlowchartSimulationView : UserControl
 
         if (hit != null && hit.Value.Item1 == HitTarget.Rect)
         {
+            //Rect moving.
             _isMoving = true;
             LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();

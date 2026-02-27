@@ -19,22 +19,13 @@ namespace ORS_ER.connections
             ToComponentId = toComponentId;
         }
 
-        public bool HitTest(SKPoint testPoint, SKPoint lineStart, SKPoint lineEnd, float tolerance)
+        public bool HitTest(SKPoint testPoint, SKPoint lineStart, SKPoint lineEnd)
         {
-            // Fast reject using a tolerance-expanded bounding box.
-            var minX = MathF.Min(lineStart.X, lineEnd.X) - tolerance;
-            var maxX = MathF.Max(lineStart.X, lineEnd.X) + tolerance;
-            var minY = MathF.Min(lineStart.Y, lineEnd.Y) - tolerance;
-            var maxY = MathF.Max(lineStart.Y, lineEnd.Y) + tolerance;
-            if (testPoint.X < minX || testPoint.X > maxX || testPoint.Y < minY || testPoint.Y > maxY)
-                IsSelected = false;
-
+            float tolerance = 2.5f;
             var lineVector = lineEnd - lineStart;
             var pointVector = testPoint - lineStart;
 
             var lineLengthSquared = lineVector.X * lineVector.X + lineVector.Y * lineVector.Y;
-            if (lineLengthSquared <= float.Epsilon)
-                IsSelected = (testPoint - lineStart).Length <= tolerance;
 
             // Project the test point onto the segment and measure distance to the closest point.
             var projection = (pointVector.X * lineVector.X + pointVector.Y * lineVector.Y) / lineLengthSquared;

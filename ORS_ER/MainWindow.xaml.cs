@@ -220,7 +220,7 @@ namespace ORS_ER
 		{
 			if (GetSelectedSimulation() is FlowchartSimulationView fc)
 			{
-				fc.SaveCanvasAsPng();
+			    fc.SaveCanvasAsPng();
 				e.Handled = true;
 				return;
 			}
@@ -240,13 +240,6 @@ namespace ORS_ER
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
             {
                 fc.StressTest();
-                e.Handled = true;
-                return;
-            }
-
-            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
-            {
-                lg.StressTest();
                 e.Handled = true;
                 return;
             }

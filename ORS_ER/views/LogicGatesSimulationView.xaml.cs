@@ -405,16 +405,16 @@ public partial class LogicGatesSimulationView : UserControl
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
         // Check if we hit connection or we deselect it.
-        foreach (var connectionEntry in Connections)
+        foreach (var conn in Connections)
         {
-            if (connectionEntry.Value.ToIOId == "" || (hit != null))
+            if (conn.Value.ToIOId == "" || (hit != null))
             {
-                connectionEntry.Value.IsSelected = false;
+                conn.Value.IsSelected = false;
                 continue;
             }
-            var fromNode = PaintItems[connectionEntry.Value.FromComponentId].Outputs[connectionEntry.Value.FromIOId].Node;
-            var toNode = PaintItems[connectionEntry.Value.ToComponentId].Inputs[connectionEntry.Value.ToIOId].Node;
-            var isSelected = connectionEntry.Value.HitTest(mouseWorld, fromNode, toNode, 5);
+            var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromIOId].Node;
+            var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToIOId].Node;
+            var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode);
             if (isSelected)
             {
                 skiaElement.InvalidateVisual();
@@ -569,10 +569,5 @@ public partial class LogicGatesSimulationView : UserControl
             Connections.Add(conn.Key, conn.Value);
 
         skiaElement.InvalidateVisual();
-    }
-
-    public void StressTest()
-    {
-
     }
 }
