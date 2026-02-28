@@ -80,6 +80,7 @@ ORS_ER is a WPF desktop app for building and simulating two kinds of diagrams: f
 ## Usage
 - Use the simulation picker to switch between Flowchart and Logic Gates.
 - Drag blocks from the palette onto the canvas and connect them.
+- Connect them by ckilicking an output port, then an input port. For flowcharts, connections represent execution flow; for logic gates, they represent signal flow.
 - Flowchart: select `Run` to execute and view output in the console pane.
 - Logic Gates: toggle binary inputs and interact with components to update outputs.
 - Use the menu to save/load diagrams or export PNGs.
