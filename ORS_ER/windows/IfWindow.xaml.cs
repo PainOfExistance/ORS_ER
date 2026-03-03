@@ -47,10 +47,10 @@ namespace ORS_ER.windows
         }
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            var candidateName1 = Variable1.Text?.Trim() ?? string.Empty;
-            var candidateName2 = Variable2.Text?.Trim() ?? string.Empty;
+            var leftOperand = Variable1.Text?.Trim() ?? string.Empty;
+            var rightOperand = Variable2.Text?.Trim() ?? string.Empty;
 
-            if (IsCSharpKeyword(candidateName1) || IsCSharpKeyword(candidateName2) || LogicTypeComboBox.SelectedItem == null)
+            if (IsCSharpKeyword(leftOperand) || IsCSharpKeyword(rightOperand) || LogicTypeComboBox.SelectedItem == null)
             {
                 MessageBox.Show("Invalid variable name or not selected item.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

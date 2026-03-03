@@ -139,7 +139,7 @@ namespace ORS_ER.components
             if (_internalComponents is not null && _internalConnections is not null)
                 return;
 
-            // Lazily build the embedded circuit once per component instance.
+            // Build the embedded circuit once per component instance.
             if (_data.Diagram is null)
             {
                 _internalComponents = new Dictionary<string, Component>();

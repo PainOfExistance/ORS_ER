@@ -25,7 +25,7 @@ namespace ORS_ER
                 List<bool> inputValues = new();
                 foreach (var inputs in currentNode.Inputs.Values)
                 {
-                    // Resolve upstream outputs (bool or indexed array) into flat input values.
+                    // Get values depending on the type of the input connection - if it's a direct boolean or if its list.
                     bool valueToAdd = false;
                     try
                     {

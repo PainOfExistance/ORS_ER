@@ -146,6 +146,7 @@ namespace ORS_ER
         {
             static void TrimTrailing(StringBuilder builder)
             {
+                //groes trough loop and trims trailing commas and newlines, to ensure valid JSON formatting
                 while (builder.Length > 0)
                 {
                     var ch = builder[^1];
@@ -253,6 +254,7 @@ namespace ORS_ER
                                 dynamic d1 = null;
                                 if (ve.TryGetProperty("value", out var v))
                                 {
+                                    // Single value loading and checking.
                                     d1 = v.ValueKind switch
                                     {
                                         JsonValueKind.String => v.GetString() ?? "",
@@ -267,6 +269,7 @@ namespace ORS_ER
                             }
                             else if (ve.ValueKind == JsonValueKind.Array && ve.GetArrayLength() == 2)
                             {
+                                // Array values for half and full adder.
                                 var item0 = ve[0];
                                 var item1 = ve[1];
                                 var s0 = item0.ValueKind == JsonValueKind.String ? item0.GetString() : item0.ToString();
@@ -574,6 +577,7 @@ namespace ORS_ER
                     dynamic d1 = null;
                     if (ve.TryGetProperty("value", out var v))
                     {
+                        // Single value loading and checking.
                         d1 = v.ValueKind switch
                         {
                             JsonValueKind.String => v.GetString() ?? "",
@@ -588,6 +592,7 @@ namespace ORS_ER
                 }
                 else if (ve.ValueKind == JsonValueKind.Array && ve.GetArrayLength() == 2)
                 {
+                    // Array values for half and full adder.
                     var item0 = ve[0];
                     var item1 = ve[1];
                     var s0 = item0.ValueKind == JsonValueKind.String ? item0.GetString() : item0.ToString();
