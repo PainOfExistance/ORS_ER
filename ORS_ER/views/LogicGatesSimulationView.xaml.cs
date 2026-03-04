@@ -194,6 +194,12 @@ public partial class LogicGatesSimulationView : UserControl
 
     private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
 
+    private SKPoint ToScreenPoint(Point position)
+    {
+        var dpi = VisualTreeHelper.GetDpi(skiaElement);
+        return new SKPoint((float)(position.X * dpi.DpiScaleX), (float)(position.Y * dpi.DpiScaleY));
+    }
+
     public void CancelConnection()
     {
         CancelPendingConnection(false, false);
@@ -400,7 +406,7 @@ public partial class LogicGatesSimulationView : UserControl
 
         skiaElement.Focus();
         var mousePosition = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
+        var mouseScreen = ToScreenPoint(mousePosition);
         var mouseWorld = ScreenToWorld(mouseScreen);
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
@@ -427,6 +433,7 @@ public partial class LogicGatesSimulationView : UserControl
         if (hit != null && hit.Value.Item1 == HitTarget.Rect)
         {
             //Rect moving.
+            skiaElement.Cursor = Cursors.Hand;
             _isMoving = true;
             LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
@@ -468,19 +475,17 @@ public partial class LogicGatesSimulationView : UserControl
     private void SkiaElement_OnMouseMove(object sender, MouseEventArgs e)
     {
         var mousePosition = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
+        var mouseScreen = ToScreenPoint(mousePosition);
         _mouseWorld = ScreenToWorld(mouseScreen);
 
         if (_isPanning)
         {
-            var mouse = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
-            var deltaScreen = mouse - _panStartMouse;
+            var deltaScreen = mouseScreen - _panStartMouse;
             _panOffset = _panStartOffset + deltaScreen;
             skiaElement.InvalidateVisual();
         }
         else if (_isMoving)
         {
-            skiaElement.Cursor = Cursors.SizeAll;
             foreach (var item in PaintItems)
             {
                 if (item.Value.Selected)
@@ -512,7 +517,7 @@ public partial class LogicGatesSimulationView : UserControl
     private void SkiaElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
     {
         var mousePosition = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
+        var mouseScreen = ToScreenPoint(mousePosition);
 
         var zoomFactor = e.Delta > 0 ? ZoomStep : 1f / ZoomStep;
         var newZoom = Math.Clamp(_zoom * zoomFactor, MinZoom, MaxZoom);

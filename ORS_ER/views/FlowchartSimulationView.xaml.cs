@@ -230,6 +230,12 @@ public partial class FlowchartSimulationView : UserControl
 
     private SKPoint ScreenToWorld(SKPoint screen) => new(screen.X / _zoom - _panOffset.X, screen.Y / _zoom - _panOffset.Y);
 
+    private SKPoint ToScreenPoint(Point position)
+    {
+        var dpi = VisualTreeHelper.GetDpi(skiaElement);
+        return new SKPoint((float)(position.X * dpi.DpiScaleX), (float)(position.Y * dpi.DpiScaleY));
+    }
+
     private void PalettePreview_OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
@@ -426,6 +432,7 @@ public partial class FlowchartSimulationView : UserControl
             {
                 if (candidateResult.Value.Item1 == HitTarget.Output)
                 {
+                    // Hitting output starts connecting.
                     if (!_isConnecting)
                     {
                         _isConnecting = true;
@@ -650,6 +657,7 @@ public partial class FlowchartSimulationView : UserControl
         if (hit != null && hit.Value.Item1 == HitTarget.Rect)
         {
             //Rect moving.
+            skiaElement.Cursor = Cursors.Hand;
             _isMoving = true;
             LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
@@ -691,13 +699,12 @@ public partial class FlowchartSimulationView : UserControl
     private void SkiaElement_OnMouseMove(object sender, MouseEventArgs e)
     {
         var mousePosition = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
+        var mouseScreen = ToScreenPoint(mousePosition);
         _mouseWorld = ScreenToWorld(mouseScreen);
 
         if (_isPanning)
         {
-            var mouse = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
-            var deltaScreen = mouse - _panStartMouse;
+            var deltaScreen = mouseScreen - _panStartMouse;
             _panOffset = _panStartOffset + deltaScreen;
             skiaElement.InvalidateVisual();
             e.Handled = true;
@@ -706,7 +713,6 @@ public partial class FlowchartSimulationView : UserControl
 
         if (_isMoving)
         {
-            skiaElement.Cursor = Cursors.SizeAll;
             foreach (var item in PaintItems)
             {
                 if (item.Value.Selected)
@@ -736,14 +742,13 @@ public partial class FlowchartSimulationView : UserControl
         _isMoving = false;
         skiaElement.ReleaseMouseCapture();
         skiaElement.Cursor = Cursors.Arrow;
-
         e.Handled = true;
     }
 
     private void SkiaElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
     {
         var mousePosition = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
+        var mouseScreen = ToScreenPoint(mousePosition);
 
         var zoomFactor = e.Delta > 0 ? ZoomStep : 1f / ZoomStep;
         var newZoom = Math.Clamp(_zoom * zoomFactor, MinZoom, MaxZoom);
@@ -880,9 +885,6 @@ public partial class FlowchartSimulationView : UserControl
             CancellationToken cancellationToken = new CancellationToken();
             Parser.ParseFlowchartAsync(PaintItems, Connections, cancellationToken);
             skiaElement.InvalidateVisual();
-
-            /*PaintItems.Clear();
-            Connections.Clear();*/
         }
         catch (Exception ex)
         {
