@@ -630,7 +630,7 @@ public partial class FlowchartSimulationView : UserControl
 
         skiaElement.Focus();
         var mousePosition = e.GetPosition(skiaElement);
-        var mouseScreen = new SKPoint((float)mousePosition.X, (float)mousePosition.Y);
+        var mouseScreen = ToScreenPoint(mousePosition);
         var mouseWorld = ScreenToWorld(mouseScreen);
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
@@ -749,7 +749,6 @@ public partial class FlowchartSimulationView : UserControl
     {
         var mousePosition = e.GetPosition(skiaElement);
         var mouseScreen = ToScreenPoint(mousePosition);
-
         var zoomFactor = e.Delta > 0 ? ZoomStep : 1f / ZoomStep;
         var newZoom = Math.Clamp(_zoom * zoomFactor, MinZoom, MaxZoom);
 

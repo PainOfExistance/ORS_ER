@@ -518,7 +518,6 @@ public partial class LogicGatesSimulationView : UserControl
     {
         var mousePosition = e.GetPosition(skiaElement);
         var mouseScreen = ToScreenPoint(mousePosition);
-
         var zoomFactor = e.Delta > 0 ? ZoomStep : 1f / ZoomStep;
         var newZoom = Math.Clamp(_zoom * zoomFactor, MinZoom, MaxZoom);
 
