@@ -159,5 +159,38 @@ namespace ORS_ER
                 }
             }
         }
+
+        public Dictionary<string, dynamic> ExtractVariables(Dictionary<string, Component> paintItems, Dictionary<string, Connection> connections, Component currentItem)
+        {
+            Dictionary<string, dynamic> variables = new Dictionary<string, dynamic>();
+            Queue<Component> toVisit = new Queue<Component>();
+            toVisit.Enqueue(currentItem);
+            while (toVisit.Count > 0)
+            {
+                var item = toVisit.Dequeue();
+                if (item is Input || item is Operator)
+                {
+                    variables[item.Value.Item1] = item.Value.Item2;
+                }
+                var inputConnections = item.Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                    .Select(connId => connections[connId])
+                    .ToList();
+
+                if (inputConnections.Count == 2)
+                {
+                    inputConnections = paintItems[paintItems[connections[item.Inputs.First().Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]].Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                    .Select(connId => connections[connId])
+                    .ToList();
+                }
+                //todo handle while and handle exceptions but thats all for later
+
+                foreach (var conn in inputConnections)
+                {
+                    var fromComponent = paintItems[conn.FromComponentId];
+                    toVisit.Enqueue(fromComponent);
+                }
+            }
+            return variables;
+        }
     }
 }
