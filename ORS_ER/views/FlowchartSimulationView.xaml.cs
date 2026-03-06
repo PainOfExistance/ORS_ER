@@ -113,6 +113,7 @@ public partial class FlowchartSimulationView : UserControl
 
     private void FlowchartSimulationView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
+        skiaElement.Cursor = Cursors.Arrow;
         CancelPendingConnection(true, true);
     }
 
@@ -123,12 +124,30 @@ public partial class FlowchartSimulationView : UserControl
 
         if (TryDeleteSelectedConnection())
         {
+            var cts = new CancellationTokenSource();
+            RunAsync(cts.Token).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
+                }
+            });
+
             CompleteDelete(e);
             return;
         }
 
         if (TryDeleteSelectedComponent())
         {
+            var cts = new CancellationTokenSource();
+            RunAsync(cts.Token).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
+                }
+            });
+
             CompleteDelete(e);
             return;
         }
@@ -433,7 +452,7 @@ public partial class FlowchartSimulationView : UserControl
                 if (candidateResult.Value.Item1 == HitTarget.Output)
                 {
                     // Hitting output starts connecting.
-                    if (!_isConnecting)
+                    if (!_isConnecting && item.Outputs[candidateResult.Value.Item3.GetId()].OutputConnectionIds.Count() < 1)
                     {
                         _isConnecting = true;
                         Connection newConnection = new Connection(candidateResult.Value.Item3.GetId(), "", candidateResult.Value.Item2.GetId(), "");
@@ -662,6 +681,7 @@ public partial class FlowchartSimulationView : UserControl
             LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
             e.Handled = true;
+
             return;
         }
 
@@ -682,6 +702,34 @@ public partial class FlowchartSimulationView : UserControl
         {
             skiaElement.InvalidateVisual();
             e.Handled = true;
+
+            var cts = new CancellationTokenSource();
+            RunAsync(cts.Token).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
+                }
+            });
+
+            return;
+        }
+
+        if (hit != null && (hit.Value.Item1 == HitTarget.Input || hit.Value.Item1 == HitTarget.Output))
+        {
+            skiaElement.Cursor = Cursors.Pen;
+            skiaElement.InvalidateVisual();
+            e.Handled = true;
+
+            var cts = new CancellationTokenSource();
+            RunAsync(cts.Token).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
+                }
+            });
+
             return;
         }
 
@@ -725,6 +773,8 @@ public partial class FlowchartSimulationView : UserControl
 
         if (_isConnecting)
         {
+            skiaElement.Cursor = Cursors.Pen;
+
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
@@ -741,7 +791,8 @@ public partial class FlowchartSimulationView : UserControl
         _isPanning = false;
         _isMoving = false;
         skiaElement.ReleaseMouseCapture();
-        skiaElement.Cursor = Cursors.Arrow;
+        if (!_isConnecting)
+            skiaElement.Cursor = Cursors.Arrow;
         e.Handled = true;
     }
 
