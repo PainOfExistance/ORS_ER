@@ -88,9 +88,14 @@ namespace ORS_ER
             // Seed with flowchart entry nodes (inputs/operators) that have no incoming connections.
             var queuedNodes = new Queue<Component>(
                 paintItems
-                    .Where(kv => kv.Value.Inputs.First().Value.InputConnectionIds.Count() == 0 && (kv.Value.GetType() == typeof(Input) || kv.Value.GetType() == typeof(Operator)))
+                    .Where(kv => kv.Value.Inputs.First().Value.InputConnectionIds.Count() == 0 && kv.Value.GetType() == typeof(Input))
                     .Select(kv => kv.Value));
             var nodeIdHashed = new HashSet<string>(queuedNodes.Select(node => node.GetId()));
+            if (queuedNodes.Count > 1)
+            {
+                Console.WriteLine("Multiple entry points detected. Please ensure there is only one input block with no incoming connections.");
+                return;
+            }
 
             while (queuedNodes.Count > 0)
             {

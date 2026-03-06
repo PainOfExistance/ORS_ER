@@ -55,6 +55,11 @@ namespace ORS_ER.windows
                 MessageBox.Show("Invalid variable name or not selected item.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+            if(candidateName == "" || candidateName == leftOperand || candidateName == rightOperand)
+            {
+                MessageBox.Show("Variable name cannot be empty or be reasigned.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             this.Value.Item1 = candidateName;
             this.Value.Item2 = LogicTypeComboBox.SelectedItem;
