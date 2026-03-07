@@ -163,51 +163,59 @@ namespace ORS_ER
         public static Dictionary<string, dynamic> ExtractVariables(Dictionary<string, Component> paintItems, Dictionary<string, Connection> connections, Component currentItem)
         {
             Dictionary<string, dynamic> variables = new Dictionary<string, dynamic?>();
-            Queue<Component> toVisit = new Queue<Component>();
-            toVisit.Enqueue(currentItem);
-            while (toVisit.Count > 0)
+            try
             {
-                var item = toVisit.Dequeue();
-                if (item is Input || item is Operator)
+                Queue<Component> toVisit = new Queue<Component>();
+                toVisit.Enqueue(currentItem);
+                while (toVisit.Count > 0)
                 {
-                    if (item.Value.Item1 != null && item.Value.Item2 != null)
-                        variables[item.Value.Item1] = item.Value.Item2;
-                }
-                var inputConnections = item.Inputs.Values.SelectMany(input => input.InputConnectionIds)
-                    .Select(connId => connections[connId])
-                    .ToList();
-
-
-                if (inputConnections.Count >= 2)
-                {
-                    if (item is While)
+                    var item = toVisit.Dequeue();
+                    if (item is Input || item is Operator)
                     {
-                        inputConnections = paintItems[paintItems[connections[item.Inputs.Last().Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]].Inputs.Values
-                        .SelectMany(input => input.InputConnectionIds)
+                        if (item.Value.Item1 != null && item.Value.Item2 != null)
+                            variables[item.Value.Item1] = item.Value.Item2;
+                    }
+                    var inputConnections = item.Inputs.Values.SelectMany(input => input.InputConnectionIds)
                         .Select(connId => connections[connId])
                         .ToList();
-                    }
-                    else
+
+
+                    if (inputConnections.Count >= 2)
                     {
-                        inputConnections = paintItems[paintItems[connections[item.Inputs.First().Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]].Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                        if (item is While)
+                        {
+                            inputConnections = item.Inputs.Last().Value.InputConnectionIds
                         .Select(connId => connections[connId])
                         .ToList();
+                        }
+                        else
+                        {
+                            inputConnections = paintItems[paintItems[connections[item.Inputs.First()
+                            .Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]]
+                            .Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                            .Select(connId => connections[connId])
+                            .ToList();
+                        }
+                    }
+                    else if (item is While)
+                    {
+                        inputConnections = item.Inputs.Values
+                            .Where(kv => kv.IfTrue == "Start")
+                            .SelectMany(kv => kv.InputConnectionIds.Select(id => connections[id]))
+                            .ToList();
+                    }
+
+
+                    foreach (var conn in inputConnections)
+                    {
+                        var fromComponent = paintItems[conn.FromComponentId];
+                        toVisit.Enqueue(fromComponent);
                     }
                 }
-                else if (item is While)
-                {
-                    inputConnections = item.Inputs.Values
-                        .Where(kv => kv.IfTrue == "Start")
-                        .SelectMany(kv => kv.InputConnectionIds.Select(id => connections[id]))
-                        .ToList();
-                }
-
-
-                foreach (var conn in inputConnections)
-                {
-                    var fromComponent = paintItems[conn.FromComponentId];
-                    toVisit.Enqueue(fromComponent);
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error extracting variables for block {currentItem.Name} with id {currentItem.GetId()}: {ex.Message}");
             }
             return variables;
         }

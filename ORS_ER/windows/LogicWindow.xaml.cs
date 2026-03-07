@@ -100,9 +100,9 @@ namespace ORS_ER.windows
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(candidateName) || IsSameReference(candidateName, leftInput) || IsSameReference(candidateName, rightInput))
+            if (string.IsNullOrWhiteSpace(candidateName))
             {
-                MessageBox.Show("Variable name cannot be empty or be reasigned.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Variable name cannot be empty.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
