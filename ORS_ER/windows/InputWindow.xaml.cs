@@ -42,7 +42,7 @@ namespace ORS_ER.windows
             this.Value.Item1 = candidateName;
             if (this.Type.Contains("String"))
             {
-                this.Value.Item2 = ValueTextBox.Text.Replace("\"", "");
+                this.Value.Item2 = '"'+ValueTextBox.Text+'"';
             }
             else if (this.Type.Contains("Binary"))
             {

@@ -16,32 +16,101 @@ namespace ORS_ER.windows
     {
         public (string, dynamic) Value = ("", null);
         public string Code = "";
-        public PrintWindow(string Code, (string, dynamic) Value)
+        private readonly Dictionary<string, dynamic> variables;
+        public PrintWindow(string Code, (string, dynamic) Value, Dictionary<string, dynamic> variables)
         {
             InitializeComponent();
             this.Code = Code;
             this.Value = Value;
-            VariableComboBox.Text = Value.Item1;
+            this.variables = variables;
+            VariableComboBox.ItemsSource = variables.Keys;
+
+            bool hasVariable = false;
+            string querryKey = Value.Item1 == null ? "" : Value.Item1.ToString();
+            if (variables.Count() != 0)
+            {
+                hasVariable = variables.ContainsKey(querryKey);
+            }
+            PrintVariableRadioButton.IsChecked = hasVariable;
+            PrintTextRadioButton.IsChecked = !hasVariable;
+            if (hasVariable)
+            {
+                VariableComboBox.SelectedItem = Value.Item1;
+            }
+
+            if (!hasVariable)
+            {
+                PrintTextTextBox.Text = Value.Item1;
+            }
+
+            Loaded += (_, __) => UpdateInputVisibility();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.Value.Item1 = VariableComboBox.Text?.Trim() ?? string.Empty;
-            if (VariableComboBox.Text?.Trim() == "")
+            if (PrintTextRadioButton.IsChecked == true)
             {
-                this.Code = "";
+                SaveTextPrintValue();
                 DialogResult = true;
                 return;
             }
 
-            this.Code = $"Console.WriteLine({this.Value.Item1});";
-
+            SaveVariablePrintValue();
             DialogResult = true;
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
+        }
+
+        private void PrintMode_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateInputVisibility();
+        }
+
+        private void UpdateInputVisibility()
+        {
+            var isTextMode = PrintTextRadioButton.IsChecked == true;
+            VariableComboBox.Visibility = isTextMode ? Visibility.Collapsed : Visibility.Visible;
+            PrintTextTextBox.Visibility = isTextMode ? Visibility.Visible : Visibility.Collapsed;
+            if (isTextMode)
+                VaraibleTextLabel.Content = "Set text to print:";
+            else
+                VaraibleTextLabel.Content = "Select variable to print:";
+
+        }
+
+        private void SaveVariablePrintValue()
+        {
+            var variableName = VariableComboBox.Text?.Trim() ?? string.Empty;
+            Value.Item1 = variableName;
+            if (string.IsNullOrWhiteSpace(variableName))
+            {
+                Code = "";
+                return;
+            }
+
+            Code = $"Console.WriteLine({variableName});";
+        }
+
+        private void SaveTextPrintValue()
+        {
+            var textToPrint = PrintTextTextBox.Text?.Trim() ?? string.Empty;
+            Value.Item1 = textToPrint;
+            if (string.IsNullOrWhiteSpace(textToPrint))
+            {
+                Code = "";
+                return;
+            }
+
+            var escapedText = EscapePrintText(textToPrint);
+            Code = $"Console.WriteLine(\"{escapedText}\");";
+        }
+
+        private static string EscapePrintText(string text)
+        {
+            return text.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n");
         }
     }
 }

@@ -24,13 +24,13 @@
         <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="=" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
         <Label Grid.Row="0" Grid.Column="1" Content="Variable 1:" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <TextBox Grid.Row="1" Grid.Column="1" x:Name="Variable1" Width="80" Margin="5"/>
+        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="Variable1" Width="80" Margin="5" IsEditable="True" SelectionChanged="VariableInput_SelectionChanged" KeyUp="VariableInput_KeyUp" LostFocus="VariableInput_LostFocus"/>
 
         <Label Grid.Row="0" Grid.Column="2" Content="Operation:" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         <ComboBox Grid.Row="1" Grid.Column="2" x:Name="LogicTypeComboBox" Width="80" Margin="5" SelectionChanged="LogicTypeComboBox_SelectionChanged"/>
 
         <Label Grid.Row="0" Grid.Column="3" Content="Varaible 2:" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <TextBox Grid.Row="1" Grid.Column="3" x:Name="Variable2" Width="80" Margin="5"/>
+        <ComboBox Grid.Row="1" Grid.Column="3" x:Name="Variable2" Width="80" Margin="5" IsEditable="True" SelectionChanged="VariableInput_SelectionChanged" KeyUp="VariableInput_KeyUp" LostFocus="VariableInput_LostFocus"/>
 
 
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center">

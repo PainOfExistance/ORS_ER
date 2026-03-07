@@ -81,7 +81,7 @@ namespace ORS_ER.components
             rect.Offset(dx, dy);
             this.InteractionRect = rect;
         }
-        virtual public (HitTarget, Component, IO?)? HitTest(SKPoint world)
+        virtual public (HitTarget, Component, IO?)? HitTest(SKPoint world, Dictionary<string, dynamic> variables)
         {
             const float hitRadius = 8f;
             var hitRadius2 = hitRadius * hitRadius;
@@ -135,7 +135,7 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(Operator))
                 {
                     // Operator dialogs allow editing the embedded expression/value.
-                    var dlg = new LogicWindow(this.Code, this.Value);
+                    var dlg = new LogicWindow(this.Code, this.Value, variables);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;
@@ -160,7 +160,7 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(Print))
                 {
                     // Print dialog configures output formatting.
-                    var dlg = new PrintWindow(this.Code, this.Value);
+                    var dlg = new PrintWindow(this.Code, this.Value, variables);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;
@@ -172,7 +172,7 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(If) || this.GetType() == typeof(While))
                 {
                     // If/While dialog configures the condition.
-                    var dlg = new IfWindow(this.Code, this.Value);
+                    var dlg = new IfWindow(this.Code, this.Value, variables);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;

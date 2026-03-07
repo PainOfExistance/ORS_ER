@@ -323,7 +323,7 @@ public partial class LogicGatesSimulationView : UserControl
         foreach (Component item in PaintItems.Values)
         {
             item.Selected = false;
-            candidateResult = item.HitTest(world);
+            candidateResult = item.HitTest(world, new Dictionary<string, dynamic>());
             if (candidateResult != null)
             {
                 if (candidateResult.Value.Item1 == HitTarget.Output)

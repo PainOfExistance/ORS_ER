@@ -160,9 +160,9 @@ namespace ORS_ER
             }
         }
 
-        public Dictionary<string, dynamic> ExtractVariables(Dictionary<string, Component> paintItems, Dictionary<string, Connection> connections, Component currentItem)
+        public static Dictionary<string, dynamic> ExtractVariables(Dictionary<string, Component> paintItems, Dictionary<string, Connection> connections, Component currentItem)
         {
-            Dictionary<string, dynamic> variables = new Dictionary<string, dynamic>();
+            Dictionary<string, dynamic> variables = new Dictionary<string, dynamic?>();
             Queue<Component> toVisit = new Queue<Component>();
             toVisit.Enqueue(currentItem);
             while (toVisit.Count > 0)
@@ -170,19 +170,38 @@ namespace ORS_ER
                 var item = toVisit.Dequeue();
                 if (item is Input || item is Operator)
                 {
-                    variables[item.Value.Item1] = item.Value.Item2;
+                    if (item.Value.Item1 != null && item.Value.Item2 != null)
+                        variables[item.Value.Item1] = item.Value.Item2;
                 }
                 var inputConnections = item.Inputs.Values.SelectMany(input => input.InputConnectionIds)
                     .Select(connId => connections[connId])
                     .ToList();
 
-                if (inputConnections.Count == 2)
+
+                if (inputConnections.Count >= 2)
                 {
-                    inputConnections = paintItems[paintItems[connections[item.Inputs.First().Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]].Inputs.Values.SelectMany(input => input.InputConnectionIds)
-                    .Select(connId => connections[connId])
-                    .ToList();
+                    if (item is While)
+                    {
+                        inputConnections = paintItems[paintItems[connections[item.Inputs.Last().Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]].Inputs.Values
+                        .SelectMany(input => input.InputConnectionIds)
+                        .Select(connId => connections[connId])
+                        .ToList();
+                    }
+                    else
+                    {
+                        inputConnections = paintItems[paintItems[connections[item.Inputs.First().Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]].Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                        .Select(connId => connections[connId])
+                        .ToList();
+                    }
                 }
-                //todo handle while and handle exceptions but thats all for later
+                else if (item is While)
+                {
+                    inputConnections = item.Inputs.Values
+                        .Where(kv => kv.IfTrue == "Start")
+                        .SelectMany(kv => kv.InputConnectionIds.Select(id => connections[id]))
+                        .ToList();
+                }
+
 
                 foreach (var conn in inputConnections)
                 {

@@ -446,7 +446,8 @@ public partial class FlowchartSimulationView : UserControl
         foreach (Component item in PaintItems.Values)
         {
             item.Selected = false;
-            candidateResult = item.HitTest(world);
+            Dictionary<string, dynamic> variables = Parser.ExtractVariables(PaintItems, Connections, item);
+            candidateResult = item.HitTest(world, variables);
             if (candidateResult != null)
             {
                 if (candidateResult.Value.Item1 == HitTarget.Output)
@@ -610,6 +611,15 @@ public partial class FlowchartSimulationView : UserControl
                             Connections[_connectingConnectionId].IsSelected = false;
                             _isConnecting = false;
                             _connectingConnectionId = "";
+
+                            var cts = new CancellationTokenSource();
+                            RunAsync(cts.Token).ContinueWith(t =>
+                            {
+                                if (t.IsFaulted)
+                                {
+                                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
+                                }
+                            });
                         }
                         else if (_isConnecting)
                         {
@@ -720,15 +730,6 @@ public partial class FlowchartSimulationView : UserControl
             skiaElement.Cursor = Cursors.Pen;
             skiaElement.InvalidateVisual();
             e.Handled = true;
-
-            var cts = new CancellationTokenSource();
-            RunAsync(cts.Token).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
-                }
-            });
 
             return;
         }

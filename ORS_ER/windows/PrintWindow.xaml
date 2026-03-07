@@ -4,21 +4,28 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ORS_ER.windows"
-        Title="Print" Width="300" Height="150"
+        Title="Print" Width="360" Height="190"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8" HorizontalAlignment="center">
-            <Label Content="Select variable to print:" VerticalAlignment="Center"/>
-            <TextBox x:Name="VariableComboBox" Width="100" Margin="8,0,0,0"/>
+            <RadioButton x:Name="PrintVariableRadioButton" Content="Variable" Margin="0,0,8,0" Checked="PrintMode_Checked"/>
+            <RadioButton x:Name="PrintTextRadioButton" Content="Text" Checked="PrintMode_Checked"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="center">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8" HorizontalAlignment="center">
+            <Label x:Name="VaraibleTextLabel" Content="Select variable to print:" VerticalAlignment="Center"/>
+            <ComboBox x:Name="VariableComboBox" Width="140" Margin="8,0,0,0"/>
+            <TextBox x:Name="PrintTextTextBox" Width="140" Margin="8,0,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="center">
             <Button Content="OK" Width="80" Margin="0,0,8,0" Click="Button_Click"/>
             <Button Content="Cancel" Width="80" Click="Button_Click_1" />
         </StackPanel>
