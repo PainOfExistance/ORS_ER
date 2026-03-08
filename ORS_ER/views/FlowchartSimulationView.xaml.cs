@@ -198,8 +198,9 @@ public partial class FlowchartSimulationView : UserControl
         {
             string current = toVisit.First();
             toVisit.RemoveAt(0);
-            if (PaintItems[current].Inputs.First().Value.InputConnectionIds.Count() == 2 || component.GetType() == typeof(If) || component.GetType() == typeof(While))
+            if (PaintItems[current].Inputs.First().Value.InputConnectionIds.Count() == 2)
             {
+                // todo fix this for if inside if propagation
                 break;
             }
             else if (prevIsInsideIf != "")
@@ -215,7 +216,43 @@ public partial class FlowchartSimulationView : UserControl
             {
                 for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
                 {
-                    toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                    if (PaintItems[current].GetType() == typeof(If) && PaintItems[current].Outputs[outputKey].IfTrue == "True")
+                    {
+                        string nextIsInsideIfItem = Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId;
+                        bool stoping = false;
+                        while (!stoping)
+                        {
+                            if (PaintItems[nextIsInsideIfItem].IsInsideIf.Contains(PaintItems[current].IsInsideIf))
+                            {
+                                if (PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.Count > 0)
+                                {
+                                    nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                                }
+                                else
+                                {
+                                    nextIsInsideIfItem = "";
+                                    stoping = true;
+                                }
+                            }
+                            else
+                            {
+                                stoping = true;
+                                nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                            }
+                        }
+                        if (nextIsInsideIfItem != "")
+                        {
+                            toVisit.Add(Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId);
+                        }
+                    }
+                    else if (PaintItems[current].GetType() == typeof(While) && PaintItems[current].Outputs[outputKey].IfTrue == "False")
+                    {
+                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                    }
+                    else if (!(PaintItems[current].GetType() == typeof(While) || PaintItems[current].GetType() == typeof(If)))
+                    {
+                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                    }
                 }
             }
         }

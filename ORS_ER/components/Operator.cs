@@ -112,11 +112,11 @@ namespace ORS_ER.components
             string variableName = this.Value.Item1;
             string leftOperandName = "";
             string rightOperandName = "";
-            string operation = this.Value.Item2;
+            string operation = codeParts[4];
 
             // Resolve operands from the generated code parts.
             leftOperandName = codeParts[3];
-            if (this.Value.Item2 != "NOT")
+            if (operation != "NOT")
                 rightOperandName = codeParts[5];
 
             string key = "";
@@ -225,7 +225,7 @@ namespace ORS_ER.components
             }
 
             ValueRegistry.RegisterLocalValue(key, variableName, new ValueRegistry.RegistryEntry { BlockId = this.GetId(), Name = variableName, Value = this.Value.Item2 });
-            this.Value = (this.Value.Item1, operation);
+            //this.Value = (this.Value.Item1, operation);
         }
     }
 }

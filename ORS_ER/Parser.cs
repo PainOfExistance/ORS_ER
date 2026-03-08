@@ -182,11 +182,19 @@ namespace ORS_ER
 
                     if (inputConnections.Count >= 2)
                     {
-                        if (item is While)
+                        if (item is While && inputConnections.Count == 3)
+                        {
+                            inputConnections = paintItems[paintItems[connections[item.Inputs.Last()
+                            .Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]]
+                            .Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                            .Select(connId => connections[connId])
+                            .ToList();
+                        }
+                        else if (item is While && inputConnections.Count == 2)
                         {
                             inputConnections = item.Inputs.Last().Value.InputConnectionIds
-                        .Select(connId => connections[connId])
-                        .ToList();
+                            .Select(connId => connections[connId])
+                            .ToList();
                         }
                         else
                         {
@@ -196,13 +204,6 @@ namespace ORS_ER
                             .Select(connId => connections[connId])
                             .ToList();
                         }
-                    }
-                    else if (item is While)
-                    {
-                        inputConnections = item.Inputs.Values
-                            .Where(kv => kv.IfTrue == "Start")
-                            .SelectMany(kv => kv.InputConnectionIds.Select(id => connections[id]))
-                            .ToList();
                     }
 
 
