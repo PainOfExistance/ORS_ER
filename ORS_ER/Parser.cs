@@ -179,8 +179,7 @@ namespace ORS_ER
                         .Select(connId => connections[connId])
                         .ToList();
 
-
-                    if (inputConnections.Count >= 2)
+                    while (inputConnections.Count >= 2)
                     {
                         if (item is While && inputConnections.Count == 3)
                         {
@@ -198,11 +197,28 @@ namespace ORS_ER
                         }
                         else
                         {
-                            inputConnections = paintItems[paintItems[connections[item.Inputs.First()
-                            .Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]]
-                            .Inputs.Values.SelectMany(input => input.InputConnectionIds)
-                            .Select(connId => connections[connId])
-                            .ToList();
+                            if (paintItems[inputConnections[0].FromComponentId] is If)
+                            {
+                                inputConnections = paintItems[inputConnections[0].FromComponentId]
+                               .Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                               .Select(connId => connections[connId])
+                               .ToList();
+                            }
+                            else if (paintItems[inputConnections[1].FromComponentId] is If)
+                            {
+                                inputConnections = paintItems[inputConnections[0].FromComponentId]
+                               .Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                               .Select(connId => connections[connId])
+                               .ToList();
+                            }
+                            else
+                            {
+                                inputConnections = paintItems[paintItems[connections[item.Inputs.First()
+                                .Value.InputConnectionIds.First()].FromComponentId].IsInsideIf.Split("_")[0]]
+                                .Inputs.Values.SelectMany(input => input.InputConnectionIds)
+                                .Select(connId => connections[connId])
+                                .ToList();
+                            }
                         }
                     }
 

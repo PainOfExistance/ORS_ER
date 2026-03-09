@@ -157,104 +157,185 @@ public partial class FlowchartSimulationView : UserControl
 
     public void ClearNestedConnectionScopes(string scopeId, List<string> toVisit)
     {
-        // Traverse outgoing connections and clear nested If/While scope flags.
-        for (; toVisit.Count > 0;)
+        try
         {
-            string current = toVisit.First();
-            toVisit.RemoveAt(0);
-            if (PaintItems[current].IsInsideIf.Contains(scopeId) && PaintItems[current].IsInsideIf != "")
+            // Traverse outgoing connections and clear nested If/While scope flags.
+            for (; toVisit.Count > 0;)
             {
-                PaintItems[current].IsInsideIf = "";
-                foreach (string outputKey in PaintItems[current].Outputs.Keys)
+                string current = toVisit.First();
+                toVisit.RemoveAt(0);
+                if (PaintItems[current].IsInsideIf.Contains(scopeId) && PaintItems[current].IsInsideIf != "")
                 {
-                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
+                    PaintItems[current].IsInsideIf = "";
+                    foreach (string outputKey in PaintItems[current].Outputs.Keys)
                     {
-                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                        for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
+                        {
+                            toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                        }
                     }
                 }
-            }
 
-            if (PaintItems[current].IsInsideWhile.Contains(scopeId) && PaintItems[current].IsInsideWhile != "")
-            {
-                PaintItems[current].IsInsideWhile = "";
-                foreach (string outputKey in PaintItems[current].Outputs.Keys)
+                if (PaintItems[current].IsInsideWhile.Contains(scopeId) && PaintItems[current].IsInsideWhile != "")
                 {
-                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
+                    PaintItems[current].IsInsideWhile = "";
+                    foreach (string outputKey in PaintItems[current].Outputs.Keys)
                     {
-                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                        for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
+                        {
+                            toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                        }
+                    }
+                }
+
+                if (PaintItems[current] is If)
+                {
+                    string nextIsInsideIfItem = "";
+                    if (PaintItems[current].Outputs.First().Value.OutputConnectionIds.Count() > 0)
+                    {
+                        nextIsInsideIfItem = Connections[PaintItems[current].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                    }
+                    else if (PaintItems[current].Outputs.Last().Value.OutputConnectionIds.Count() > 0)
+                    {
+                        nextIsInsideIfItem = Connections[PaintItems[current].Outputs.Last().Value.OutputConnectionIds.First()].ToComponentId;
+                    }
+
+                    bool stoping = false;
+                    while (!stoping)
+                    {
+                        if (PaintItems[nextIsInsideIfItem].IsInsideIf.Contains(PaintItems[current].GetId()))
+                        {
+                            if (PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.Count > 0)
+                            {
+                                nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                            }
+                            else
+                            {
+                                nextIsInsideIfItem = "";
+                                stoping = true;
+                            }
+                        }
+                        else
+                        {
+                            stoping = true;
+                            //nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                        }
+                    }
+                    if (nextIsInsideIfItem != "")
+                    {
+                        //nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                        PaintItems[nextIsInsideIfItem].IsInsideIf = "";
+                        if (PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.Count() > 0)
+                        {
+                            toVisit.Add(Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId);
+                        }
+                    }
+                }
+                else if (PaintItems[current] is While)
+                {
+                    var falseOutput = PaintItems[current].Outputs
+                        .Where(kv => kv.Value.IfTrue == "False")
+                        .Select(kv => kv.Value.OutputConnectionIds.FirstOrDefault())
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(falseOutput) && Connections.TryGetValue(falseOutput, out var whileConnection))
+                    {
+                        toVisit.Add(whileConnection.ToComponentId);
                     }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("Error during scope clearing: " + ex.Message);
         }
     }
 
     private void PropagateIsInsideFlags(Component component)
     {
-        // Traverse outgoing connections and propagate If/While scope flags.
-        var toVisit = new List<string> { component.GetId() };
-        string prevIsInsideIf = component.IsInsideIf;
-        string prevIsInsideWhile = component.IsInsideWhile;
-        for (; toVisit.Count > 0;)
+        try
         {
-            string current = toVisit.First();
-            toVisit.RemoveAt(0);
-            if (PaintItems[current].Inputs.First().Value.InputConnectionIds.Count() == 2)
+            // Traverse outgoing connections and propagate If/While scope flags.
+            var toVisit = new List<string> { component.GetId() };
+            string prevIsInsideIf = component.IsInsideIf;
+            string prevIsInsideWhile = component.IsInsideWhile;
+            for (; toVisit.Count > 0;)
             {
-                // todo fix this for if inside if propagation
-                break;
-            }
-            else if (prevIsInsideIf != "")
-            {
-                PaintItems[current].IsInsideIf = prevIsInsideIf;
-            }
-            else if (prevIsInsideWhile != "")
-            {
-                PaintItems[current].IsInsideWhile = prevIsInsideWhile;
-            }
-
-            foreach (string outputKey in PaintItems[current].Outputs.Keys)
-            {
-                for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
+                string current = toVisit.First();
+                toVisit.RemoveAt(0);
+                if (PaintItems[current].Inputs.Last().Value.InputConnectionIds.Count() == 2)
                 {
-                    if (PaintItems[current].GetType() == typeof(If) && PaintItems[current].Outputs[outputKey].IfTrue == "True")
+                    // todo fix this for if inside if propagation
+                    break;
+                }
+                else if (prevIsInsideIf != "")
+                {
+                    PaintItems[current].IsInsideIf = prevIsInsideIf;
+                }
+                else if (prevIsInsideWhile != "")
+                {
+                    PaintItems[current].IsInsideWhile = prevIsInsideWhile;
+                }
+
+                foreach (string outputKey in PaintItems[current].Outputs.Keys)
+                {
+                    for (int i = 0; i < PaintItems[current].Outputs[outputKey].OutputConnectionIds.Count; i++)
                     {
-                        string nextIsInsideIfItem = Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId;
-                        bool stoping = false;
-                        while (!stoping)
+                        if (PaintItems[current].GetType() == typeof(If) && PaintItems[current].Outputs[outputKey].IfTrue == "True")
                         {
-                            if (PaintItems[nextIsInsideIfItem].IsInsideIf.Contains(PaintItems[current].IsInsideIf))
+                            string nextIsInsideIfItem = Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId;
+                            bool stoping = false;
+                            while (!stoping)
                             {
-                                if (PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.Count > 0)
+                                if (PaintItems[nextIsInsideIfItem].IsInsideIf.Contains(PaintItems[current].GetId()))
                                 {
-                                    nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                                    if (PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.Count > 0)
+                                    {
+                                        nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                                    }
+                                    else
+                                    {
+                                        nextIsInsideIfItem = "";
+                                        stoping = true;
+                                    }
                                 }
                                 else
                                 {
-                                    nextIsInsideIfItem = "";
                                     stoping = true;
+                                    //nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
                                 }
                             }
-                            else
+                            if (nextIsInsideIfItem != "")
                             {
-                                stoping = true;
-                                nextIsInsideIfItem = Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId;
+                                if (prevIsInsideIf != "")
+                                {
+                                    PaintItems[nextIsInsideIfItem].IsInsideIf = prevIsInsideIf;
+                                }
+                                else if (prevIsInsideWhile != "")
+                                {
+                                    PaintItems[nextIsInsideIfItem].IsInsideWhile = prevIsInsideWhile;
+                                }
+                                if (PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.Count() > 0)
+                                {
+                                    toVisit.Add(Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId);
+                                }
                             }
                         }
-                        if (nextIsInsideIfItem != "")
+                        else if (PaintItems[current].GetType() == typeof(While) && PaintItems[current].Outputs[outputKey].IfTrue == "False")
                         {
-                            toVisit.Add(Connections[PaintItems[nextIsInsideIfItem].Outputs.First().Value.OutputConnectionIds.First()].ToComponentId);
+                            toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
                         }
-                    }
-                    else if (PaintItems[current].GetType() == typeof(While) && PaintItems[current].Outputs[outputKey].IfTrue == "False")
-                    {
-                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
-                    }
-                    else if (!(PaintItems[current].GetType() == typeof(While) || PaintItems[current].GetType() == typeof(If)))
-                    {
-                        toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                        else if (!(PaintItems[current].GetType() == typeof(While) || PaintItems[current].GetType() == typeof(If)))
+                        {
+                            toVisit.Add(Connections[PaintItems[current].Outputs[outputKey].OutputConnectionIds[i]].ToComponentId);
+                        }
                     }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("Error during scope propagation: " + ex.Message);
         }
     }
 
@@ -597,7 +678,8 @@ public partial class FlowchartSimulationView : UserControl
                         {
                             if (PaintItems[Connections[_connectingConnectionId].FromComponentId] is If && !clearId)
                             {
-                                item.IsInsideIf = Connections[_connectingConnectionId].FromComponentId + "_" + PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].IfTrue;
+                                string sufix = PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].GetId() == PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs.First().Value.GetId() ? "_False" : "_True";
+                                item.IsInsideIf = Connections[_connectingConnectionId].FromComponentId + sufix;
                             }
                             else if (PaintItems[Connections[_connectingConnectionId].FromComponentId] is While && PaintItems[Connections[_connectingConnectionId].FromComponentId].Outputs[Connections[_connectingConnectionId].FromIOId].IfTrue != "False")
                             {
