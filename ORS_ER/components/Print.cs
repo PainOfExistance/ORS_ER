@@ -125,11 +125,15 @@ namespace ORS_ER.components
             if (registryEntry is not RegistryEntry)
             {
                 Console.WriteLine(this.Value.Item1);
+                return;
             }
-            else
+            if (registryEntry?.Value is ArrayValue arrayValue)
             {
-                Console.WriteLine(this.Value.Item1 + ": " + registryEntry?.Value);
+                Console.WriteLine(this.Value.Item1 + ": " + arrayValue.ToDisplayString());
+                return;
             }
+
+            Console.WriteLine(this.Value.Item1 + ": " + registryEntry?.Value);
         }
     }
 }

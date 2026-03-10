@@ -67,6 +67,10 @@ namespace ORS_ER.components
                 {
                     label = "Make a Binary variable";
                 }
+                if (this.Name.Contains("Array"))
+                {
+                    label = "Make an Array variable";
+                }
 
                 while (InteractionRect.Width < (Font.MeasureText(label) + 5))
                 {
@@ -79,8 +83,15 @@ namespace ORS_ER.components
             if (this.Code != "")
             {
                 Font.Size = 20;
-                string[] parts = this.Code.Split(' ');
-                string displayCode = parts[1] + " = " + parts[3];
+                string displayCode = "";
+                if (this.Value.Item2 is ArrayValue arrayValue)
+                    displayCode = $"{this.Value.Item1} = {arrayValue.ToDisplayString()}";
+
+                if (displayCode == "")
+                {
+                    string[] parts = this.Code.Split(' ');
+                    displayCode = parts[1] + " = " + parts[3];
+                }
 
                 while (InteractionRect.Width < (Font.MeasureText(displayCode) + 5))
                 {
@@ -99,6 +110,10 @@ namespace ORS_ER.components
             if (this.Name.Contains("Binary"))
             {
                 labelText = "BIN";
+            }
+            if (this.Name.Contains("Array"))
+            {
+                labelText = "ARR";
             }
 
             Font.Size = 12;

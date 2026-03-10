@@ -254,18 +254,26 @@ namespace ORS_ER
                                 dynamic d1 = null;
                                 if (ve.TryGetProperty("value", out var v))
                                 {
-                                    // Single value loading and checking.
-                                    d1 = v.ValueKind switch
+                                    if (v.ValueKind == JsonValueKind.Object && ArrayValue.TryRead(v, out var arrayValue))
                                     {
-                                        JsonValueKind.String => v.GetString() ?? "",
-                                        JsonValueKind.Number => v.TryGetDouble(out var d) ? d : v,
-                                        JsonValueKind.True => true,
-                                        JsonValueKind.False => false,
-                                        JsonValueKind.Null => null,
-                                        _ => v
-                                    };
+                                        newComponent.Value = (name ?? "", arrayValue);
+                                        d1 = null;
+                                    }
+
+                                    if (newComponent.Value.Item2 is null)
+                                    {
+                                        d1 = v.ValueKind switch
+                                        {
+                                            JsonValueKind.String => v.GetString() ?? "",
+                                            JsonValueKind.Number => v.TryGetDouble(out var d) ? d : v,
+                                            JsonValueKind.True => true,
+                                            JsonValueKind.False => false,
+                                            JsonValueKind.Null => null,
+                                            _ => v
+                                        };
+                                        newComponent.Value = (name ?? "", d1);
+                                    }
                                 }
-                                newComponent.Value = (name ?? "", d1);
                             }
                             else if (ve.ValueKind == JsonValueKind.Array && ve.GetArrayLength() == 2)
                             {
@@ -577,18 +585,26 @@ namespace ORS_ER
                     dynamic d1 = null;
                     if (ve.TryGetProperty("value", out var v))
                     {
-                        // Single value loading and checking.
-                        d1 = v.ValueKind switch
+                        if (v.ValueKind == JsonValueKind.Object && ArrayValue.TryRead(v, out var arrayValue))
                         {
-                            JsonValueKind.String => v.GetString() ?? "",
-                            JsonValueKind.Number => v.TryGetDouble(out var d) ? d : v,
-                            JsonValueKind.True => true,
-                            JsonValueKind.False => false,
-                            JsonValueKind.Null => null,
-                            _ => v
-                        };
+                            newComponent.Value = (name ?? "", arrayValue);
+                            d1 = null;
+                        }
+
+                        if (newComponent.Value.Item2 is null)
+                        {
+                            d1 = v.ValueKind switch
+                            {
+                                JsonValueKind.String => v.GetString() ?? "",
+                                JsonValueKind.Number => v.TryGetDouble(out var d) ? d : v,
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Null => null,
+                                _ => v
+                            };
+                            newComponent.Value = (name ?? "", d1);
+                        }
                     }
-                    newComponent.Value = (name ?? "", d1);
                 }
                 else if (ve.ValueKind == JsonValueKind.Array && ve.GetArrayLength() == 2)
                 {
@@ -617,8 +633,12 @@ namespace ORS_ER
                     return CreatePrint(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Binary Input":
                     return CreateInput(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "Array Input":
+                    return CreateInput(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "Operator Block":
                     return CreateOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
+                case "Array Operator":
+                    return CreateArrayOperator(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "If":
                     return CreateIf(Name, Description, Category, mouseWorldX, mouseWorldY);
                 case "While":
@@ -650,6 +670,14 @@ namespace ORS_ER
             operatorComponent.Selected = true;
             operatorComponent.CreateRect(mouseWorldX, mouseWorldY);
             return operatorComponent;
+        }
+
+        private static Component CreateArrayOperator(string name, string description, string category, int mouseWorldX, int mouseWorldY)
+        {
+            var arrayOperator = new ArrayOperator(name, description, category);
+            arrayOperator.Selected = true;
+            arrayOperator.CreateRect(mouseWorldX, mouseWorldY);
+            return arrayOperator;
         }
 
         private static Component CreateIf(string name, string description, string category, int mouseWorldX, int mouseWorldY)

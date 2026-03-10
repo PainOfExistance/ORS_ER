@@ -1,0 +1,50 @@
+<Window x:Class="ORS_ER.windows.ArrayOperatorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Array Operator" Width="520" Height="280"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="Name:" Width="90" VerticalAlignment="Center"/>
+            <TextBox x:Name="ResultNameTextBox" Width="390"/>
+        </WrapPanel>
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+            <TextBlock Text="Target:" Width="90" VerticalAlignment="Center"/>
+            <ComboBox x:Name="ArrayComboBox" Width="390" IsEditable="False"/>
+        </WrapPanel>
+
+        <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+            <TextBlock Text="Operation:" Width="90" VerticalAlignment="Center"/>
+            <ComboBox x:Name="OperationComboBox" Width="390" SelectionChanged="OperationComboBox_SelectionChanged"/>
+        </WrapPanel>
+
+        <WrapPanel Grid.Row="3" Margin="0,0,0,8" x:Name="IndexPanel">
+            <TextBlock Text="Index:" Width="90" VerticalAlignment="Center"/>
+			<ComboBox x:Name="IndexComboBox" Width="390" IsEditable="True"/>
+        </WrapPanel>
+
+        <WrapPanel Grid.Row="4" Margin="0,0,0,8" x:Name="ValuePanel">
+            <TextBlock Text="Value:" Width="90" VerticalAlignment="Center"/>
+			<ComboBox x:Name="ValueComboBox" Width="390" IsEditable="True"/>
+        </WrapPanel>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="OK" Width="80" Margin="0,0,8,0" Click="Ok_Click"/>
+            <Button Content="Cancel" Width="80" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

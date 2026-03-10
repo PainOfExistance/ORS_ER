@@ -170,7 +170,7 @@ namespace ORS_ER
                 while (toVisit.Count > 0)
                 {
                     var item = toVisit.Dequeue();
-                    if (item is Input || item is Operator)
+                    if (item is Input || item is Operator || item is ArrayOperator)
                     {
                         if (item.Value.Item1 != null && item.Value.Item2 != null)
                             variables[item.Value.Item1] = item.Value.Item2;

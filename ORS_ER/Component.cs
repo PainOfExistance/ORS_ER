@@ -147,7 +147,17 @@ namespace ORS_ER.components
 
                 if (this.GetType() == typeof(Input))
                 {
-                    // Input dialog configures the variable/value.
+                    if (this.Name.Contains("Array"))
+                    {
+                        var arrayDialog = new ArrayInputWindow(this.Code, this.Value);
+                        if (arrayDialog.ShowDialog() == true)
+                        {
+                            this.Code = arrayDialog.Code;
+                            this.Value = arrayDialog.Value;
+                        }
+                        return (HitTarget.Button, this, null);
+                    }
+
                     var dlg = new InputWindow(this.Code, this.Value, this.Name);
                     if (dlg.ShowDialog() == true)
                     {
@@ -173,6 +183,17 @@ namespace ORS_ER.components
                 {
                     // If/While dialog configures the condition.
                     var dlg = new IfWindow(this.Code, this.Value, variables);
+                    if (dlg.ShowDialog() == true)
+                    {
+                        this.Code = dlg.Code;
+                        this.Value = dlg.Value;
+                    }
+                    return (HitTarget.Button, this, null);
+                }
+
+                if (this.GetType() == typeof(ArrayOperator))
+                {
+                    var dlg = new ArrayOperatorWindow(this.Code, this.Value, variables);
                     if (dlg.ShowDialog() == true)
                     {
                         this.Code = dlg.Code;
@@ -221,6 +242,7 @@ namespace ORS_ER.components
                     byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal =>
                         Convert.ToString(valueObject, System.Globalization.CultureInfo.InvariantCulture) ?? "0",
                     JsonElement je => je.GetRawText(),
+                    ArrayValue arrayValue => JsonSerializer.Serialize(arrayValue.ToSerializableModel()),
                     _ => JsonSerializer.Serialize(valueObject.ToString() ?? "")
                 };
 

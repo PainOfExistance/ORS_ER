@@ -40,8 +40,10 @@ public partial class FlowchartSimulationView : UserControl
         new Input("String Input", "String input.", "Inputs"),
         new Input("Numerical Input", "Numerical input.", "Inputs"),
         new Input("Binary Input", "Binary input.", "Inputs"),
+        new Input("Array Input", "Array input.", "Inputs"),
         new Print("Print", "Prints to console.", "Outputs"),
         new Operator("Operator Block", "Performs numerical or bolean or string operations.", "Logic"),
+        new ArrayOperator("Array Operator", "Performs array operations.", "Logic"),
         new If("If", "Branches based on condition.", "Control Flow"),
         new While("While", "Repeats based on condition.", "Control Flow"),
     };
@@ -950,7 +952,6 @@ public partial class FlowchartSimulationView : UserControl
 
     public void NewDiagram()
     {
-        ValueRegistry.ClearAllRegistries();
         ConsoleOutput.Text = "------Console Output------";
 
         foreach (var item in PaintItems.Values)

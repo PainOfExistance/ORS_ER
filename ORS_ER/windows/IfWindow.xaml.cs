@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ORS_ER.connections;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,7 +27,8 @@ namespace ORS_ER.windows
             Unknown,
             Number,
             Boolean,
-            String
+            String,
+            Array
         }
 
         public (string, dynamic) Value = ("", null);
@@ -48,8 +50,9 @@ namespace ORS_ER.windows
             this.Value = Value;
             this.variables = variables;
             LogicTypeComboBox.ItemsSource = allOperations;
-            Variable1.ItemsSource = variables.Keys;
-            Variable2.ItemsSource = variables.Keys;
+            var scalarVariables = variables.Where(kv => kv.Value is not ArrayValue).Select(kv => kv.Key).ToList();
+            Variable1.ItemsSource = scalarVariables;
+            Variable2.ItemsSource = scalarVariables;
 
             var parts = Code.Split(" ").ToList();
             Debug.WriteLine($"Code: {parts.Count()}");
@@ -181,6 +184,11 @@ namespace ORS_ER.windows
                 return new List<string> { "==", "!=" };
             }
 
+            if (type == OperandType.Array)
+            {
+                return Array.Empty<string>();
+            }
+
             return allOperations;
         }
 
@@ -229,6 +237,11 @@ namespace ORS_ER.windows
             if (value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal)
             {
                 return OperandType.Number;
+            }
+
+            if (value is ArrayValue)
+            {
+                return OperandType.Array;
             }
 
             if (value is JsonElement element)
