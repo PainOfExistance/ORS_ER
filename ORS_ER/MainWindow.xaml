@@ -36,6 +36,7 @@
                 <Button x:Name="ExportPng" Content="Export PNG" Click="ExportPng_Click"/>
                 <Button x:Name="Run" Content="Run" Click="Run_Click"/>
                 <Button x:Name="StressZest" Content="Stress Test" Click="StressZest_Click"/>
+                <Button x:Name="Help" Content="Help" Click="Help_Click"/>
             </ToolBar>
         </ToolBarTray>
 

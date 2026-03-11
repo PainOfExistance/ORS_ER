@@ -939,7 +939,7 @@ public partial class FlowchartSimulationView : UserControl
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        //ValueRegistry.ClearAllRegistries();
+        ValueRegistry.ClearAllRegistries();
         ConsoleOutput.Text = "------Console Output------";
 
         foreach (var item in PaintItems.Values)

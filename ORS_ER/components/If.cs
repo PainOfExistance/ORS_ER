@@ -53,7 +53,7 @@ namespace ORS_ER.components
 
             Font.Size = 20;
             var input1 = Inputs.Values.First();
-            canvas.DrawCircle(input1.Node, 8, Paints.IOPaint);
+            canvas.DrawCircle(input1.Node, 8, Paints.InputIOPaint);
 
             string[] labels = { "F", "T" };
             var output1 = Outputs.Values.First();

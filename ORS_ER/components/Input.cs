@@ -1,6 +1,7 @@
 ﻿using ORS_ER.connections;
 using ORS_ER.windows;
 using SkiaSharp;
+using System.Text.Json;
 using System.Xml.Linq;
 
 namespace ORS_ER.components
@@ -48,7 +49,7 @@ namespace ORS_ER.components
 
             foreach (var input in Inputs)
             {
-                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.InputIOPaint);
             }
 
             canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);
@@ -154,7 +155,7 @@ namespace ORS_ER.components
             {
                 key = this.IsInsideIf.Split('_')[0];
             }
-            if (key.IsGlobal && this.IsInsideWhile != "")
+            if (this.IsInsideWhile != "")
             {
                 key = this.IsInsideWhile.Split('_')[0];
             }
@@ -168,6 +169,12 @@ namespace ORS_ER.components
             };
 
             ValueRegistry.RegisterLocalValue(key, entry.Key, entry);
+
+            if (this.Name.Contains("Array"))
+            {
+                if (this.Value.Item2 is ArrayValue arrayValue)
+                    this.Value = (this.Value.Item1, arrayValue.Clone());
+            }
         }
     }
 }

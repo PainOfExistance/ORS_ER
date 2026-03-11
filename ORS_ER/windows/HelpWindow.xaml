@@ -1,0 +1,70 @@
+﻿<Window x:Class="ORS_ER.windows.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ORS_ER.windows"
+        mc:Ignorable="d"
+        Title="Help" Height="600" Width="900" Background="#F4F6F9">
+    <Grid Margin="24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Border Background="White" CornerRadius="8" BorderBrush="#E1E6EB" BorderThickness="1" Padding="20">
+            <RichTextBox x:Name="Help" IsReadOnly="True" BorderThickness="0" Background="Transparent" FontSize="16" VerticalScrollBarVisibility="Auto">
+                <FlowDocument FontFamily="Segoe UI" PagePadding="0" TextAlignment="Left">
+                    <Paragraph FontSize="32" TextAlignment="Center" FontWeight="SemiBold" Margin="0,0,0,12">
+                        How to use this simulator
+                    </Paragraph>
+
+                    <Paragraph FontSize="20" FontWeight="SemiBold" Margin="0,12,0,6">1. What is this?</Paragraph>
+                    <Paragraph Margin="0,0,0,8">
+                        This is a Flowchart and Logic Gate simulator in one application. Use the selection box in the top-left corner
+                        to switch between simulations and see the currently active mode.
+                    </Paragraph>
+
+                    <Paragraph FontSize="20" FontWeight="SemiBold" Margin="0,12,0,6">2. Menu bar</Paragraph>
+                    <Paragraph Margin="0,0,0,8">
+                        Use
+                        <Bold>New</Bold> to start a fresh simulation. Use
+                        <Bold>Save diagram</Bold> to store your work as a
+                        <Bold>JSON</Bold> file and
+                        <Bold>Load diagram</Bold> to open it later. In Logic Gate simulation, you can store
+                        the current circuit as a reusable component with
+                        <Bold>Save component</Bold> and load custom components with
+                        <Bold>Load component</Bold> . You can also export the current diagram with
+                        <Bold>Export PNG</Bold> to save an image.
+                    </Paragraph>
+
+                    <Paragraph FontSize="20" FontWeight="SemiBold" Margin="0,12,0,6">3. Simulation</Paragraph>
+                    <Paragraph Margin="0,0,0,8">
+                        The simulation runs automatically every time you add or remove blocks or connections, or when you modify block
+                        values. To run it manually, click
+                        <Bold>Run</Bold> in the menu bar.
+                    </Paragraph>
+                    <Paragraph Margin="0,0,0,8">
+                        Add elements to the canvas by selecting them from the list on the left, then clicking on the canvas where you
+                        want them placed.
+                    </Paragraph>
+                    <Paragraph Margin="0,0,0,8">
+                        Select elements on the canvas by clicking them; the outline turns red. Drag with the
+                        <Bold>left mouse button</Bold> to reposition. Press
+                        <Bold>Delete</Bold> to remove the selected element.
+                    </Paragraph>
+                    <Paragraph Margin="0,0,0,8">
+                        In Flowchart simulation, click the center of an element to set values, create comparisons, perform operations,
+                        or modify variables. In Logic Gate simulation, click an input to toggle its value between true and false.
+                    </Paragraph>
+                    <Paragraph Margin="0,0,0,0">
+                        Create connections by clicking the
+                        <Bold>black</Bold> output circle on a block. A line will follow your cursor.
+                        Click the
+                        <Bold>grey</Bold> input circle on another block to complete the connection. Cancel with the
+                        <Bold>right mouse button</Bold> . Select a connection to highlight it, then press
+                        <Bold>Delete</Bold> to remove it.
+                    </Paragraph>
+                </FlowDocument>
+            </RichTextBox>
+        </Border>
+    </Grid>
+</Window>

@@ -165,6 +165,21 @@ public sealed class ArrayValue
         return $"new string[] {{ {string.Join(", ", StringItems.Select(s => $"\"{EscapeString(s)}\""))} }}";
     }
 
+    public ArrayValue Clone()
+    {
+        var copy = Create(ElementType, 0);
+        if (ElementType == ArrayElementType.Number)
+            copy.NumberItems.AddRange(NumberItems);
+
+        if (ElementType == ArrayElementType.Boolean)
+            copy.BooleanItems.AddRange(BooleanItems);
+
+        if (ElementType == ArrayElementType.String)
+            copy.StringItems.AddRange(StringItems);
+
+        return copy;
+    }
+
     public static bool TryRead(JsonElement element, out ArrayValue arrayValue)
     {
         arrayValue = new ArrayValue(ArrayElementType.Number);

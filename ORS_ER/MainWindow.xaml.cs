@@ -1,15 +1,16 @@
-﻿using System.Collections.ObjectModel;
+﻿using ORS_ER.components;
+using ORS_ER.connections;
+using ORS_ER.views;
+using ORS_ER.windows;
+using SkiaSharp;
+using SkiaSharp.Views.Desktop;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using ORS_ER.components;
-using ORS_ER.connections;
-using ORS_ER.views;
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
-using System.Threading;
 
 namespace ORS_ER
 {
@@ -244,6 +245,13 @@ namespace ORS_ER
                 return;
             }
 
+            e.Handled = true;
+        }
+
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            HelpWindow helpWindow = new HelpWindow();
+            helpWindow.Show();
             e.Handled = true;
         }
     }

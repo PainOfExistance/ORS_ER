@@ -20,6 +20,7 @@ namespace ORS_ER.components
         public SKPaint TextPaint { get; }
         public SKPaint SelectedStroke { get; }
         public SKPaint IOPaint { get; }
+        public SKPaint InputIOPaint { get; }
         public SKPaint IOPaintActive { get; }
         public SKPaint LineStroke { get; }
         public SKPaint SelectedLineStroke { get; }
@@ -76,6 +77,13 @@ namespace ORS_ER.components
             {
                 Style = SKPaintStyle.Fill,
                 Color = io,
+                IsAntialias = true,
+            };
+
+            InputIOPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                Color = SKColors.Gray,
                 IsAntialias = true,
             };
 

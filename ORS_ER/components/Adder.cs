@@ -72,7 +72,7 @@ namespace ORS_ER.components
 
             foreach (var input in this.Inputs)
             {
-                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.InputIOPaint);
             }
 
             foreach (var output in this.Outputs)

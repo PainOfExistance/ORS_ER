@@ -52,7 +52,7 @@ namespace ORS_ER.components
 
             foreach (var input in Inputs)
             {
-                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.InputIOPaint);
             }
 
             canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);

@@ -61,7 +61,7 @@ namespace ORS_ER.components
                 canvas.DrawRect(Rect, Paints.ComponentStroke);
 
             foreach (var input in Inputs)
-                canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
+                canvas.DrawCircle(input.Value.Node, 8, Paints.InputIOPaint);
 
             var outputValues = GetOutputValues();
             var index = 0;

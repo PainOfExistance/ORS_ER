@@ -67,8 +67,8 @@ namespace ORS_ER.components
             Font.Size = 20;
             var input1 = Inputs.Values.First();
             var input2 = Inputs.Values.Last();
-            canvas.DrawCircle(input1.Node, 8, Paints.IOPaint);
-            canvas.DrawCircle(input2.Node, 8, Paints.IOPaint);
+            canvas.DrawCircle(input1.Node, 8, Paints.InputIOPaint);
+            canvas.DrawCircle(input2.Node, 8, Paints.InputIOPaint);
 
             var textXX = input1.Node.X - (Font.MeasureText("↑", Paints.TextPaint) / 2);
             var textYY = input1.Node.Y - 10;
