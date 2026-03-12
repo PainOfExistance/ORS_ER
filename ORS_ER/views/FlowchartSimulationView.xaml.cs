@@ -20,6 +20,7 @@ public partial class FlowchartSimulationView : UserControl
     private TextWriter? _previousError;
     private bool _consoleRedirected;
     private Task? _simulationTask;
+    private readonly object _simulationLock = new();
 
     private SKPoint _panOffset = new(0, 0);
     private float _zoom = 1.0f;
@@ -54,7 +55,7 @@ public partial class FlowchartSimulationView : UserControl
     public Dictionary<string, Connection> Connections { get; set; } = new();
     private bool _isConnecting;
     private string _connectingConnectionId = "";
-    public CancellationTokenSource cts = new CancellationTokenSource();
+    public CancellationTokenSource cts = new();
 
     public FlowchartSimulationView()
     {
@@ -128,14 +129,7 @@ public partial class FlowchartSimulationView : UserControl
 
         if (TryDeleteSelectedConnection())
         {
-            cts.Cancel();
-            RunAsync().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
-                }
-            });
+            TriggerSimulationRun();
 
             CompleteDelete(e);
             return;
@@ -143,14 +137,7 @@ public partial class FlowchartSimulationView : UserControl
 
         if (TryDeleteSelectedComponent())
         {
-            cts.Cancel();
-            RunAsync().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
-                }
-            });
+            TriggerSimulationRun();
 
             CompleteDelete(e);
             return;
@@ -735,14 +722,7 @@ public partial class FlowchartSimulationView : UserControl
                             _isConnecting = false;
                             _connectingConnectionId = "";
 
-                            cts.Cancel();
-                            RunAsync().ContinueWith(t =>
-                            {
-                                if (t.IsFaulted)
-                                {
-                                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
-                                }
-                            });
+                            TriggerSimulationRun();
                         }
                         else if (_isConnecting)
                         {
@@ -842,14 +822,7 @@ public partial class FlowchartSimulationView : UserControl
             skiaElement.InvalidateVisual();
             e.Handled = true;
 
-            cts.Cancel();
-            RunAsync().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    Debug.WriteLine("Error during simulation: " + t.Exception?.GetBaseException().Message);
-                }
-            });
+            TriggerSimulationRun();
 
             return;
         }
@@ -945,25 +918,55 @@ public partial class FlowchartSimulationView : UserControl
         e.Handled = true;
     }
 
+    private async void TriggerSimulationRun()
+    {
+        try
+        {
+            await RunAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("Error during simulation: " + ex.Message);
+        }
+    }
+
     public async Task RunAsync()
     {
-        if (_simulationTask is not null && !_simulationTask.IsCompleted)
+        Task? previousTask;
+        CancellationTokenSource previousCts;
+        CancellationTokenSource nextCts = new();
+
+        lock (_simulationLock)
         {
-            cts.Cancel();
+            previousTask = _simulationTask;
+            previousCts = cts;
+            if (!previousCts.IsCancellationRequested)
+                previousCts.Cancel();
+
+            cts = nextCts;
+        }
+
+        if (previousTask is not null && !previousTask.IsCompleted)
+        {
             try
             {
-                await _simulationTask;
+                await previousTask;
             }
             catch (OperationCanceledException)
             {
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error during previous simulation: " + ex.Message);
+            }
         }
 
-        if (cts.IsCancellationRequested)
-        {
-            cts.Dispose();
-            cts = new CancellationTokenSource();
-        }
+        previousCts.Dispose();
+
+        var cancellationToken = nextCts.Token;
 
         //ValueRegistry.ClearAllRegistries();
         ConsoleOutput.Clear();
@@ -972,10 +975,31 @@ public partial class FlowchartSimulationView : UserControl
         foreach (var item in PaintItems.Values)
             item.Reset();
 
-        _simulationTask = Parser.ParseFlowchartAsync(PaintItems, Connections, cts.Token);
-        await _simulationTask;
+        var simulationTask = Parser.ParseFlowchartAsync(PaintItems, Connections, cancellationToken);
 
-        skiaElement.InvalidateVisual();
+        lock (_simulationLock)
+        {
+            if (!ReferenceEquals(cts, nextCts))
+            {
+                nextCts.Cancel();
+                nextCts.Dispose();
+                return;
+            }
+
+            _simulationTask = simulationTask;
+        }
+
+        try
+        {
+            await simulationTask;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (!cancellationToken.IsCancellationRequested)
+            skiaElement.InvalidateVisual();
     }
 
     public void NewDiagram()

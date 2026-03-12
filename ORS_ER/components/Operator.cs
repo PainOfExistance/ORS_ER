@@ -63,8 +63,13 @@ namespace ORS_ER.components
             float textY = InteractionRect.MidY + Font.Size / 4;
             if (this.Code == "==")
             {
-                textX = InteractionRect.MidX - (Font.MeasureText("+") / 2);
-                canvas.DrawText("+", textX, textY, Font, Paints.ButtonTextPaint);
+                while (InteractionRect.Width < (Font.MeasureText("Configure primitive operation") + 5))
+                {
+                    Font.Size--;
+                }
+
+                textX = InteractionRect.MidX - (Font.MeasureText("Configure primitive operation") / 2);
+                canvas.DrawText("Configure primitive operation", textX, textY, Font, Paints.ButtonTextPaint);
             }
             if (this.Code != "==")
             {
