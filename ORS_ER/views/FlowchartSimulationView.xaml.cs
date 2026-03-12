@@ -965,7 +965,7 @@ public partial class FlowchartSimulationView : UserControl
             cts = new CancellationTokenSource();
         }
 
-        ValueRegistry.ClearAllRegistries();
+        //ValueRegistry.ClearAllRegistries();
         ConsoleOutput.Clear();
         ConsoleOutput.Text = "------Console Output------";
 
