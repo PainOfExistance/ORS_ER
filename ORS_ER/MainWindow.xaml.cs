@@ -133,8 +133,7 @@ namespace ORS_ER
 
             try
             {
-                var cts = new CancellationTokenSource();
-                await fc.RunAsync(cts.Token);
+                await fc.RunAsync();
             }
             catch (Exception ex)
             {

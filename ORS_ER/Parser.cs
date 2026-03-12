@@ -72,12 +72,12 @@ namespace ORS_ER
             }
         }
 
-        public static void ParseFlowchartAsync(
+        public static Task ParseFlowchartAsync(
             Dictionary<string, Component> paintItems,
             Dictionary<string, Connection> connections,
             CancellationToken cancellationToken = default)
         {
-            Task.Run(() => ParseFlowchartCore(paintItems, connections, cancellationToken), cancellationToken);
+            return Task.Run(() => ParseFlowchartCore(paintItems, connections, cancellationToken), cancellationToken);
         }
 
         private static void ParseFlowchartCore(
@@ -97,9 +97,19 @@ namespace ORS_ER
                 return;
             }
 
+            var maxIterations = Math.Max(1000, paintItems.Count * 100);
+            var iterationCount = 0;
+
             while (queuedNodes.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                iterationCount++;
+                if (iterationCount > maxIterations)
+                {
+                    Console.WriteLine("Simulation stopped because it exceeded the maximum iteration limit.");
+                    return;
+                }
 
                 var currentNode = queuedNodes.Dequeue();
                 nodeIdHashed.Remove(currentNode.GetId());
@@ -227,6 +237,22 @@ namespace ORS_ER
                     {
                         var fromComponent = paintItems[conn.FromComponentId];
                         toVisit.Enqueue(fromComponent);
+                    }
+                }
+
+                if (currentItem.Outputs.SelectMany(kv => kv.Value.OutputConnectionIds).Count() != 0 && currentItem is not While && currentItem is not If)
+                {
+                    variables.Remove(currentItem.Value.Item1);
+                }
+                else if (currentItem is ArrayOperator)
+                {
+                    string label = "";
+                    if (ArrayOperatorPayload.TryParse(currentItem.Code, out var payload))
+                        label = payload.ToDisplayText();
+
+                    if (!label.Contains("Set"))
+                    {
+                        variables.Remove(currentItem.Value.Item1);
                     }
                 }
             }

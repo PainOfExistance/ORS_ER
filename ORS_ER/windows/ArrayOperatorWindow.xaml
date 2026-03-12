@@ -19,7 +19,7 @@
 
         <WrapPanel Grid.Row="0" Margin="0,0,0,8">
             <TextBlock Text="Name:" Width="90" VerticalAlignment="Center"/>
-            <TextBox x:Name="ResultNameTextBox" Width="390"/>
+            <TextBox x:Name="ResultNameTextBox" Width="390" IsEnabled="False"/>
         </WrapPanel>
 
         <WrapPanel Grid.Row="1" Margin="0,0,0,8">

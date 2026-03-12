@@ -43,7 +43,7 @@ class ArrayOperator : Component
             canvas.DrawRect(Rect, Paints.ComponentStroke);
 
         foreach (var input in Inputs)
-            canvas.DrawCircle(input.Value.Node, 8, Paints.IOPaint);
+            canvas.DrawCircle(input.Value.Node, 8, Paints.InputIOPaint);
 
         foreach (var output in Outputs)
             canvas.DrawCircle(output.Value.Node, 8, Paints.IOPaint);

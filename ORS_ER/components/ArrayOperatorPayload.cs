@@ -33,7 +33,7 @@ public sealed class ArrayOperatorPayload
         if (Operation == "Set")
         {
             if (string.IsNullOrWhiteSpace(ResultName))
-                return $"Set({ArrayName}, {IndexToken ?? Index?.ToString()})";
+                return $"Set({ArrayName}, {IndexToken ?? Index?.ToString()}, {Value})";
 
             return $"{ResultName} = Set({ArrayName}, {IndexToken ?? Index?.ToString()})";
         }

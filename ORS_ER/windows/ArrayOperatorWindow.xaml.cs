@@ -153,6 +153,15 @@ public partial class ArrayOperatorWindow : Window
 
         if (!needsValue)
             ValueComboBox.Text = "";
+
+        if (operation == "Get" || operation == "Length")
+        {
+            ResultNameTextBox.IsEnabled = true;
+        }
+        else
+        {
+            ResultNameTextBox.IsEnabled = false;
+        }
     }
 
     private void LoadExisting()

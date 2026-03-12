@@ -19,6 +19,7 @@ public partial class FlowchartSimulationView : UserControl
     private TextWriter? _previousOut;
     private TextWriter? _previousError;
     private bool _consoleRedirected;
+    private Task? _simulationTask;
 
     private SKPoint _panOffset = new(0, 0);
     private float _zoom = 1.0f;
@@ -53,6 +54,7 @@ public partial class FlowchartSimulationView : UserControl
     public Dictionary<string, Connection> Connections { get; set; } = new();
     private bool _isConnecting;
     private string _connectingConnectionId = "";
+    public CancellationTokenSource cts = new CancellationTokenSource();
 
     public FlowchartSimulationView()
     {
@@ -126,8 +128,8 @@ public partial class FlowchartSimulationView : UserControl
 
         if (TryDeleteSelectedConnection())
         {
-            var cts = new CancellationTokenSource();
-            RunAsync(cts.Token).ContinueWith(t =>
+            cts.Cancel();
+            RunAsync().ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {
@@ -141,8 +143,8 @@ public partial class FlowchartSimulationView : UserControl
 
         if (TryDeleteSelectedComponent())
         {
-            var cts = new CancellationTokenSource();
-            RunAsync(cts.Token).ContinueWith(t =>
+            cts.Cancel();
+            RunAsync().ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {
@@ -733,8 +735,8 @@ public partial class FlowchartSimulationView : UserControl
                             _isConnecting = false;
                             _connectingConnectionId = "";
 
-                            var cts = new CancellationTokenSource();
-                            RunAsync(cts.Token).ContinueWith(t =>
+                            cts.Cancel();
+                            RunAsync().ContinueWith(t =>
                             {
                                 if (t.IsFaulted)
                                 {
@@ -785,9 +787,10 @@ public partial class FlowchartSimulationView : UserControl
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
 
         // Check if we hit connection or we deselect it.
+        bool changed = false;
         foreach (var conn in Connections)
         {
-            if (conn.Value.ToIOId == "" || (hit != null))
+            if (conn.Value.ToIOId == "" || hit != null)
             {
                 conn.Value.IsSelected = false;
                 continue;
@@ -797,11 +800,16 @@ public partial class FlowchartSimulationView : UserControl
             var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode);
             if (isSelected)
             {
+                changed = true;
                 skiaElement.InvalidateVisual();
                 e.Handled = true;
                 _isPanning = false;
-                return;
             }
+        }
+
+        if (changed)
+        {
+            return;
         }
 
         if (hit != null && hit.Value.Item1 == HitTarget.Rect)
@@ -834,8 +842,8 @@ public partial class FlowchartSimulationView : UserControl
             skiaElement.InvalidateVisual();
             e.Handled = true;
 
-            var cts = new CancellationTokenSource();
-            RunAsync(cts.Token).ContinueWith(t =>
+            cts.Cancel();
+            RunAsync().ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {
@@ -937,15 +945,35 @@ public partial class FlowchartSimulationView : UserControl
         e.Handled = true;
     }
 
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task RunAsync()
     {
+        if (_simulationTask is not null && !_simulationTask.IsCompleted)
+        {
+            cts.Cancel();
+            try
+            {
+                await _simulationTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        if (cts.IsCancellationRequested)
+        {
+            cts.Dispose();
+            cts = new CancellationTokenSource();
+        }
+
         ValueRegistry.ClearAllRegistries();
+        ConsoleOutput.Clear();
         ConsoleOutput.Text = "------Console Output------";
 
         foreach (var item in PaintItems.Values)
             item.Reset();
 
-        Parser.ParseFlowchartAsync(PaintItems, Connections, cancellationToken);
+        _simulationTask = Parser.ParseFlowchartAsync(PaintItems, Connections, cts.Token);
+        await _simulationTask;
 
         skiaElement.InvalidateVisual();
     }
@@ -1054,7 +1082,7 @@ public partial class FlowchartSimulationView : UserControl
                 item.Reset();
 
             CancellationToken cancellationToken = new CancellationToken();
-            Parser.ParseFlowchartAsync(PaintItems, Connections, cancellationToken);
+            _ = Parser.ParseFlowchartAsync(PaintItems, Connections, cancellationToken);
             skiaElement.InvalidateVisual();
         }
         catch (Exception ex)
