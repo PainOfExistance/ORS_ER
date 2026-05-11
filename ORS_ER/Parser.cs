@@ -1,5 +1,6 @@
 ﻿using ORS_ER.components;
 using ORS_ER.connections;
+using System.Diagnostics;
 
 namespace ORS_ER
 {
@@ -242,7 +243,14 @@ namespace ORS_ER
 
                 if (currentItem.Outputs.SelectMany(kv => kv.Value.OutputConnectionIds).Count() != 0 && currentItem is not While && currentItem is not If)
                 {
-                    variables.Remove(currentItem.Value.Item1);
+                    if (currentItem is Operator && (currentItem.Code.Split(" ")[3] != currentItem.Value.Item1 && currentItem.Code.Split(" ")[5] != currentItem.Value.Item1))
+                    {
+                        variables.Remove(currentItem.Value.Item1);
+                    }
+                    else if (currentItem is not Operator)
+                    {
+                        variables.Remove(currentItem.Value.Item1);
+                    }
                 }
                 else if (currentItem is ArrayOperator)
                 {
