@@ -197,6 +197,25 @@ namespace ORS_ER
             e.Handled = true;
         }
 
+        private void SaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSelectedSimulation() is FlowchartSimulationView fc)
+            {
+                fc.SaveDiagram();
+                e.Handled = true;
+                return;
+            }
+
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+            {
+                lg.SaveDiagram();
+                e.Handled = true;
+                return;
+            }
+
+            e.Handled = true;
+        }
+
         private void Load_Click(object sender, RoutedEventArgs e)
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)

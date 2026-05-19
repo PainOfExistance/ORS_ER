@@ -28,6 +28,7 @@
 
                 <Button x:Name="New" Content="New" Click="New_Click"/>
                 <Button x:Name="Save" Content="Save diagram" Click="Save_Click"/>
+                <Button x:Name="SaveAs" Content="Save diagram As" Click="SaveAs_Click"/>
                 <Button x:Name="Load" Content="Load diagram" Click="Load_Click"/>
                 <Separator/>
                 <Button x:Name="SaveComponent" Content="Save component" Click="SaveComponent_Click"/>
