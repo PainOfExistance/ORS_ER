@@ -401,14 +401,16 @@ public partial class LogicGatesSimulationView : UserControl
 
     private void SkiaElement_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left)
-            return;
-
         skiaElement.Focus();
         var mousePosition = e.GetPosition(skiaElement);
         var mouseScreen = ToScreenPoint(mousePosition);
         var mouseWorld = ScreenToWorld(mouseScreen);
         (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
+
+        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Left)
+        {
+            hit.Value.Item2.Value = ("bool", !hit.Value.Item2.Value.Item2);
+        }
 
         // Check if we hit connection or we deselect it.
         foreach (var conn in Connections)
@@ -430,7 +432,17 @@ public partial class LogicGatesSimulationView : UserControl
             }
         }
 
-        if (hit != null && hit.Value.Item1 == HitTarget.Rect)
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            LayersListView.SelectedItem = null;
+            _isPanning = false;
+            _isMoving = false;
+            skiaElement.Cursor = Cursors.Arrow;
+            skiaElement.InvalidateVisual();
+            return;
+        }
+
+        if (hit != null && (hit.Value.Item1 == HitTarget.Rect || hit.Value.Item1 == HitTarget.Button) && e.ChangedButton == MouseButton.Left)
         {
             //Rect moving.
             skiaElement.Cursor = Cursors.Hand;
@@ -440,6 +452,7 @@ public partial class LogicGatesSimulationView : UserControl
             e.Handled = true;
             return;
         }
+
         if (LayersListView.SelectedItem != null)
         {
             // Adding item
@@ -448,12 +461,13 @@ public partial class LogicGatesSimulationView : UserControl
             var newComponent = Creator.CreateLG(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
 
             PaintItems.Add(newComponent.GetId(), newComponent);
-            LayersListView.SelectedItem = null;
+            //LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
         }
-        if (hit != null && hit.Value.Item1 == HitTarget.Button)
+
+        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Right)
         {
             RunSimulation();
             skiaElement.InvalidateVisual();

@@ -22,8 +22,8 @@ namespace ORS_ER
         {
             get
             {
-                if (_simulationCache.TryGetValue("Flowchart", out var existing))
-                    return (FlowchartSimulationView)existing;
+                //if (_simulationCache.TryGetValue("Flowchart", out var existing))
+                //    return (FlowchartSimulationView)existing;
 
                 var created = new FlowchartSimulationView();
                 _simulationCache["Flowchart"] = created;
@@ -31,12 +31,12 @@ namespace ORS_ER
             }
         }
 
-        private UserControl LogicGatesView
+        private LogicGatesSimulationView LogicGatesView
         {
             get
             {
-                if (_simulationCache.TryGetValue("Logic Gates", out var existing))
-                    return existing;
+                //if (_simulationCache.TryGetValue("Logic Gates", out var existing))
+                //    return existing;
 
                 var created = new LogicGatesSimulationView();
                 _simulationCache["Logic Gates"] = created;

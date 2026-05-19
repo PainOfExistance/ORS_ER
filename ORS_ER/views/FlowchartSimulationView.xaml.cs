@@ -548,7 +548,7 @@ public partial class FlowchartSimulationView : UserControl
         e.Handled = true;
     }
 
-    private (HitTarget, Component, IO)? HitTest(SKPoint world)
+    private (HitTarget, Component, IO)? HitTest(SKPoint world, MouseButton mouseButton)
     {
         (HitTarget, Component, IO)? hitResult = null;
         (HitTarget, Component, IO)? candidateResult = null;
@@ -556,7 +556,7 @@ public partial class FlowchartSimulationView : UserControl
         {
             item.Selected = false;
             Dictionary<string, dynamic> variables = Parser.ExtractVariables(PaintItems, Connections, item);
-            candidateResult = item.HitTest(world, variables);
+            candidateResult = item.HitTest(world, variables, mouseButton);
             if (candidateResult != null)
             {
                 if (candidateResult.Value.Item1 == HitTarget.Output)
@@ -755,16 +755,15 @@ public partial class FlowchartSimulationView : UserControl
         return hitResult;
     }
 
+
+
     private void SkiaElement_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left)
-            return;
-
         skiaElement.Focus();
         var mousePosition = e.GetPosition(skiaElement);
         var mouseScreen = ToScreenPoint(mousePosition);
         var mouseWorld = ScreenToWorld(mouseScreen);
-        (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
+        (HitTarget, Component, IO)? hit = HitTest(mouseWorld, e.ChangedButton);
 
         // Check if we hit connection or we deselect it.
         bool changed = false;
@@ -787,12 +786,22 @@ public partial class FlowchartSimulationView : UserControl
             }
         }
 
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            LayersListView.SelectedItem = null;
+            _isPanning = false;
+            _isMoving = false;
+            skiaElement.Cursor = Cursors.Arrow;
+            skiaElement.InvalidateVisual();
+            return;
+        }
+
         if (changed)
         {
             return;
         }
 
-        if (hit != null && hit.Value.Item1 == HitTarget.Rect)
+        if (hit != null && (hit.Value.Item1 == HitTarget.Rect || hit.Value.Item1 == HitTarget.Button) && e.ChangedButton == MouseButton.Left)
         {
             //Rect moving.
             skiaElement.Cursor = Cursors.Hand;
@@ -811,25 +820,25 @@ public partial class FlowchartSimulationView : UserControl
             var newComponent = Creator.Create(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
 
             PaintItems.Add(newComponent.GetId(), newComponent);
-            LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
         }
 
-        if (hit != null && hit.Value.Item1 == HitTarget.Button)
+        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Right)
         {
             skiaElement.InvalidateVisual();
             e.Handled = true;
-
+            LayersListView.SelectedItem = null;
             TriggerSimulationRun();
 
             return;
         }
 
-        if (hit != null && (hit.Value.Item1 == HitTarget.Input || hit.Value.Item1 == HitTarget.Output))
+        if (hit != null && (hit.Value.Item1 == HitTarget.Input || hit.Value.Item1 == HitTarget.Output) && e.ChangedButton == MouseButton.Left)
         {
             skiaElement.Cursor = Cursors.Pen;
+            LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
             e.Handled = true;
 
@@ -1114,4 +1123,5 @@ public partial class FlowchartSimulationView : UserControl
             Debug.WriteLine(ex);
         }
     }
+
 }

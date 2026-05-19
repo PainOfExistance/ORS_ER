@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Input;
 
 namespace ORS_ER.components
 {
@@ -81,9 +82,9 @@ namespace ORS_ER.components
             rect.Offset(dx, dy);
             this.InteractionRect = rect;
         }
-        virtual public (HitTarget, Component, IO?)? HitTest(SKPoint world, Dictionary<string, dynamic> variables)
+        virtual public (HitTarget, Component, IO?)? HitTest(SKPoint world, Dictionary<string, dynamic> variables, MouseButton mb = MouseButton.Left)
         {
-            const float hitRadius = 8f;
+            const float hitRadius = 16f;
             var hitRadius2 = hitRadius * hitRadius;
 
             static bool HitPoint(SKPoint nodePoint, SKPoint targetPoint, float radiusSquared)
@@ -135,12 +136,15 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(Operator))
                 {
                     // Operator dialogs allow editing the embedded expression/value.
-                    var dlg = new LogicWindow(this.Code, this.Value, variables);
-                    if (dlg.ShowDialog() == true)
+                    if (mb == MouseButton.Right)
                     {
-                        this.Code = dlg.Code;
-                        this.Value = dlg.Value;
-                        Debug.WriteLine($"LogicWindow returned: {this.Value.Item2}");
+                        var dlg = new LogicWindow(this.Code, this.Value, variables);
+                        if (dlg.ShowDialog() == true)
+                        {
+                            this.Code = dlg.Code;
+                            this.Value = dlg.Value;
+                            Debug.WriteLine($"LogicWindow returned: {this.Value.Item2}");
+                        }
                     }
                     return (HitTarget.Button, this, null);
                 }
@@ -149,20 +153,26 @@ namespace ORS_ER.components
                 {
                     if (this.Name.Contains("Array"))
                     {
-                        var arrayDialog = new ArrayInputWindow(this.Code, this.Value);
-                        if (arrayDialog.ShowDialog() == true)
+                        if (mb == MouseButton.Right)
                         {
-                            this.Code = arrayDialog.Code;
-                            this.Value = arrayDialog.Value;
+                            var arrayDialog = new ArrayInputWindow(this.Code, this.Value);
+                            if (arrayDialog.ShowDialog() == true)
+                            {
+                                this.Code = arrayDialog.Code;
+                                this.Value = arrayDialog.Value;
+                            }
                         }
                         return (HitTarget.Button, this, null);
                     }
 
-                    var dlg = new InputWindow(this.Code, this.Value, this.Name);
-                    if (dlg.ShowDialog() == true)
+                    if (mb == MouseButton.Right)
                     {
-                        this.Code = dlg.Code;
-                        this.Value = dlg.Value;
+                        var dlg = new InputWindow(this.Code, this.Value, this.Name);
+                        if (dlg.ShowDialog() == true)
+                        {
+                            this.Code = dlg.Code;
+                            this.Value = dlg.Value;
+                        }
                     }
                     return (HitTarget.Button, this, null);
                 }
@@ -170,11 +180,14 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(Print))
                 {
                     // Print dialog configures output formatting.
-                    var dlg = new PrintWindow(this.Code, this.Value, variables);
-                    if (dlg.ShowDialog() == true)
+                    if (mb == MouseButton.Right)
                     {
-                        this.Code = dlg.Code;
-                        this.Value = dlg.Value;
+                        var dlg = new PrintWindow(this.Code, this.Value, variables);
+                        if (dlg.ShowDialog() == true)
+                        {
+                            this.Code = dlg.Code;
+                            this.Value = dlg.Value;
+                        }
                     }
                     return (HitTarget.Button, this, null);
                 }
@@ -182,22 +195,28 @@ namespace ORS_ER.components
                 if (this.GetType() == typeof(If) || this.GetType() == typeof(While))
                 {
                     // If/While dialog configures the condition.
-                    var dlg = new IfWindow(this.Code, this.Value, variables);
-                    if (dlg.ShowDialog() == true)
+                    if (mb == MouseButton.Right)
                     {
-                        this.Code = dlg.Code;
-                        this.Value = dlg.Value;
+                        var dlg = new IfWindow(this.Code, this.Value, variables);
+                        if (dlg.ShowDialog() == true)
+                        {
+                            this.Code = dlg.Code;
+                            this.Value = dlg.Value;
+                        }
                     }
                     return (HitTarget.Button, this, null);
                 }
 
                 if (this.GetType() == typeof(ArrayOperator))
                 {
-                    var dlg = new ArrayOperatorWindow(this.Code, this.Value, variables);
-                    if (dlg.ShowDialog() == true)
+                    if (mb == MouseButton.Right)
                     {
-                        this.Code = dlg.Code;
-                        this.Value = dlg.Value;
+                        var dlg = new ArrayOperatorWindow(this.Code, this.Value, variables);
+                        if (dlg.ShowDialog() == true)
+                        {
+                            this.Code = dlg.Code;
+                            this.Value = dlg.Value;
+                        }
                     }
                     return (HitTarget.Button, this, null);
                 }
