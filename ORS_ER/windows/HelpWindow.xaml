@@ -52,8 +52,10 @@
                         <Bold>Delete</Bold> to remove the selected element.
                     </Paragraph>
                     <Paragraph Margin="0,0,0,8">
-                        In Flowchart simulation, click the center of an element to set values, create comparisons, perform operations,
-                        or modify variables. In Logic Gate simulation, click an input to toggle its value between true and false.
+                        In Flowchart simulation,
+                        <Bold>right click</Bold> the center of an element to set values, create comparisons, perform operations,
+                        or modify variables. In Logic Gate simulation,
+                        <Bold>right click</Bold> an input to toggle its value between true and false.
                     </Paragraph>
                     <Paragraph Margin="0,0,0,0">
                         Create connections by clicking the
