@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using ORS_ER.components;
 using ORS_ER.connections;
 using SkiaSharp;
@@ -33,7 +34,7 @@ public partial class FlowchartSimulationView : UserControl
     private const float MaxZoom = 10.0f;
     private const float ZoomStep = 1.1f;
     private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
-
+    public string LoadedFilePath = "";
     private const float PalettePreviewZoom = 0.225f;
 
 
@@ -755,8 +756,6 @@ public partial class FlowchartSimulationView : UserControl
         return hitResult;
     }
 
-
-
     private void SkiaElement_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         skiaElement.Focus();
@@ -809,7 +808,24 @@ public partial class FlowchartSimulationView : UserControl
             LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
             e.Handled = true;
+            return;
+        }
 
+        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Right)
+        {
+            TriggerSimulationRun();
+            skiaElement.InvalidateVisual();
+            LayersListView.SelectedItem = null;
+            e.Handled = true;
+            return;
+        }
+
+        if (hit != null && (hit.Value.Item1 == HitTarget.Input || hit.Value.Item1 == HitTarget.Output) && e.ChangedButton == MouseButton.Left)
+        {
+            skiaElement.Cursor = Cursors.Pen;
+            LayersListView.SelectedItem = null;
+            skiaElement.InvalidateVisual();
+            e.Handled = true;
             return;
         }
 
@@ -825,23 +841,11 @@ public partial class FlowchartSimulationView : UserControl
             return;
         }
 
-        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Right)
+        if ((e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right) && _isConnecting)
         {
-            skiaElement.InvalidateVisual();
+            skiaElement.Cursor = Cursors.Arrow;
+            CancelPendingConnection(true, false);
             e.Handled = true;
-            LayersListView.SelectedItem = null;
-            TriggerSimulationRun();
-
-            return;
-        }
-
-        if (hit != null && (hit.Value.Item1 == HitTarget.Input || hit.Value.Item1 == HitTarget.Output) && e.ChangedButton == MouseButton.Left)
-        {
-            skiaElement.Cursor = Cursors.Pen;
-            LayersListView.SelectedItem = null;
-            skiaElement.InvalidateVisual();
-            e.Handled = true;
-
             return;
         }
 
@@ -886,20 +890,17 @@ public partial class FlowchartSimulationView : UserControl
         if (_isConnecting)
         {
             skiaElement.Cursor = Cursors.Pen;
-
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
         }
 
+        skiaElement.Cursor = Cursors.Arrow;
         e.Handled = true;
     }
 
     private void SkiaElement_OnMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left)
-            return;
-
         _isPanning = false;
         _isMoving = false;
         skiaElement.ReleaseMouseCapture();
@@ -1027,9 +1028,25 @@ public partial class FlowchartSimulationView : UserControl
 
     public void SaveDiagram()
     {
-        CancelPendingConnection(true, true);
+        CancelPendingConnection(true, false);
+        Creator.Save(PaintItems, Connections, "FlowChart", LoadedFilePath);
+    }
 
-        Creator.Save(PaintItems, Connections, "Flowchart");
+    public void SaveDiagramAs()
+    {
+        CancelPendingConnection(true, false);
+        SaveFileDialog saveFileDialog = new SaveFileDialog();
+        saveFileDialog.Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*";
+        saveFileDialog.FileName = "diagram";
+        saveFileDialog.Title = "Save As";
+        saveFileDialog.ShowDialog();
+
+        if (saveFileDialog.FileName != "")
+        {
+            LoadedFilePath = saveFileDialog.FileName;
+        }
+
+        Creator.Save(this.PaintItems, this.Connections, "FlowChart", LoadedFilePath);
     }
 
     public void SaveCanvasAsPng()
@@ -1039,13 +1056,13 @@ public partial class FlowchartSimulationView : UserControl
         CanvasExport.SaveAsPng(PaintItems, Connections);
     }
 
-    public void LoadDiagram()
+    public bool LoadDiagram()
     {
         CancelPendingConnection(true, false);
 
-        var items = Creator.Load("Flowchart");
-        if (items.Item1.Count == 0)
-            return;
+        var items = Creator.Load("FlowChart");
+        if (items.Item1.Count == 0 || items.Item3 == "fail")
+            return false;
 
         PaintItems.Clear();
         Connections.Clear();
@@ -1054,7 +1071,10 @@ public partial class FlowchartSimulationView : UserControl
         foreach (var conn in items.Item2)
             Connections.Add(conn.Key, conn.Value);
 
+        LoadedFilePath = items.Item3;
         skiaElement.InvalidateVisual();
+
+        return true;
     }
     public void StressTest()
     {

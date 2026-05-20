@@ -19,35 +19,26 @@ namespace ORS_ER
         private readonly Dictionary<string, UserControl> _simulationCache = new(StringComparer.Ordinal);
 
         private FlowchartSimulationView FlowchartView
-        {
-            get
-            {
-                //if (_simulationCache.TryGetValue("Flowchart", out var existing))
-                //    return (FlowchartSimulationView)existing;
-
-                var created = new FlowchartSimulationView();
-                _simulationCache["Flowchart"] = created;
-                return created;
-            }
-        }
+            => (FlowchartSimulationView)GetOrCreateSimulation("Flowchart", static () => new FlowchartSimulationView());
 
         private LogicGatesSimulationView LogicGatesView
-        {
-            get
-            {
-                //if (_simulationCache.TryGetValue("Logic Gates", out var existing))
-                //    return existing;
+            => (LogicGatesSimulationView)GetOrCreateSimulation("Logic Gates", static () => new LogicGatesSimulationView());
 
-                var created = new LogicGatesSimulationView();
-                _simulationCache["Logic Gates"] = created;
-                return created;
-            }
+        private UserControl GetOrCreateSimulation(string key, Func<UserControl> factory)
+        {
+            if (_simulationCache.TryGetValue(key, out var existing))
+                return existing;
+
+            var created = factory();
+            _simulationCache[key] = created;
+            return created;
         }
 
         public MainWindow()
         {
             InitializeComponent();
             Loaded += MainWindow_Loaded;
+            StatusLabel.Content = "No file loaded";
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -111,18 +102,30 @@ namespace ORS_ER
             if (SimulationHost.Content is FlowchartSimulationView fc)
             {
                 fc.FocusCanvas();
+                fc.LoadedFilePath = string.Empty;
+                StatusLabel.Content = "No file loaded";
+                Save.IsEnabled = false;
                 Run.IsEnabled = true;
                 SaveComponent.IsEnabled = false;
                 LoadComponent.IsEnabled = false;
+                fc.PaintItems.Clear();
+                fc.Connections.Clear();
+                fc.ConsoleOutput.Clear();
+                fc.ConsoleOutput.Text = "------Console Output------";
                 return;
             }
 
             if (SimulationHost.Content is LogicGatesSimulationView lg)
             {
                 lg.FocusCanvas();
+                lg.LoadedFilePath = string.Empty;
+                StatusLabel.Content = "No file loaded";
+                Save.IsEnabled = false;
                 Run.IsEnabled = false;
                 SaveComponent.IsEnabled = true;
                 LoadComponent.IsEnabled = true;
+                lg.PaintItems.Clear();
+                lg.Connections.Clear();
             }
         }
 
@@ -164,6 +167,9 @@ namespace ORS_ER
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
             {
                 fc.NewDiagram();
+                fc.LoadedFilePath = string.Empty;
+                StatusLabel.Content = "No file loaded";
+                Save.IsEnabled = true;
                 e.Handled = true;
                 return;
             }
@@ -171,6 +177,9 @@ namespace ORS_ER
             if (GetSelectedSimulation() is LogicGatesSimulationView lg)
             {
                 lg.NewDiagram();
+                lg.LoadedFilePath = string.Empty;
+                StatusLabel.Content = "No file loaded";
+                Save.IsEnabled = true;
                 e.Handled = true;
                 return;
             }
@@ -201,14 +210,19 @@ namespace ORS_ER
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
             {
-                fc.SaveDiagram();
+                var meow = GetSelectedSimulation();
+                fc.SaveDiagramAs();
+                StatusLabel.Content = string.IsNullOrEmpty(fc.LoadedFilePath) ? "No file loaded" : $"Loaded: {System.IO.Path.GetFileName(fc.LoadedFilePath)}";
+                Save.IsEnabled = true;
                 e.Handled = true;
                 return;
             }
 
             if (GetSelectedSimulation() is LogicGatesSimulationView lg)
             {
-                lg.SaveDiagram();
+                lg.SaveDiagramAs();
+                StatusLabel.Content = string.IsNullOrEmpty(lg.LoadedFilePath) ? "No file loaded" : $"Loaded: {System.IO.Path.GetFileName(lg.LoadedFilePath)}";
+                Save.IsEnabled = true;
                 e.Handled = true;
                 return;
             }
@@ -220,39 +234,49 @@ namespace ORS_ER
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
             {
-                fc.LoadDiagram();
-                e.Handled = true;
+                bool success = fc.LoadDiagram();
+                if (success)
+                {
+                    StatusLabel.Content = string.IsNullOrEmpty(fc.LoadedFilePath) ? "No file loaded" : $"Loaded: {System.IO.Path.GetFileName(fc.LoadedFilePath)}";
+                    Save.IsEnabled = true;
+                    e.Handled = true;
+                }
                 return;
             }
 
             if (GetSelectedSimulation() is LogicGatesSimulationView lg)
             {
-                lg.LoadDiagram();
-                e.Handled = true;
+                bool success = lg.LoadDiagram();
+                if (success)
+                {
+                    StatusLabel.Content = string.IsNullOrEmpty(lg.LoadedFilePath) ? "No file loaded" : $"Loaded: {System.IO.Path.GetFileName(lg.LoadedFilePath)}";
+                    Save.IsEnabled = true;
+                    e.Handled = true;
+                }
                 return;
             }
 
             e.Handled = true;
         }
 
-		private void ExportPng_Click(object sender, RoutedEventArgs e)
-		{
-			if (GetSelectedSimulation() is FlowchartSimulationView fc)
-			{
-			    fc.SaveCanvasAsPng();
-				e.Handled = true;
-				return;
-			}
+        private void ExportPng_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSelectedSimulation() is FlowchartSimulationView fc)
+            {
+                fc.SaveCanvasAsPng();
+                e.Handled = true;
+                return;
+            }
 
-			if (GetSelectedSimulation() is LogicGatesSimulationView lg)
-			{
-				lg.SaveCanvasAsPng();
-				e.Handled = true;
-				return;
-			}
+            if (GetSelectedSimulation() is LogicGatesSimulationView lg)
+            {
+                lg.SaveCanvasAsPng();
+                e.Handled = true;
+                return;
+            }
 
-			e.Handled = true;
-		}
+            e.Handled = true;
+        }
 
         private void StressZest_Click(object sender, RoutedEventArgs e)
         {

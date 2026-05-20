@@ -27,17 +27,18 @@
                 <Separator/>
 
                 <Button x:Name="New" Content="New" Click="New_Click"/>
-                <Button x:Name="Save" Content="Save diagram" Click="Save_Click"/>
-                <Button x:Name="SaveAs" Content="Save diagram As" Click="SaveAs_Click"/>
-                <Button x:Name="Load" Content="Load diagram" Click="Load_Click"/>
+                <Button x:Name="Save" Content="Save" Click="Save_Click" IsEnabled="False"/>
+                <Button x:Name="SaveAs" Content="Save As" Click="SaveAs_Click"/>
+                <Button x:Name="Load" Content="Load" Click="Load_Click"/>
                 <Separator/>
                 <Button x:Name="SaveComponent" Content="Save component" Click="SaveComponent_Click"/>
                 <Button x:Name="LoadComponent" Content="Load component" Click="LoadComponent_Click"/>
                 <Separator/>
                 <Button x:Name="ExportPng" Content="Export PNG" Click="ExportPng_Click"/>
                 <Button x:Name="Run" Content="Run" Click="Run_Click"/>
-                <Button x:Name="StressZest" Content="Stress Test" Click="StressZest_Click"/>
+                <!--<Button x:Name="StressZest" Content="Stress Test" Click="StressZest_Click"/>-->
                 <Button x:Name="Help" Content="Help" Click="Help_Click"/>
+                <Label x:Name="StatusLabel" Content="No file loaded"/>
             </ToolBar>
         </ToolBarTray>
 

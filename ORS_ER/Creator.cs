@@ -142,7 +142,7 @@ namespace ORS_ER
 
         private static readonly Dictionary<string, SubCircuitData> CachedLogicComponents = new(StringComparer.OrdinalIgnoreCase);
 
-        public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections, string diagramType)
+        public static void Save(Dictionary<string, Component> components, Dictionary<string, Connection> connections, string diagramType, string FilePath = "")
         {
             static void TrimTrailing(StringBuilder builder)
             {
@@ -178,25 +178,17 @@ namespace ORS_ER
 
             try
             {
-                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*";
-                saveFileDialog.FileName = "diagram";
-                saveFileDialog.Title = "Save As";
-                saveFileDialog.ShowDialog();
-                if (saveFileDialog.FileName != "")
-                {
-                    saveFileDialog.FileName = saveFileDialog.FileName.EndsWith(".json") ? saveFileDialog.FileName : saveFileDialog.FileName + ".json";
-                    File.WriteAllText(saveFileDialog.FileName, saveData);
-                }
-                Debug.WriteLine("Saved file " + saveFileDialog.FileName);
+                File.WriteAllText(FilePath, saveData);
+                Debug.WriteLine("Saved file " + FilePath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("Error saving file: " + ex.Message);
             }
+
         }
 
-        public static (Dictionary<string, Component>, Dictionary<string, Connection>) Load(string expectedDiagramType)
+        public static (Dictionary<string, Component>, Dictionary<string, Connection>, string) Load(string expectedDiagramType)
         {
             try
             {
@@ -206,7 +198,7 @@ namespace ORS_ER
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.ShowDialog();
                 if (string.IsNullOrWhiteSpace(openFileDialog.FileName))
-                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
+                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>(), "fail");
 
                 string filePath = openFileDialog.FileName;
 
@@ -215,13 +207,13 @@ namespace ORS_ER
 
                 var rawData = JsonSerializer.Deserialize<DiagramData>(jsonData, options);
                 if (rawData is null)
-                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
+                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>(), "fail");
 
                 if (!string.Equals(rawData.DiagramType, expectedDiagramType, StringComparison.OrdinalIgnoreCase))
                 {
                     // Prevent loading a diagram into a mismatched editor type.
                     Debug.WriteLine("Diagram type mismatch when loading file.");
-                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
+                    return (new Dictionary<string, Component>(), new Dictionary<string, Connection>(), "fail");
                 }
                 Dictionary<string, Component> components = new Dictionary<string, Component>();
                 Dictionary<string, Connection> connections = new Dictionary<string, Connection>();
@@ -343,12 +335,12 @@ namespace ORS_ER
                     connections.Add(newConnection.GetId(), newConnection);
                 }
 
-                return (components, connections);
+                return (components, connections, filePath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("Error loading file: " + ex.Message);
-                return (new Dictionary<string, Component>(), new Dictionary<string, Connection>());
+                return (new Dictionary<string, Component>(), new Dictionary<string, Connection>(), "");
             }
         }
 

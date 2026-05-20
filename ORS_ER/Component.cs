@@ -121,7 +121,7 @@ namespace ORS_ER.components
                 this.IsBroken = false;
                 this.Selected = true;
 
-                if (this.GetType() == typeof(BinaryInput))
+                if (this.GetType() == typeof(BinaryInput) && mb == MouseButton.Right)
                 {
                     // Toggle the boolean input on click.
                     this.Value = ("bool", !this.Value.Item2);

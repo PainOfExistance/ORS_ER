@@ -1,18 +1,19 @@
+using Microsoft.Win32;
 using ORS_ER.components;
 using ORS_ER.connections;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
 using System.Collections.ObjectModel;
-using ICollectionView = System.ComponentModel.ICollectionView;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using ICollectionView = System.ComponentModel.ICollectionView;
 
 namespace ORS_ER.views;
 
@@ -29,6 +30,7 @@ public partial class LogicGatesSimulationView : UserControl
     private const float MaxZoom = 10.0f;
     private const float ZoomStep = 1.1f;
     private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
+    public string LoadedFilePath = "";
 
     public ObservableCollection<Component> Items { get; } = new()
     {
@@ -316,14 +318,14 @@ public partial class LogicGatesSimulationView : UserControl
         e.Handled = true;
     }
 
-    private (HitTarget, Component, IO)? HitTest(SKPoint world)
+    private (HitTarget, Component, IO)? HitTest(SKPoint world, MouseButton mb)
     {
         (HitTarget, Component, IO)? hitResult = null;
         (HitTarget, Component, IO)? candidateResult = null;
         foreach (Component item in PaintItems.Values)
         {
             item.Selected = false;
-            candidateResult = item.HitTest(world, new Dictionary<string, dynamic>());
+            candidateResult = item.HitTest(world, new Dictionary<string, dynamic>(), mb);
             if (candidateResult != null)
             {
                 if (candidateResult.Value.Item1 == HitTarget.Output)
@@ -405,12 +407,7 @@ public partial class LogicGatesSimulationView : UserControl
         var mousePosition = e.GetPosition(skiaElement);
         var mouseScreen = ToScreenPoint(mousePosition);
         var mouseWorld = ScreenToWorld(mouseScreen);
-        (HitTarget, Component, IO)? hit = HitTest(mouseWorld);
-
-        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Left)
-        {
-            hit.Value.Item2.Value = ("bool", !hit.Value.Item2.Value.Item2);
-        }
+        (HitTarget, Component, IO)? hit = HitTest(mouseWorld, e.ChangedButton);
 
         // Check if we hit connection or we deselect it.
         foreach (var conn in Connections)
@@ -432,7 +429,7 @@ public partial class LogicGatesSimulationView : UserControl
             }
         }
 
-        if (e.ChangedButton == MouseButton.Right)
+        if (e.ChangedButton == MouseButton.Right && hit == null)
         {
             LayersListView.SelectedItem = null;
             _isPanning = false;
@@ -453,6 +450,24 @@ public partial class LogicGatesSimulationView : UserControl
             return;
         }
 
+        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Right)
+        {
+            LayersListView.SelectedItem = null;
+            RunSimulation();
+            skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
+        }
+
+        if (hit != null && (hit.Value.Item1 == HitTarget.Input || hit.Value.Item1 == HitTarget.Output) && e.ChangedButton == MouseButton.Left)
+        {
+            skiaElement.Cursor = Cursors.Pen;
+            LayersListView.SelectedItem = null;
+            skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
+        }
+
         if (LayersListView.SelectedItem != null)
         {
             // Adding item
@@ -461,16 +476,15 @@ public partial class LogicGatesSimulationView : UserControl
             var newComponent = Creator.CreateLG(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
 
             PaintItems.Add(newComponent.GetId(), newComponent);
-            //LayersListView.SelectedItem = null;
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
         }
 
-        if (hit != null && hit.Value.Item1 == HitTarget.Button && e.ChangedButton == MouseButton.Right)
+        if ((e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right) && _isConnecting)
         {
-            RunSimulation();
-            skiaElement.InvalidateVisual();
+            skiaElement.Cursor = Cursors.Arrow;
+            CancelPendingConnection(true, false);
             e.Handled = true;
             return;
         }
@@ -497,8 +511,11 @@ public partial class LogicGatesSimulationView : UserControl
             var deltaScreen = mouseScreen - _panStartMouse;
             _panOffset = _panStartOffset + deltaScreen;
             skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
         }
-        else if (_isMoving)
+
+        if (_isMoving)
         {
             foreach (var item in PaintItems)
             {
@@ -506,24 +523,27 @@ public partial class LogicGatesSimulationView : UserControl
                     item.Value.OffsetRect((int)_mouseWorld.X, (int)_mouseWorld.Y);
             }
             skiaElement.InvalidateVisual();
-        }
-        else if (_isConnecting)
-        {
-            skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
         }
 
+        if (_isConnecting)
+        {
+            skiaElement.Cursor = Cursors.Pen;
+            skiaElement.InvalidateVisual();
+            e.Handled = true;
+            return;
+        }
+
+        skiaElement.Cursor = Cursors.Arrow;
         e.Handled = true;
     }
 
     private void SkiaElement_OnMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left)
-            return;
-
         _isPanning = false;
         _isMoving = false;
         skiaElement.ReleaseMouseCapture();
-        skiaElement.Cursor = Cursors.Arrow;
 
         e.Handled = true;
     }
@@ -563,7 +583,24 @@ public partial class LogicGatesSimulationView : UserControl
     {
         CancelPendingConnection(true, false);
 
-        Creator.Save(PaintItems, Connections, "LogicGates");
+        Creator.Save(PaintItems, Connections, "LogicGates", LoadedFilePath);
+    }
+
+    public void SaveDiagramAs()
+    {
+        CancelPendingConnection(true, false);
+        SaveFileDialog saveFileDialog = new SaveFileDialog();
+        saveFileDialog.Filter = "Json (*.json)|*.json|Show All Files (*.*)|*.*";
+        saveFileDialog.FileName = "diagram";
+        saveFileDialog.Title = "Save As";
+        saveFileDialog.ShowDialog();
+
+        if (saveFileDialog.FileName != "")
+        {
+            LoadedFilePath = saveFileDialog.FileName;
+        }
+
+        Creator.Save(PaintItems, Connections, "LogicGates", LoadedFilePath);
     }
 
     public void SaveCanvasAsPng()
@@ -573,11 +610,11 @@ public partial class LogicGatesSimulationView : UserControl
         CanvasExport.SaveAsPng(PaintItems, Connections);
     }
 
-    public void LoadDiagram()
+    public bool LoadDiagram()
     {
         var items = Creator.Load("LogicGates");
-        if (items.Item1.Count == 0)
-            return;
+        if (items.Item1.Count == 0 || items.Item3 == "fail")
+            return false;
 
         PaintItems.Clear();
         Connections.Clear();
@@ -586,6 +623,9 @@ public partial class LogicGatesSimulationView : UserControl
         foreach (var conn in items.Item2)
             Connections.Add(conn.Key, conn.Value);
 
+        LoadedFilePath = items.Item3;
         skiaElement.InvalidateVisual();
+
+        return true;
     }
 }
