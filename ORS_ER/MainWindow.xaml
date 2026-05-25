@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:ORS_ER"
         mc:Ignorable="d"
         Title="MainWindow" Height="700" Width="800" MinWidth="1220"
-        PreviewMouseDown="Window_PreviewMouseDown">
+        PreviewMouseDown="Window_PreviewMouseDown"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

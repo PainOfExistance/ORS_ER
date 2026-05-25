@@ -26,11 +26,14 @@ public partial class LogicGatesSimulationView : UserControl
     private SKPoint _panStartMouse;
     private SKPoint _panStartOffset;
     private SKPoint _mouseWorld;
+    private Component _copyElement;
     private const float MinZoom = 0.1f;
     private const float MaxZoom = 10.0f;
     private const float ZoomStep = 1.1f;
     private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
     public string LoadedFilePath = "";
+    public List<(Dictionary<string, Component>, Dictionary<string, Connection>)> history = new();
+    private int _histroyPointer = 0;
 
     public ObservableCollection<Component> Items { get; } = new()
     {
@@ -47,8 +50,7 @@ public partial class LogicGatesSimulationView : UserControl
         new Adder("Full Adder", "Full addition.", "Adders")
     };
 
-
-    public Dictionary<string, Component> PaintItems { get; } = new();
+    public Dictionary<string, Component> PaintItems { get; set; } = new();
 
     public Dictionary<string, Connection> Connections { get; set; } = new();
     private bool _isConnecting;
@@ -63,8 +65,30 @@ public partial class LogicGatesSimulationView : UserControl
             AddCustomComponentToPalette(data);
 
         PreviewMouseRightButtonDown += FlowchartSimulationView_PreviewMouseRightButtonDown;
-        PreviewKeyDown += FlowchartSimulationView_PreviewKeyDown;
         Focusable = true;
+        history.Add(new(new Dictionary<string, Component>(), new Dictionary<string, Connection>()));
+    }
+
+    private void AddToHistory()
+    {
+        if (history.Count > 30)
+        {
+            history.RemoveAt(0);
+        }
+
+        if (_histroyPointer != history.Count - 1)
+        {
+            history = history.Take(_histroyPointer + 1).ToList();
+        }
+
+        var paintItemsCopy = PaintItems.ToDictionary(
+            kv => kv.Key,
+            kv => (Component)kv.Value);
+        var connectionsCopy = Connections.ToDictionary(
+            kv => kv.Key,
+            kv => (Connection)kv.Value);
+        history.Add((paintItemsCopy, connectionsCopy));
+        _histroyPointer = _histroyPointer + 1;
     }
 
     public void SaveDiagramAsComponent(string? name = null, string? description = null, string? category = null)
@@ -103,23 +127,25 @@ public partial class LogicGatesSimulationView : UserControl
 
     private void FlowchartSimulationView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
+        skiaElement.Cursor = Cursors.Arrow;
         CancelPendingConnection(true, true);
     }
 
-    private void FlowchartSimulationView_PreviewKeyDown(object sender, KeyEventArgs e)
+    public void Delete(KeyEventArgs e)
     {
-        if (e.Key != Key.Delete)
-            return;
-
         if (TryDeleteSelectedConnection())
         {
             CompleteDelete(e);
+            RunSimulation();
+            AddToHistory();
             return;
         }
 
         if (TryDeleteSelectedComponent())
         {
             CompleteDelete(e);
+            RunSimulation();
+            AddToHistory();
             return;
         }
 
@@ -363,6 +389,7 @@ public partial class LogicGatesSimulationView : UserControl
                             _isConnecting = false;
                             _connectingConnectionId = "";
                             RunSimulation();
+                            AddToHistory();
                         }
                         if (_isConnecting)
                         {
@@ -474,8 +501,8 @@ public partial class LogicGatesSimulationView : UserControl
             int selectedIndex = LayersListView.SelectedIndex;
             var selected = Items[selectedIndex];
             var newComponent = Creator.CreateLG(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
-
             PaintItems.Add(newComponent.GetId(), newComponent);
+            AddToHistory();
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
@@ -574,6 +601,9 @@ public partial class LogicGatesSimulationView : UserControl
 
         PaintItems.Clear();
         Connections.Clear();
+        _histroyPointer = 0;
+        history.Clear();
+        history.Add(new(new Dictionary<string, Component>(), new Dictionary<string, Connection>()));
         _isConnecting = false;
         _connectingConnectionId = "";
         skiaElement.InvalidateVisual();
@@ -627,5 +657,73 @@ public partial class LogicGatesSimulationView : UserControl
         skiaElement.InvalidateVisual();
 
         return true;
+    }
+
+    public void Duplicate()
+    {
+        var item = PaintItems.Values.Where(kv => kv.Selected == true);
+        if (item.Count() > 0)
+        {
+            var itm = item.ElementAt(0);
+            var newItem = Creator.CreateLG(itm.Name, itm.Description, itm.Category, (int)(itm.Rect.MidX + itm.Rect.Width) + 10, (int)itm.Rect.MidY);
+            newItem.Code = itm.Code;
+            newItem.Value = itm.Value;
+            PaintItems.Add(newItem.GetId(), newItem);
+            PaintItems.Values.Where(kv => kv.Selected == true).ElementAt(0).Selected = false;
+            AddToHistory();
+            skiaElement.InvalidateVisual();
+            return;
+        }
+    }
+
+    public void Copy()
+    {
+        var item = PaintItems.Values.Where(kv => kv.Selected == true);
+        if (item.Count() > 0)
+        {
+            var itm = item.ElementAt(0);
+            _copyElement = Creator.CreateLG(itm.Name, itm.Description, itm.Category, (int)(itm.Rect.MidX), (int)itm.Rect.MidY);
+            _copyElement.Code = itm.Code;
+            _copyElement.Value = itm.Value;
+        }
+    }
+
+    public void Paste()
+    {
+        if (_copyElement != null)
+        {
+            var itm = Creator.CreateLG(_copyElement.Name, _copyElement.Description, _copyElement.Category, (int)_mouseWorld.X, (int)_mouseWorld.Y);
+            itm.Code = _copyElement.Code;
+            itm.Value = _copyElement.Value;
+            PaintItems.Add(itm.GetId(), itm);
+            AddToHistory();
+            skiaElement.InvalidateVisual();
+        }
+    }
+
+    public void Undo()
+    {
+        if (_histroyPointer > 0)
+        {
+            _histroyPointer--;
+            var componentsAndConnections = history[_histroyPointer];
+            PaintItems = new Dictionary<string, Component>(componentsAndConnections.Item1);
+            Connections = new Dictionary<string, Connection>(componentsAndConnections.Item2);
+            RunSimulation();
+            skiaElement.InvalidateVisual();
+        }
+    }
+
+    public void Redo()
+    {
+        if (_histroyPointer < history.Count - 1)
+        {
+            _histroyPointer++;
+            var componentsAndConnections = history[_histroyPointer];
+            PaintItems = new Dictionary<string, Component>(componentsAndConnections.Item1);
+            Connections = new Dictionary<string, Connection>(componentsAndConnections.Item2);
+            RunSimulation();
+            skiaElement.InvalidateVisual();
+        }
     }
 }

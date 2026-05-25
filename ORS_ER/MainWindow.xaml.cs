@@ -296,5 +296,108 @@ namespace ORS_ER
             helpWindow.Show();
             e.Handled = true;
         }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                if (SimulationHost.Content is FlowchartSimulationView fc)
+                {
+                    fc.Delete(e);
+                    e.Handled = true;
+                    return;
+                }
+
+                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                {
+                    lg.Delete(e);
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.D)
+            {
+                if (SimulationHost.Content is FlowchartSimulationView fc)
+                {
+                    fc.Duplicate();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                {
+                    lg.Duplicate();
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if(((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.C)
+            {
+                if (SimulationHost.Content is FlowchartSimulationView fc)
+                {
+                    fc.Copy();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                {
+                    lg.Copy();
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.V)
+            {
+                if (SimulationHost.Content is FlowchartSimulationView fc)
+                {
+                    fc.Paste();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                {
+                    lg.Paste();
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.Z)
+            {
+                if (SimulationHost.Content is FlowchartSimulationView fc)
+                {
+                    _ = fc.UndoAsync();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                {
+                    lg.Undo();
+                    e.Handled = true;
+                    return;
+                }
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.Y)
+            {
+                if (SimulationHost.Content is FlowchartSimulationView fc)
+                {
+                    _ = fc.RedoAsync();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                {
+                    lg.Redo();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            e.Handled = true;
+            return;
+        }
     }
 }

@@ -7,7 +7,6 @@ using SkiaSharp.Views.WPF;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,7 +21,7 @@ public partial class FlowchartSimulationView : UserControl
     private bool _consoleRedirected;
     private Task? _simulationTask;
     private readonly object _simulationLock = new();
-
+    private Component _copyElement;
     private SKPoint _panOffset = new(0, 0);
     private float _zoom = 1.0f;
     private bool _isPanning;
@@ -36,7 +35,8 @@ public partial class FlowchartSimulationView : UserControl
     private static readonly ComponentPaints Paints = ComponentPaints.Create(ComponentPaintScheme.Input);
     public string LoadedFilePath = "";
     private const float PalettePreviewZoom = 0.225f;
-
+    public List<(Dictionary<string, Component>, Dictionary<string, Connection>)> history = new();
+    private int _histroyPointer = 0;
 
     public ObservableCollection<Component> Items { get; } = new()
     {
@@ -51,7 +51,7 @@ public partial class FlowchartSimulationView : UserControl
         new While("While", "Repeats based on condition.", "Control Flow"),
     };
 
-    public Dictionary<string, Component> PaintItems { get; } = new();
+    public Dictionary<string, Component> PaintItems { get; set; } = new();
 
     public Dictionary<string, Connection> Connections { get; set; } = new();
     private bool _isConnecting;
@@ -66,8 +66,30 @@ public partial class FlowchartSimulationView : UserControl
         Loaded += FlowchartSimulationView_Loaded;
         Unloaded += FlowchartSimulationView_Unloaded;
         PreviewMouseRightButtonDown += FlowchartSimulationView_PreviewMouseRightButtonDown;
-        PreviewKeyDown += FlowchartSimulationView_PreviewKeyDown;
         Focusable = true;
+        history.Add(new(new Dictionary<string, Component>(), new Dictionary<string, Connection>()));
+    }
+
+    private void AddToHistory()
+    {
+        if (history.Count > 30)
+        {
+            history.RemoveAt(0);
+        }
+
+        if (_histroyPointer != history.Count - 1)
+        {
+            history = history.Take(_histroyPointer + 1).ToList();
+        }
+
+        var paintItemsCopy = PaintItems.ToDictionary(
+            kv => kv.Key,
+            kv => (Component)kv.Value);
+        var connectionsCopy = Connections.ToDictionary(
+            kv => kv.Key,
+            kv => (Connection)kv.Value);
+        history.Add((paintItemsCopy, connectionsCopy));
+        _histroyPointer = _histroyPointer + 1;
     }
 
     private void FlowchartSimulationView_Loaded(object sender, RoutedEventArgs e)
@@ -123,24 +145,21 @@ public partial class FlowchartSimulationView : UserControl
         CancelPendingConnection(true, true);
     }
 
-    private void FlowchartSimulationView_PreviewKeyDown(object sender, KeyEventArgs e)
+    public void Delete(KeyEventArgs e)
     {
-        if (e.Key != Key.Delete)
-            return;
-
         if (TryDeleteSelectedConnection())
         {
             TriggerSimulationRun();
-
             CompleteDelete(e);
+            AddToHistory();
             return;
         }
 
         if (TryDeleteSelectedComponent())
         {
             TriggerSimulationRun();
-
             CompleteDelete(e);
+            AddToHistory();
             return;
         }
 
@@ -722,8 +741,8 @@ public partial class FlowchartSimulationView : UserControl
                             Connections[_connectingConnectionId].IsSelected = false;
                             _isConnecting = false;
                             _connectingConnectionId = "";
-
                             TriggerSimulationRun();
+                            AddToHistory();
                         }
                         else if (_isConnecting)
                         {
@@ -749,6 +768,10 @@ public partial class FlowchartSimulationView : UserControl
                 }
                 if (candidateResult.Value.Item1 == HitTarget.Button)
                 {
+                    if (_isConnecting)
+                    {
+                        CancelPendingConnection(false, false);
+                    }
                     hitResult = candidateResult;
                 }
             }
@@ -761,8 +784,8 @@ public partial class FlowchartSimulationView : UserControl
         skiaElement.Focus();
         var mousePosition = e.GetPosition(skiaElement);
         var mouseScreen = ToScreenPoint(mousePosition);
-        var mouseWorld = ScreenToWorld(mouseScreen);
-        (HitTarget, Component, IO)? hit = HitTest(mouseWorld, e.ChangedButton);
+        _mouseWorld = ScreenToWorld(mouseScreen);
+        (HitTarget, Component, IO)? hit = HitTest(_mouseWorld, e.ChangedButton);
 
         // Check if we hit connection or we deselect it.
         bool changed = false;
@@ -775,7 +798,7 @@ public partial class FlowchartSimulationView : UserControl
             }
             var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromIOId].Node;
             var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToIOId].Node;
-            var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode);
+            var isSelected = conn.Value.HitTest(_mouseWorld, fromNode, toNode);
             if (isSelected)
             {
                 changed = true;
@@ -833,9 +856,9 @@ public partial class FlowchartSimulationView : UserControl
         {
             int index = LayersListView.SelectedIndex;
             var selected = Items[index];
-            var newComponent = Creator.Create(selected.Name, selected.Description, selected.Category, (int)mouseWorld.X, (int)mouseWorld.Y);
-
+            var newComponent = Creator.Create(selected.Name, selected.Description, selected.Category, (int)_mouseWorld.X, (int)_mouseWorld.Y);
             PaintItems.Add(newComponent.GetId(), newComponent);
+            AddToHistory();
             skiaElement.InvalidateVisual();
             e.Handled = true;
             return;
@@ -1021,6 +1044,9 @@ public partial class FlowchartSimulationView : UserControl
 
         PaintItems.Clear();
         Connections.Clear();
+        _histroyPointer = 0;
+        history.Clear();
+        history.Add(new(new Dictionary<string, Component>(), new Dictionary<string, Connection>()));
         _isConnecting = false;
         _connectingConnectionId = "";
         skiaElement.InvalidateVisual();
@@ -1144,4 +1170,72 @@ public partial class FlowchartSimulationView : UserControl
         }
     }
 
+    public void Duplicate()
+    {
+        var item = PaintItems.Values.Where(kv => kv.Selected == true);
+        if (item.Count() > 0)
+        {
+            var itm = item.ElementAt(0);
+            var newItem = Creator.Create(itm.Name, itm.Description, itm.Category, (int)(itm.Rect.MidX + itm.Rect.Width) + 10, (int)itm.Rect.MidY);
+            newItem.Code = itm.Code;
+            newItem.Value = itm.Value;
+            PaintItems.Add(newItem.GetId(), newItem);
+            PaintItems.Values.Where(kv => kv.Selected == true).ElementAt(0).Selected = false;
+            AddToHistory();
+            skiaElement.InvalidateVisual();
+        }
+    }
+
+    public void Copy()
+    {
+        var item = PaintItems.Values.Where(kv => kv.Selected == true);
+        if (item.Count() > 0)
+        {
+            var itm = item.ElementAt(0);
+            _copyElement = Creator.Create(itm.Name, itm.Description, itm.Category, (int)(itm.Rect.MidX), (int)itm.Rect.MidY);
+            _copyElement.Code = itm.Code;
+            _copyElement.Value = itm.Value;
+        }
+    }
+
+    public void Paste()
+    {
+        if (_copyElement != null)
+        {
+            var itm = Creator.Create(_copyElement.Name, _copyElement.Description, _copyElement.Category, (int)_mouseWorld.X, (int)_mouseWorld.Y);
+            itm.Code = _copyElement.Code;
+            itm.Value = _copyElement.Value;
+            PaintItems.Add(itm.GetId(), itm);
+            AddToHistory();
+            skiaElement.InvalidateVisual();
+        }
+    }
+
+    public async Task UndoAsync()
+    {
+        Debug.WriteLine(_histroyPointer);
+        if (_histroyPointer > 0)
+        {
+            _histroyPointer--;
+            var componentsAndConnections = history[_histroyPointer];
+            PaintItems = new Dictionary<string, Component>(componentsAndConnections.Item1);
+            Connections = new Dictionary<string, Connection>(componentsAndConnections.Item2);
+            skiaElement.InvalidateVisual();
+            await RunAsync();
+        }
+    }
+
+    public async Task RedoAsync()
+    {
+        Debug.WriteLine(_histroyPointer);
+        if (_histroyPointer < history.Count - 1)
+        {
+            _histroyPointer++;
+            var componentsAndConnections = history[_histroyPointer];
+            PaintItems = new Dictionary<string, Component>(componentsAndConnections.Item1);
+            Connections = new Dictionary<string, Connection>(componentsAndConnections.Item2);
+            skiaElement.InvalidateVisual();
+            await RunAsync();
+        }
+    }
 }
