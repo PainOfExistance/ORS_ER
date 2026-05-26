@@ -19,19 +19,30 @@
                 <Separator/>
                 <Menu>
                     <MenuItem Header="File">
-                        <MenuItem x:Name="New" Header="New" Click="New_Click"/>
-                        <MenuItem x:Name="Save" Header="Save" Click="Save_Click" IsEnabled="False"/>
-                        <MenuItem x:Name="SaveAs" Header="Save As" Click="SaveAs_Click"/>
-                        <MenuItem x:Name="Load" Header="Load" Click="Load_Click"/>
+                        <MenuItem x:Name="New" Header="New (Ctrl+N)" Click="New_Click"/>
+                        <MenuItem x:Name="Save" Header="Save (Ctrl+S)" Click="Save_Click" IsEnabled="False"/>
+                        <MenuItem x:Name="SaveAs" Header="Save As (Ctrl+S)" Click="SaveAs_Click"/>
+                        <MenuItem x:Name="Load" Header="Load (Ctrl+L)" Click="Load_Click"/>
                         <Separator/>
                         <MenuItem x:Name="SaveComponent" Header="Save component" Click="SaveComponent_Click"/>
                         <MenuItem x:Name="LoadComponent" Header="Load component" Click="LoadComponent_Click"/>
                         <Separator/>
-                        <MenuItem x:Name="ExportPng" Header="Export PNG" Click="ExportPng_Click"/>
+                        <MenuItem x:Name="ExportPng" Header="Export PNG (Ctrl+E)" Click="ExportPng_Click"/>
                     </MenuItem>
                 </Menu>
-                <Button x:Name="Run" Content="Run" Click="Run_Click"/>
-                <Button x:Name="Help" Content="Help" Click="Help_Click"/>
+                <Menu>
+                    <MenuItem Header="Edit">
+                        <MenuItem x:Name="Undo" Header="Undo (Ctrl+Z)" Click="Undo_Click"/>
+                        <MenuItem x:Name="Redo" Header="Redo (Ctrl+Y)" Click="Redo_Click"/>
+                        <Separator/>
+                        <MenuItem x:Name="Copy" Header="Copy (Ctrl+C)" Click="Copy_Click"/>
+                        <MenuItem x:Name="Paste" Header="Paste (Ctrl+V)" Click="Paste_Click"/>
+                        <MenuItem x:Name="Duplicate" Header="Duplicate (Ctrl+D)" Click="Duplicate_Click" />
+                        <MenuItem x:Name="Delete" Header="Delete (Del)" Click="Delete_Click"/>
+                    </MenuItem>
+                </Menu>
+                <Button x:Name="Run" Content="Run (Ctrl+R)" Click="Run_Click"/>
+                <Button x:Name="Help" Content="Help (Ctrl+H)" Click="Help_Click"/>
                 <Separator/>
                 <Label x:Name="StatusLabel" Content="No file loaded"/>
                 <Separator/>

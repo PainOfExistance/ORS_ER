@@ -25,15 +25,26 @@
 
                     <Paragraph FontSize="20" FontWeight="SemiBold" Margin="0,12,0,6">2. Menu bar</Paragraph>
                     <Paragraph Margin="0,0,0,8">
-                        Use
-                        <Bold>New</Bold> to start a fresh simulation. Use
-                        <Bold>Save diagram</Bold> to store your work as a
-                        <Bold>JSON</Bold> file and
-                        <Bold>Load diagram</Bold> to open it later. In Logic Gate simulation, you can store
+                        Here you can work with your designed flowchart or circuit.
+                        In
+                        <Bold>File</Bold> you have options to create new diagram by clicking on
+                        <Bold>New</Bold>. Use
+                        <Bold>Save As</Bold> to store your work as a
+                        <Bold>JSON</Bold> file, or use
+                        <Bold>Save</Bold> to save your current design to already loaded file.
+                        <Bold>Load</Bold> is used to open your work in simulator. In Logic Gate simulation, you can store
                         the current circuit as a reusable component with
                         <Bold>Save component</Bold> and load custom components with
                         <Bold>Load component</Bold> . You can also export the current diagram with
-                        <Bold>Export PNG</Bold> to save an image.
+                        <Bold>Export PNG</Bold> to save an image of the diagram.
+                        You can also see keybinds used for different commands in their names.
+                        <LineBreak/>
+                        <LineBreak/>
+                        In
+                        <Bold>Edit</Bold> you can
+                        <Bold>Copy, Paste, Duplicate and Delete</Bold> your elements as well as
+                        <Bold>Undo</Bold> and
+                        <Bold>Redo</Bold> your changes.
                     </Paragraph>
 
                     <Paragraph FontSize="20" FontWeight="SemiBold" Margin="0,12,0,6">3. Simulation</Paragraph>

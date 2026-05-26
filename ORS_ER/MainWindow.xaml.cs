@@ -210,7 +210,6 @@ namespace ORS_ER
         {
             if (GetSelectedSimulation() is FlowchartSimulationView fc)
             {
-                var meow = GetSelectedSimulation();
                 fc.SaveDiagramAs();
                 StatusLabel.Content = string.IsNullOrEmpty(fc.LoadedFilePath) ? "No file loaded" : $"Loaded: {System.IO.Path.GetFileName(fc.LoadedFilePath)}";
                 Save.IsEnabled = true;
@@ -278,18 +277,6 @@ namespace ORS_ER
             e.Handled = true;
         }
 
-        private void StressZest_Click(object sender, RoutedEventArgs e)
-        {
-            if (GetSelectedSimulation() is FlowchartSimulationView fc)
-            {
-                fc.StressTest();
-                e.Handled = true;
-                return;
-            }
-
-            e.Handled = true;
-        }
-
         private void Help_Click(object sender, RoutedEventArgs e)
         {
             HelpWindow helpWindow = new HelpWindow();
@@ -297,103 +284,182 @@ namespace ORS_ER
             e.Handled = true;
         }
 
+        private void Copy_Click(object sender, RoutedEventArgs e)
+        {
+            if (SimulationHost.Content is FlowchartSimulationView fc)
+            {
+                fc.Copy();
+                e.Handled = true;
+                return;
+            }
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
+            {
+                lg.Copy();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void Redo_Click(object sender, RoutedEventArgs e)
+        {
+            if (SimulationHost.Content is FlowchartSimulationView fc)
+            {
+                _ = fc.RedoAsync();
+                e.Handled = true;
+                return;
+            }
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
+            {
+                lg.Redo();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void Undo_Click(object sender, RoutedEventArgs e)
+        {
+            if (SimulationHost.Content is FlowchartSimulationView fc)
+            {
+                _ = fc.UndoAsync();
+                e.Handled = true;
+                return;
+            }
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
+            {
+                lg.Undo();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void Paste_Click(object sender, RoutedEventArgs e)
+        {
+            if (SimulationHost.Content is FlowchartSimulationView fc)
+            {
+                fc.Paste();
+                e.Handled = true;
+                return;
+            }
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
+            {
+                lg.Paste();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void Duplicate_Click(object sender, RoutedEventArgs e)
+        {
+            if (SimulationHost.Content is FlowchartSimulationView fc)
+            {
+                fc.Duplicate();
+                e.Handled = true;
+                return;
+            }
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
+            {
+                lg.Duplicate();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            KeyEventArgs keyEventArgs = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(this), 0, Key.Delete)
+            {
+                RoutedEvent = Keyboard.KeyDownEvent
+            };
+            if (SimulationHost.Content is FlowchartSimulationView fc)
+            {
+                fc.Delete(keyEventArgs);
+                e.Handled = true;
+                return;
+            }
+
+            if (SimulationHost.Content is LogicGatesSimulationView lg)
+            {
+                lg.Delete(keyEventArgs);
+                e.Handled = true;
+                return;
+            }
+        }
+
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Delete)
             {
-                if (SimulationHost.Content is FlowchartSimulationView fc)
-                {
-                    fc.Delete(e);
-                    e.Handled = true;
-                    return;
-                }
-
-                if (SimulationHost.Content is LogicGatesSimulationView lg)
-                {
-                    lg.Delete(e);
-                    e.Handled = true;
-                    return;
-                }
+                Delete_Click(sender, new RoutedEventArgs(Button.ClickEvent));
             }
             else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.D)
             {
-                if (SimulationHost.Content is FlowchartSimulationView fc)
-                {
-                    fc.Duplicate();
-                    e.Handled = true;
-                    return;
-                }
-
-                if (SimulationHost.Content is LogicGatesSimulationView lg)
-                {
-                    lg.Duplicate();
-                    e.Handled = true;
-                    return;
-                }
+                Duplicate_Click(sender, new RoutedEventArgs(Button.ClickEvent));
             }
-            else if(((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.C)
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.C)
             {
-                if (SimulationHost.Content is FlowchartSimulationView fc)
-                {
-                    fc.Copy();
-                    e.Handled = true;
-                    return;
-                }
-
-                if (SimulationHost.Content is LogicGatesSimulationView lg)
-                {
-                    lg.Copy();
-                    e.Handled = true;
-                    return;
-                }
+                Copy_Click(sender, new RoutedEventArgs(Button.ClickEvent));
             }
             else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.V)
             {
-                if (SimulationHost.Content is FlowchartSimulationView fc)
-                {
-                    fc.Paste();
-                    e.Handled = true;
-                    return;
-                }
-
-                if (SimulationHost.Content is LogicGatesSimulationView lg)
-                {
-                    lg.Paste();
-                    e.Handled = true;
-                    return;
-                }
+                Paste_Click(sender, new RoutedEventArgs(Button.ClickEvent));
             }
             else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.Z)
             {
-                if (SimulationHost.Content is FlowchartSimulationView fc)
-                {
-                    _ = fc.UndoAsync();
-                    e.Handled = true;
-                    return;
-                }
-
-                if (SimulationHost.Content is LogicGatesSimulationView lg)
-                {
-                    lg.Undo();
-                    e.Handled = true;
-                    return;
-                }
+                Undo_Click(sender, new RoutedEventArgs(Button.ClickEvent));
             }
             else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.Y)
             {
-                if (SimulationHost.Content is FlowchartSimulationView fc)
+                Redo_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.S)
+            {
+                if (GetSelectedSimulation() is FlowchartSimulationView fc)
                 {
-                    _ = fc.RedoAsync();
-                    e.Handled = true;
-                    return;
+                    if (string.IsNullOrEmpty(fc.LoadedFilePath))
+                    {
+                        SaveAs_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+                    }
+                    else
+                    {
+                        Save_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+                    }
                 }
-
-                if (SimulationHost.Content is LogicGatesSimulationView lg)
+                else if (GetSelectedSimulation() is LogicGatesSimulationView lg)
                 {
-                    lg.Redo();
-                    e.Handled = true;
-                    return;
+                    if (string.IsNullOrEmpty(lg.LoadedFilePath))
+                    {
+                        SaveAs_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+                    }
+                    else
+                    {
+                        Save_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+                    }
                 }
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.N)
+            {
+                New_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.L)
+            {
+                Load_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.E)
+            {
+                ExportPng_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.R)
+            {
+                Run_Click(sender, new RoutedEventArgs(Button.ClickEvent));
+            }
+            else if (((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) && e.Key == Key.H)
+            {
+                Help_Click(sender, new RoutedEventArgs(Button.ClickEvent));
             }
 
             e.Handled = true;
