@@ -447,11 +447,12 @@ public partial class LogicGatesSimulationView : UserControl
             var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromIOId].Node;
             var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToIOId].Node;
             var isSelected = conn.Value.HitTest(mouseWorld, fromNode, toNode);
+
             if (isSelected)
             {
+                _isPanning = false;
                 skiaElement.InvalidateVisual();
                 e.Handled = true;
-                _isPanning = false;
                 return;
             }
         }

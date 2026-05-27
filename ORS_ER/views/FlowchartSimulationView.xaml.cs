@@ -788,7 +788,6 @@ public partial class FlowchartSimulationView : UserControl
         (HitTarget, Component, IO)? hit = HitTest(_mouseWorld, e.ChangedButton);
 
         // Check if we hit connection or we deselect it.
-        bool changed = false;
         foreach (var conn in Connections)
         {
             if (conn.Value.ToIOId == "" || hit != null)
@@ -799,12 +798,13 @@ public partial class FlowchartSimulationView : UserControl
             var fromNode = PaintItems[conn.Value.FromComponentId].Outputs[conn.Value.FromIOId].Node;
             var toNode = PaintItems[conn.Value.ToComponentId].Inputs[conn.Value.ToIOId].Node;
             var isSelected = conn.Value.HitTest(_mouseWorld, fromNode, toNode);
+
             if (isSelected)
             {
-                changed = true;
+                _isPanning = false;
                 skiaElement.InvalidateVisual();
                 e.Handled = true;
-                _isPanning = false;
+                return;
             }
         }
 
@@ -815,11 +815,6 @@ public partial class FlowchartSimulationView : UserControl
             _isMoving = false;
             skiaElement.Cursor = Cursors.Arrow;
             skiaElement.InvalidateVisual();
-            return;
-        }
-
-        if (changed)
-        {
             return;
         }
 
