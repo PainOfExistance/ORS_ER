@@ -36,6 +36,7 @@ namespace ORS_ER.components
         public SKRect Rect { get; set; }
         public SKRect InteractionRect { get; set; }
         public SKFont Font = new SKFont();
+        public SKPoint prevXY = new();
         public Component(Component component) : this(component.Name, component.Description, component.Category)
         {
             this._id = component._id;
@@ -56,6 +57,8 @@ namespace ORS_ER.components
         abstract public void CreateRect(int x, int y);
         virtual public void OffsetRect(int x, int y)
         {
+            this.prevXY.X = Rect.MidX;
+            this.prevXY.Y = Rect.MidY;
             var rect = Rect;
             var dx = x - rect.MidX;
             var dy = y - rect.MidY;

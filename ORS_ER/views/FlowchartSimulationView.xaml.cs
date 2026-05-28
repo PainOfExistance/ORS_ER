@@ -371,6 +371,17 @@ public partial class FlowchartSimulationView : UserControl
             canvas.DrawLine(fromNode, toPoint, connection.IsSelected ? Paints.SelectedLineStroke : Paints.LineStroke);
         }
 
+        foreach (var itemX in PaintItems)
+        {
+            foreach (var itemY in PaintItems)
+            {
+                if (itemX.Value.Rect.IntersectsWith(itemY.Value.Rect) && itemX.Key != itemY.Key)
+                {
+                    itemY.Value.OffsetRect((int)itemY.Value.prevXY.X, (int)itemY.Value.prevXY.Y);
+                }
+            }
+        }
+
         foreach (var item in PaintItems)
             item.Value.Paint(canvas);
     }

@@ -645,6 +645,7 @@ namespace ORS_ER
             var input = new Input(name, description, category);
             input.Selected = true;
             input.CreateRect(mouseWorldX, mouseWorldY);
+            input.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
             return input;
         }
 
@@ -653,6 +654,7 @@ namespace ORS_ER
             var printComponent = new Print(name, description, category);
             printComponent.Selected = true;
             printComponent.CreateRect(mouseWorldX, mouseWorldY);
+            printComponent.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
             return printComponent;
         }
 
@@ -661,6 +663,7 @@ namespace ORS_ER
             var operatorComponent = new Operator(name, description, category);
             operatorComponent.Selected = true;
             operatorComponent.CreateRect(mouseWorldX, mouseWorldY);
+            operatorComponent.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
             return operatorComponent;
         }
 
@@ -669,6 +672,7 @@ namespace ORS_ER
             var arrayOperator = new ArrayOperator(name, description, category);
             arrayOperator.Selected = true;
             arrayOperator.CreateRect(mouseWorldX, mouseWorldY);
+            arrayOperator.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
             return arrayOperator;
         }
 
@@ -677,6 +681,7 @@ namespace ORS_ER
             var ifComponent = new If(name, description, category);
             ifComponent.Selected = true;
             ifComponent.CreateRect(mouseWorldX, mouseWorldY);
+            ifComponent.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
             return ifComponent;
         }
 
@@ -685,6 +690,7 @@ namespace ORS_ER
             var whileComponent = new While(name, description, category);
             whileComponent.Selected = true;
             whileComponent.CreateRect(mouseWorldX, mouseWorldY);
+            whileComponent.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
             return whileComponent;
         }
 
@@ -696,6 +702,7 @@ namespace ORS_ER
                 var customComponent = new SubCircuitComponent(cached);
                 customComponent.Selected = true;
                 customComponent.CreateRect(mouseWorldX, mouseWorldY);
+                customComponent.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
                 return customComponent;
             }
 
@@ -705,26 +712,31 @@ namespace ORS_ER
                     var binaryInput = new BinaryInput(Name, Description, Category);
                     binaryInput.Selected = true;
                     binaryInput.CreateRect(mouseWorldX, mouseWorldY);
+                    binaryInput.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
                     return binaryInput;
                 case "Binary Output":
                     var binaryOutput = new BinaryOutput(Name, Description, Category);
                     binaryOutput.Selected = true;
                     binaryOutput.CreateRect(mouseWorldX, mouseWorldY);
+                    binaryOutput.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
                     return binaryOutput;
                 case "Half Adder":
                     var halfAdder = new Adder(Name, Description, Category);
                     halfAdder.Selected = true;
                     halfAdder.CreateRect(mouseWorldX, mouseWorldY);
+                    halfAdder.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
                     return halfAdder;
                 case "Full Adder":
                     var fullAdder = new Adder(Name, Description, Category);
                     fullAdder.Selected = true;
                     fullAdder.CreateRect(mouseWorldX, mouseWorldY);
+                    fullAdder.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
                     return fullAdder;
                 default:
                     var gateComponent = new Gate(Name, Description, Category);
                     gateComponent.Selected = true;
                     gateComponent.CreateRect(mouseWorldX, mouseWorldY);
+                    gateComponent.prevXY = new SkiaSharp.SKPoint(mouseWorldX, mouseWorldY);
                     return gateComponent;
             }
         }
