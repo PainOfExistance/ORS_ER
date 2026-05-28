@@ -178,7 +178,14 @@ public partial class LogicGatesSimulationView : UserControl
             {
                 if (itemX.Value.Rect.IntersectsWith(itemY.Value.Rect) && itemX.Key != itemY.Key)
                 {
-                    itemY.Value.OffsetRect((int)itemY.Value.prevXY.X, (int)itemY.Value.prevXY.Y);
+                    if (itemY.Value.Rect.MidX == itemY.Value.prevXY.X && itemY.Value.Rect.MidY == itemY.Value.prevXY.Y)
+                    {
+                        itemY.Value.OffsetRect((int)(itemY.Value.prevXY.X + itemY.Value.Rect.Width + 10), (int)itemY.Value.prevXY.Y);
+                    }
+                    else
+                    {
+                        itemY.Value.OffsetRect((int)itemY.Value.prevXY.X, (int)itemY.Value.prevXY.Y);
+                    }
                 }
             }
         }
