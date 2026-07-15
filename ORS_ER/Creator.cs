@@ -54,6 +54,9 @@ namespace ORS_ER
 
             [JsonPropertyName("ioId")]
             public string? IoId { get; set; }
+
+            [JsonPropertyName("name")]
+            public string? Name { get; set; }
         }
 
         internal sealed class ComponentData
@@ -287,6 +290,8 @@ namespace ORS_ER
                     {
                         IO newIO = new IO();
                         newIO.SetId(input.Id);
+                    // restore label/name for the IO if present
+                    newIO.Name = input.Name ?? "";
                         newIO.IfTrue = input.IfTrue ?? "";
                         if (input.InputIds != null || input.OutputIds != null)
                         {
@@ -308,6 +313,8 @@ namespace ORS_ER
                     {
                         IO newIO = new IO();
                         newIO.SetId(output.Id);
+                    // restore label/name for the IO if present
+                    newIO.Name = output.Name ?? "";
                         newIO.IfTrue = output.IfTrue ?? "";
                         if (output.InputIds != null || output.OutputIds != null)
                         {
@@ -365,6 +372,7 @@ namespace ORS_ER
                 {
                     var newIO = new IO();
                     newIO.SetId(input.Id ?? newIO.GetId());
+                    newIO.Name = input.Name ?? "";
                     newIO.IfTrue = input.IfTrue ?? "";
                     if (input.InputIds != null || input.OutputIds != null)
                     {
@@ -384,6 +392,7 @@ namespace ORS_ER
                 {
                     var newIO = new IO();
                     newIO.SetId(output.Id ?? newIO.GetId());
+                    newIO.Name = output.Name ?? "";
                     newIO.IfTrue = output.IfTrue ?? "";
                     if (output.InputIds != null || output.OutputIds != null)
                     {
@@ -440,7 +449,8 @@ namespace ORS_ER
                     .Select(component => new SubCircuitPinData
                     {
                         ComponentId = component.GetId(),
-                        IoId = component.Outputs.Keys.FirstOrDefault()
+                        IoId = component.Outputs.Keys.FirstOrDefault(),
+                        Name = component.Outputs.Values.FirstOrDefault()?.Name
                     })
                     .ToList();
 
@@ -451,7 +461,8 @@ namespace ORS_ER
                     .Select(component => new SubCircuitPinData
                     {
                         ComponentId = component.GetId(),
-                        IoId = component.Inputs.Keys.FirstOrDefault()
+                        IoId = component.Inputs.Keys.FirstOrDefault(),
+                        Name = component.Inputs.Values.FirstOrDefault()?.Name
                     })
                     .ToList();
 

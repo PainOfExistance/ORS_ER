@@ -98,16 +98,44 @@ namespace ORS_ER.components
             }
 
             foreach (var io in Inputs)
-                if (HitPoint(io.Value.Node, world, hitRadius2))
+                if (HitPoint(io.Value.Node, world, hitRadius2) || HitPoint(new SKPoint(io.Value.Node.X, io.Value.Node.Y - 12), world, hitRadius2))
                 {
                     this.Selected = false;
+                    // Right-click on IO or its label opens label editor for binary input/output
+                    if (mb == MouseButton.Right && (this is BinaryInput || this is BinaryOutput))
+                    {
+                        try
+                        {
+                            var dlg = new windows.LabelWindow(io.Value.Name ?? "");
+                            if (dlg.ShowDialog() == true)
+                                io.Value.Name = dlg.LabelText ?? "";
+                        }
+                        catch { }
+
+                        return (HitTarget.Button, this, null);
+                    }
+
                     return (HitTarget.Input, this, io.Value);
                 }
 
             foreach (var io in Outputs)
-                if (HitPoint(io.Value.Node, world, hitRadius2))
+                if (HitPoint(io.Value.Node, world, hitRadius2) || HitPoint(new SKPoint(io.Value.Node.X, io.Value.Node.Y + 12), world, hitRadius2))
                 {
                     this.Selected = false;
+                    // Right-click on IO or its label opens label editor for binary input/output
+                    if (mb == MouseButton.Right && (this is BinaryInput || this is BinaryOutput))
+                    {
+                        try
+                        {
+                            var dlg = new windows.LabelWindow(io.Value.Name ?? "");
+                            if (dlg.ShowDialog() == true)
+                                io.Value.Name = dlg.LabelText ?? "";
+                        }
+                        catch { }
+
+                        return (HitTarget.Button, this, null);
+                    }
+
                     return (HitTarget.Output, this, io.Value);
                 }
 
@@ -223,6 +251,38 @@ namespace ORS_ER.components
                     }
                     return (HitTarget.Button, this, null);
                 }
+            }
+
+            // Right-click on component area (outside interaction button) for binary inputs/outputs opens label editor.
+            if (this is BinaryInput or BinaryOutput && Rect.Contains(local) && !InteractionRect.Contains(local) && mb == MouseButton.Right)
+            {
+                try
+                {
+                    // BinaryInput -> edit first output name; BinaryOutput -> edit first input name
+                    if (this is BinaryInput bIn)
+                    {
+                        var io = bIn.Outputs.Values.FirstOrDefault();
+                        var dlg = new windows.LabelWindow(io?.Name ?? "");
+                        if (dlg.ShowDialog() == true)
+                        {
+                            if (io != null)
+                                io.Name = dlg.LabelText ?? "";
+                        }
+                    }
+                    else if (this is BinaryOutput bOut)
+                    {
+                        var io = bOut.Inputs.Values.FirstOrDefault();
+                        var dlg = new windows.LabelWindow(io?.Name ?? "");
+                        if (dlg.ShowDialog() == true)
+                        {
+                            if (io != null)
+                                io.Name = dlg.LabelText ?? "";
+                        }
+                    }
+                }
+                catch { }
+
+                return (HitTarget.Button, this, null);
             }
 
             if (Rect.Contains(local))

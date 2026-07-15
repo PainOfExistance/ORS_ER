@@ -63,6 +63,33 @@ namespace ORS_ER.components
             foreach (var input in Inputs)
                 canvas.DrawCircle(input.Value.Node, 8, Paints.InputIOPaint);
 
+            // Draw labels for input pins (if provided)
+            try
+            {
+                var smallFont = new SKFont(Font.Typeface, 12);
+                var i = 0;
+                var inputNames = _inputPins ?? new List<Creator.SubCircuitPinData>();
+                foreach (var input in Inputs)
+                {
+                    var name = i < inputNames.Count ? inputNames[i].Name ?? "" : "";
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        float lx = input.Value.Node.X - (smallFont.MeasureText(name) / 2);
+                        float ly = input.Value.Node.Y + 4;
+                        var labelPaint = new SKPaint
+                        {
+                            Color = SKColors.GreenYellow,
+                            IsAntialias = true,
+                            TextSize = 12,
+                            FakeBoldText = true
+                        };
+                        canvas.DrawText(name, lx, ly, smallFont, labelPaint);
+                    }
+                    i++;
+                }
+            }
+            catch { }
+
             var outputValues = GetOutputValues();
             var index = 0;
             foreach (var output in Outputs)
@@ -71,6 +98,33 @@ namespace ORS_ER.components
                 canvas.DrawCircle(output.Value.Node, 8, active ? Paints.IOPaintActive : Paints.IOPaint);
                 index++;
             }
+
+            // Draw labels for output pins (if provided)
+            try
+            {
+                var smallFont = new SKFont(Font.Typeface, 12);
+                var j = 0;
+                var outputNames = _outputPins ?? new List<Creator.SubCircuitPinData>();
+                foreach (var output in Outputs)
+                {
+                    var name = j < outputNames.Count ? outputNames[j].Name ?? "" : "";
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        float lx = output.Value.Node.X - (smallFont.MeasureText(name) / 2);
+                        float ly = output.Value.Node.Y + 4;
+                        var labelPaint = new SKPaint
+                        {
+                            Color = SKColors.GreenYellow,
+                            IsAntialias = true,
+                            TextSize = 12,
+                            FakeBoldText = true
+                        };
+                        canvas.DrawText(name, lx, ly, smallFont, labelPaint);
+                    }
+                    j++;
+                }
+            }
+            catch { }
 
             canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonFill);
             canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonStroke);
@@ -82,7 +136,9 @@ namespace ORS_ER.components
 
         public override void CreateRect(int x, int y)
         {
-            var width = Font.MeasureText(this.Name) + 40;
+            // Make custom components wider so input/output pins are not tightly packed
+            var measured = Font.MeasureText(this.Name) + 60f;
+            var width = Math.Max(160f, measured);
             var height = 90f;
 
             Rect = new SKRect(x - width / 2, y - height / 2, x + width / 2, y + height / 2);
@@ -169,6 +225,7 @@ namespace ORS_ER.components
                 component.Outputs.Clear();
                 var io = new IO();
                 io.SetId(pin.IoId);
+                io.Name = pin.Name ?? "";
                 component.Outputs.Add(io.GetId(), io);
                 component.CreateRect(0, 0);
                 components.Add(component.GetId(), component);
@@ -187,6 +244,7 @@ namespace ORS_ER.components
                 component.Inputs.Clear();
                 var io = new IO();
                 io.SetId(pin.IoId);
+                io.Name = pin.Name ?? "";
                 io.InputConnectionIds = connections.Values
                     .Where(conn => conn.ToComponentId == pin.ComponentId && conn.ToIOId == pin.IoId)
                     .Select(conn => conn.GetId())

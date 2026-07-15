@@ -57,10 +57,41 @@ namespace ORS_ER.components
             }
             canvas.DrawRoundRect(InteractionRect, 6, 6, fillPaint);
             canvas.DrawRoundRect(InteractionRect, 6, 6, Paints.ButtonStroke);
+            // Draw center value label with white bold text so it remains visible against any fill
+            try
+            {
+                var valuePaint = new SKPaint
+                {
+                    Color = SKColors.White,
+                    IsAntialias = true,
+                    TextSize = 14,
+                    FakeBoldText = true,
+                };
+                float textX = Rect.MidX - (Font.MeasureText(label) / 2);
+                float textY = Rect.MidY + Font.Size / 3;
+                canvas.DrawText(label, textX, textY, Font, valuePaint);
+            }
+            catch { }
 
-            float textX = Rect.MidX - (Font.MeasureText(label) / 2);
-            float textY = Rect.MidY + Font.Size / 3;
-            canvas.DrawText(label, textX, textY, Font, Paints.ButtonTextPaint);
+            // Draw editable label for the binary input (uses the first output's Name)
+            try
+            {
+                var io = this.Outputs.Values.FirstOrDefault();
+                var labelText = io != null && !string.IsNullOrWhiteSpace(io.Name) ? io.Name : "Label";
+                var smallFont = new SKFont(Font.Typeface, 12);
+                float lx = Rect.MidX - (smallFont.MeasureText(labelText) / 2);
+                float ly = Rect.Top - 6;
+                // Label should be red and bold
+                var labelPaint = new SKPaint
+                {
+                    Color = SKColors.Black,
+                    IsAntialias = true,
+                    TextSize = 12,
+                    FakeBoldText = true
+                };
+                canvas.DrawText(labelText, lx, ly, smallFont, labelPaint);
+            }
+            catch { }
         }
 
         public override void CreateRect(int x, int y)

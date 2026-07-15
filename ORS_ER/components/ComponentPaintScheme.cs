@@ -129,7 +129,7 @@ namespace ORS_ER.components
 
             ButtonTextPaint = new SKPaint
             {
-                Color = SKColors.WhiteSmoke,
+                Color = text,
                 IsAntialias = true,
                 TextSize = 14,
             };

@@ -9,6 +9,7 @@ namespace ORS_ER.connections
     public class IO
     {
         private string _id = Guid.NewGuid().ToString();
+        public string Name { get; set; } = "";
         public string IfTrue { get; set; } = "";
         public SKPoint Node { get; set; } = new SKPoint();
         public List<string> InputConnectionIds { get; set; } = [];
@@ -54,6 +55,7 @@ namespace ORS_ER.connections
         {
             return $"{{" +
                 $"\"id\": \"{JsonString(_id)}\"," +
+                $"\"name\": \"{JsonString(Name)}\"," +
                 $"\"ifTrue\": \"{JsonString(IfTrue)}\"," +
                 $"\"inputIds\": {JsonStringList(InputConnectionIds)}," +
                 $"\"outputIds\": {JsonStringList(OutputConnectionIds)}" +
